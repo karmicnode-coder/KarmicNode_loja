@@ -7,6 +7,26 @@
     <meta name="description" content="Karmic Node — Moda com alma. Estilo atemporal. Portugal." />
     <link rel="icon" type="image/png" href="/favicon.png" />
     <link rel="apple-touch-icon" href="/favicon.png" />
+
+    <!-- Anti-flash: aplica o tema ANTES do CSS/JS terminar de carregar -->
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem('kn-theme');
+          var systemPrefLight = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
+          var theme = stored || (systemPrefLight ? 'light' : 'dark');
+          document.documentElement.setAttribute('data-theme', theme);
+          document.documentElement.classList.add('no-theme-transition');
+          window.addEventListener('load', function () {
+            setTimeout(function () {
+              document.documentElement.classList.remove('no-theme-transition');
+            }, 100);
+          });
+        } catch (e) {
+          document.documentElement.setAttribute('data-theme', 'dark');
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

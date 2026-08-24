@@ -7,6 +7,30 @@ const LangContext = createContext<{ lang: Lang; t: (k: TKey) => string; arr: (k:
 })
 const useLang = () => useContext(LangContext)
 
+// ─── useTheme hook ───────────────────────────────────────────────────────
+// Gere o modo claro/escuro em toda a loja.
+// Persiste em localStorage e aplica no <html data-theme="...">
+function useTheme(): { theme: 'dark' | 'light'; toggle: () => void; setTheme: (t: 'dark' | 'light') => void } {
+  const [theme, setThemeState] = useState<'dark' | 'light'>(() => {
+    try {
+      const attr = document.documentElement.getAttribute('data-theme')
+      if (attr === 'light' || attr === 'dark') return attr
+      const stored = localStorage.getItem('kn-theme') as 'dark' | 'light' | null
+      if (stored) return stored
+    } catch {}
+    return 'dark'
+  })
+  const setTheme = (t: 'dark' | 'light') => {
+    setThemeState(t)
+    try {
+      document.documentElement.setAttribute('data-theme', t)
+      localStorage.setItem('kn-theme', t)
+    } catch {}
+  }
+  const toggle = () => setTheme(theme === 'dark' ? 'light' : 'dark')
+  return { theme, toggle, setTheme }
+}
+
 // Helpers para traduções de campos dos Produtos (fallback para PT se EN não existir)
 function useProductI18n() {
   const { lang } = useLang()
@@ -1330,17 +1354,59 @@ function NavDropdown({ label, active, subs, navigate, page, accent }: {
   )
 }
 
+// ─── ThemeToggle ─────────────────────────────────────────────────────────
+function ThemeToggle() {
+  const { t } = useLang()
+  const { theme, toggle } = useTheme()
+  const isLight = theme === 'light'
+  return (
+    <button onClick={toggle}
+      title={t('theme_toggle')}
+      aria-label={t('theme_toggle')}
+      style={{
+        width: 38, height: 38, borderRadius: 0,
+        background: 'transparent', border: '1px solid var(--border)',
+        color: 'var(--fg-mute)', cursor: 'pointer',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        transition: 'all .3s var(--ease)', flexShrink: 0, position: 'relative', overflow: 'hidden',
+      }}
+      onMouseEnter={e => {
+        const el = e.currentTarget as HTMLElement
+        el.style.borderColor = 'var(--gold)'; el.style.color = 'var(--gold)'
+      }}
+      onMouseLeave={e => {
+        const el = e.currentTarget as HTMLElement
+        el.style.borderColor = 'var(--border)'; el.style.color = 'var(--fg-mute)'
+      }}>
+      {/* Sol (light mode ativo) */}
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"
+        style={{
+          position: 'absolute', transition: 'all .35s var(--ease)',
+          transform: isLight ? 'rotate(0) scale(1)' : 'rotate(-90deg) scale(0)',
+          opacity: isLight ? 1 : 0,
+        }}>
+        <circle cx="12" cy="12" r="4" />
+        <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+      </svg>
+      {/* Lua (dark mode ativo) */}
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"
+        style={{
+          position: 'absolute', transition: 'all .35s var(--ease)',
+          transform: !isLight ? 'rotate(0) scale(1)' : 'rotate(90deg) scale(0)',
+          opacity: !isLight ? 1 : 0,
+        }}>
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+      </svg>
+    </button>
+  )
+}
+
 function Header({ activePage, navigate, cartCount, openCart, lang, setLang }: {
   activePage: Page; navigate: (page: Page, filter?: string) => void; cartCount: number; openCart: () => void; lang: Lang; setLang: (l: Lang) => void
 }) {
   const { t } = useLang()
   const [scrolled, setScrolled] = useState(false)
   const [navOpen, setNavOpen] = useState(false)
-  const navLinks: { label: string; page: Page }[] = [
-    { label: t('nav_home'), page: 'home' },
-    { label: t('nav_blog'), page: 'blog' },
-    { label: t('nav_contact'), page: 'contact' },
-  ]
 
   useEffect(() => {
     const h = () => setScrolled(window.scrollY > 40)
@@ -1352,14 +1418,14 @@ function Header({ activePage, navigate, cartCount, openCart, lang, setLang }: {
     <>
       {/* Announcement */}
       <div style={{ background: 'var(--bordo)', padding: '9px 20px', textAlign: 'center', fontFamily: 'var(--f-sans)', fontSize: 12, letterSpacing: '.16em', textTransform: 'uppercase', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, flexWrap: 'wrap' }}>
-        <span style={{ color: 'rgba(245,242,237,.7)' }}>🚚</span>
-        <span style={{ color: '#F5F2ED' }} dangerouslySetInnerHTML={{ __html: t('announcement_shipping') }} />
+        <span style={{ color: 'var(--fg-dim)' }}>🚚</span>
+        <span style={{ color: 'var(--btn-primary-fg)' }} dangerouslySetInnerHTML={{ __html: t('announcement_shipping') }} />
         <span style={{ color: 'var(--gold-2)' }}>·</span>
         <span style={{ color: 'var(--gold-2)' }}>{t('announcement_payment')}</span>
       </div>
 
       {/* Header bar */}
-      <header style={{ position: 'sticky', top: 0, zIndex: 50, padding: `${scrolled ? 11 : 17}px var(--pad-x)`, background: scrolled ? 'rgba(11,11,12,.96)' : 'rgba(11,11,12,.72)', backdropFilter: 'blur(16px)', borderBottom: `1px solid ${scrolled ? 'var(--border)' : 'transparent'}`, display: 'flex', alignItems: 'center', gap: 28, transition: 'all .3s ease' }}>
+      <header style={{ position: 'sticky', top: 0, zIndex: 50, padding: `${scrolled ? 11 : 17}px var(--pad-x)`, background: scrolled ? 'var(--glass-bg-scrolled)' : 'var(--glass-bg)', backdropFilter: 'blur(16px)', borderBottom: `1px solid ${scrolled ? 'var(--border)' : 'transparent'}`, display: 'flex', alignItems: 'center', gap: 28, transition: 'all .3s ease' }}>
 
         {/* Logo */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', flexShrink: 0 }} onClick={() => navigate('home')}>
@@ -1386,26 +1452,33 @@ function Header({ activePage, navigate, cartCount, openCart, lang, setLang }: {
 
         {/* Right actions */}
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{ display: 'flex', border: '1px solid var(--border)', overflow: 'hidden', flexShrink: 0 }}>
+          <div className="kn-header-desktop-only kn-header-lang-toggle" style={{ display: 'flex', border: '1px solid var(--border)', overflow: 'hidden', flexShrink: 0 }}>
             {(['pt', 'en'] as Lang[]).map(l => (
               <button key={l} onClick={() => setLang(l)}
-                style={{ padding: '6px 10px', background: lang === l ? 'var(--gold)' : 'transparent', border: 'none', color: lang === l ? '#0B0B0C' : 'var(--fg-mute)', fontSize: 10, letterSpacing: '.16em', textTransform: 'uppercase', fontWeight: 700, cursor: 'pointer', transition: 'all .2s' }}>
+                style={{ padding: '6px 10px', background: lang === l ? 'var(--gold)' : 'transparent', border: 'none', color: lang === l ? 'var(--bg)' : 'var(--fg-mute)', fontSize: 10, letterSpacing: '.16em', textTransform: 'uppercase', fontWeight: 700, cursor: 'pointer', transition: 'all .2s' }}>
                 {l}
               </button>
             ))}
           </div>
-          <IconBtn onClick={() => navigate('contact')}>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
-          </IconBtn>
+          {/* Theme toggle — à direita do PT/EN (desktop only) */}
+          <div className="kn-header-desktop-only" style={{ display: 'flex' }}>
+            <ThemeToggle />
+          </div>
+          <div className="kn-header-desktop-only" style={{ display: 'flex' }}>
+            <IconBtn onClick={() => navigate('contact')}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
+            </IconBtn>
+          </div>
 
           <button onClick={openCart}
+            className="kn-cart-btn"
             onMouseEnter={e => (e.currentTarget.style.background = 'var(--bordo-2)')}
             onMouseLeave={e => (e.currentTarget.style.background = 'var(--bordo)')}
-            style={{ padding: '9px 16px', background: 'var(--bordo)', border: 'none', color: '#F5F2ED', fontFamily: 'var(--f-sans)', fontSize: 11, letterSpacing: '.18em', textTransform: 'uppercase', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 7, transition: 'background .2s ease', flexShrink: 0 }}>
+            style={{ padding: '9px 16px', background: 'var(--bordo)', border: 'none', color: 'var(--btn-primary-fg)', fontFamily: 'var(--f-sans)', fontSize: 11, letterSpacing: '.18em', textTransform: 'uppercase', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 7, transition: 'background .2s ease', flexShrink: 0 }}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 2L4 7v13h16V7L18 2Z" /><path d="M8 10c0 2 1.8 4 4 4s4-2 4-4" /></svg>
-            <span>{t('nav_cart')}</span>
+            <span className="kn-cart-btn-label">{t('nav_cart')}</span>
             {cartCount > 0 && (
-              <span style={{ background: 'var(--gold)', color: '#0B0B0C', width: 17, height: 17, borderRadius: '50%', fontSize: 9, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{cartCount}</span>
+              <span style={{ background: 'var(--gold)', color: 'var(--bg)', width: 17, height: 17, borderRadius: '50%', fontSize: 9, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{cartCount}</span>
             )}
           </button>
 
@@ -1421,16 +1494,43 @@ function Header({ activePage, navigate, cartCount, openCart, lang, setLang }: {
 
       {/* Mobile nav */}
       <nav className={`kn-nav-mobile ${navOpen ? 'open' : ''}`}>
-        {navLinks.map(({ label, page }) => (
-          <a key={page} href="#" onClick={e => { e.preventDefault(); navigate(page); setNavOpen(false) }}
-            style={{ fontFamily: 'var(--f-display)', fontSize: 28, fontWeight: 500, color: 'var(--fg)', letterSpacing: '.04em' }}>
-            {label}
-          </a>
-        ))}
-        <div style={{ marginTop: 16, paddingTop: 24, borderTop: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <a href="#" onClick={e => { e.preventDefault(); navigate('home'); setNavOpen(false) }}
+          style={{ fontFamily: 'var(--f-display)', fontSize: 28, fontWeight: 500, color: 'var(--fg)', letterSpacing: '.04em' }}>
+          {t('nav_home')}
+        </a>
+        <a href="#" onClick={e => { e.preventDefault(); navigate('vestuario'); setNavOpen(false) }}
+          style={{ fontFamily: 'var(--f-display)', fontSize: 28, fontWeight: 500, color: 'var(--fg)', letterSpacing: '.04em' }}>
+          {t('vert_vestuario')}
+        </a>
+        <a href="#" onClick={e => { e.preventDefault(); navigate('it'); setNavOpen(false) }}
+          style={{ fontFamily: 'var(--f-display)', fontSize: 28, fontWeight: 500, color: 'var(--fg)', letterSpacing: '.04em' }}>
+          {t('vert_it')}
+        </a>
+        <a href="#" onClick={e => { e.preventDefault(); navigate('custom'); setNavOpen(false) }}
+          style={{ fontFamily: 'var(--f-display)', fontSize: 28, fontWeight: 500, color: 'var(--gold)', letterSpacing: '.04em', fontStyle: 'italic' }}>
+          ✦ {t('header_customize')}
+        </a>
+        <a href="#" onClick={e => { e.preventDefault(); navigate('blog'); setNavOpen(false) }}
+          style={{ fontFamily: 'var(--f-display)', fontSize: 28, fontWeight: 500, color: 'var(--fg)', letterSpacing: '.04em' }}>
+          {t('nav_blog')}
+        </a>
+        <a href="#" onClick={e => { e.preventDefault(); navigate('contact'); setNavOpen(false) }}
+          style={{ fontFamily: 'var(--f-display)', fontSize: 28, fontWeight: 500, color: 'var(--fg)', letterSpacing: '.04em' }}>
+          {t('nav_contact')}
+        </a>
+        <div style={{ marginTop: 16, paddingTop: 24, borderTop: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: 12, width: '100%' }}>
           <a href="#" onClick={e => { e.preventDefault(); navigate('about'); setNavOpen(false) }} style={{ fontSize: 14, color: 'var(--fg-mute)', letterSpacing: '.14em', textTransform: 'uppercase' }}>{t('nav_about')}</a>
-          <a href="#" onClick={e => { e.preventDefault(); navigate('contact'); setNavOpen(false) }} style={{ fontSize: 14, color: 'var(--fg-mute)', letterSpacing: '.14em', textTransform: 'uppercase' }}>{t('nav_contact')}</a>
-          <a href="#" onClick={e => { e.preventDefault(); navigate('custom'); setNavOpen(false) }} style={{ fontSize: 14, color: 'var(--gold)', letterSpacing: '.14em', textTransform: 'uppercase', fontWeight: 600 }}>✦ {t('nav_custom')}</a>
+          <div style={{ marginTop: 12, display: 'flex', gap: 8, alignItems: 'center' }}>
+            <div style={{ display: 'flex', border: '1px solid var(--border)', overflow: 'hidden' }}>
+              {(['pt', 'en'] as Lang[]).map(l => (
+                <button key={l} onClick={() => setLang(l)}
+                  style={{ padding: '6px 12px', background: lang === l ? 'var(--gold)' : 'transparent', border: 'none', color: lang === l ? 'var(--bg)' : 'var(--fg-mute)', fontSize: 10, letterSpacing: '.16em', textTransform: 'uppercase', fontWeight: 700, cursor: 'pointer' }}>
+                  {l}
+                </button>
+              ))}
+            </div>
+            <ThemeToggle />
+          </div>
         </div>
       </nav>
     </>
