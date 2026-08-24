@@ -1407,6 +1407,9 @@ function Header({ activePage, navigate, cartCount, openCart, lang, setLang }: {
   const { t } = useLang()
   const [scrolled, setScrolled] = useState(false)
   const [navOpen, setNavOpen] = useState(false)
+  const [headerH, setHeaderH] = useState(0)
+  const announceRef = useRef<HTMLDivElement>(null)
+  const headerRef = useRef<HTMLElement>(null)
 
   useEffect(() => {
     const h = () => setScrolled(window.scrollY > 40)
@@ -1414,10 +1417,25 @@ function Header({ activePage, navigate, cartCount, openCart, lang, setLang }: {
     return () => window.removeEventListener('scroll', h)
   }, [])
 
+  // Mede a altura real da announcement bar + header (varia com quebras de
+  // linha em telas estreitas e com o estado "scrolled"), para o painel do
+  // menu mobile começar sempre imediatamente abaixo — nunca sobreposto.
+  useEffect(() => {
+    const measure = () => {
+      const a = announceRef.current?.offsetHeight ?? 0
+      const hd = headerRef.current?.offsetHeight ?? 0
+      setHeaderH(a + hd)
+    }
+    measure()
+    window.addEventListener('resize', measure)
+    const id = window.setInterval(measure, 300)
+    return () => { window.removeEventListener('resize', measure); window.clearInterval(id) }
+  }, [scrolled])
+
   return (
     <>
       {/* Announcement */}
-      <div style={{ background: 'var(--bordo)', padding: '9px 20px', textAlign: 'center', fontFamily: 'var(--f-sans)', fontSize: 12, letterSpacing: '.16em', textTransform: 'uppercase', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, flexWrap: 'wrap' }}>
+      <div ref={announceRef} style={{ background: 'var(--bordo)', padding: '9px 20px', textAlign: 'center', fontFamily: 'var(--f-sans)', fontSize: 12, letterSpacing: '.16em', textTransform: 'uppercase', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, flexWrap: 'wrap' }}>
         <span style={{ color: 'var(--fg-dim)' }}>🚚</span>
         <span style={{ color: 'var(--btn-primary-fg)' }} dangerouslySetInnerHTML={{ __html: t('announcement_shipping') }} />
         <span style={{ color: 'var(--gold-2)' }}>·</span>
@@ -1425,7 +1443,7 @@ function Header({ activePage, navigate, cartCount, openCart, lang, setLang }: {
       </div>
 
       {/* Header bar */}
-      <header style={{ position: 'sticky', top: 0, zIndex: 50, padding: `${scrolled ? 11 : 17}px var(--pad-x)`, background: scrolled ? 'var(--glass-bg-scrolled)' : 'var(--glass-bg)', backdropFilter: 'blur(16px)', borderBottom: `1px solid ${scrolled ? 'var(--border)' : 'transparent'}`, display: 'flex', alignItems: 'center', gap: 28, transition: 'all .3s ease' }}>
+      <header ref={headerRef} style={{ position: 'sticky', top: 0, zIndex: 50, padding: `${scrolled ? 11 : 17}px var(--pad-x)`, background: scrolled ? 'var(--glass-bg-scrolled)' : 'var(--glass-bg)', backdropFilter: 'blur(16px)', borderBottom: `1px solid ${scrolled ? 'var(--border)' : 'transparent'}`, display: 'flex', alignItems: 'center', gap: 28, transition: 'all .3s ease' }}>
 
         {/* Logo */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', flexShrink: 0 }} onClick={() => navigate('home')}>
@@ -1493,7 +1511,7 @@ function Header({ activePage, navigate, cartCount, openCart, lang, setLang }: {
       </header>
 
       {/* Mobile nav */}
-      <nav className={`kn-nav-mobile ${navOpen ? 'open' : ''}`}>
+      <nav className={`kn-nav-mobile ${navOpen ? 'open' : ''}`} style={headerH ? { top: headerH } : undefined}>
         <a href="#" onClick={e => { e.preventDefault(); navigate('home'); setNavOpen(false) }}
           style={{ fontFamily: 'var(--f-display)', fontSize: 28, fontWeight: 500, color: 'var(--fg)', letterSpacing: '.04em' }}>
           {t('nav_home')}
