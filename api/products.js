@@ -1,18 +1,22 @@
+// ─── LISTA DE PRODUTOS STRIPE ─────────────────────────────────────────────
+// GET /api/products → lista todos os produtos ativos no Stripe (com preço + metadata)
+// Se STRIPE_SECRET_KEY não estiver definido ou não houver produtos, devolve array vazio
+// (o site cai no catálogo estático embutido em src/App.tsx — ALL_PRODUCTS).
+//
 import Stripe from 'stripe'
 
 const stripeKey = process.env.STRIPE_SECRET_KEY
-const stripe = stripeKey ? new Stripe(stripeKey) : null
+const stripe = stripeKey ? new Stripe(stripeKey, { apiVersion: '2024-06-20' }) : null
 
 export default async function handler(req, res) {
-  if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Method not allowed' })
-  }
+  res.setHeader('Access-Control-Allow-Origin', '*')
+  if (req.method === 'OPTIONS') return res.status(200).end()
+  if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' })
 
-  // Sem chave Stripe configurada: devolve lista vazia em vez de rebentar a função.
-  // O frontend já tem um catálogo estático de reserva (fallback) para este caso.
   if (!stripe) {
+    // Modo dev / sem Stripe configurado — o frontend usa o catálogo estático de reserva.
     res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate')
-    return res.status(200).json({ products: [] })
+    return res.status(200).json({ products: [], source: 'fallback' })
   }
 
   try {
@@ -27,35 +31,45 @@ export default async function handler(req, res) {
       .map((p, index) => {
         const price = p.default_price
         const meta = p.metadata || {}
-
         let specs = []
+        let specsEn = []
         try { specs = meta.specs ? JSON.parse(meta.specs) : [] } catch {}
+        try { specsEn = meta.specs_en ? JSON.parse(meta.specs_en) : [] } catch {}
 
         return {
           id: index + 1,
+          sku: meta.sku || p.id,
           stripeId: typeof price === 'object' ? price.id : price,
           name: p.name,
+          nameEn: meta.name_en || undefined,
           category: meta.category || 'Geral',
+          categoryEn: meta.category_en || undefined,
+          subcategory: meta.subcategory || undefined,
+          subcategoryEn: meta.subcategory_en || undefined,
+          vertical: meta.vertical || undefined,
+          customizable: meta.customizable === 'true',
           tags: meta.tags ? meta.tags.split(',').map(t => t.trim()) : [],
           price: typeof price === 'object' && price.unit_amount ? price.unit_amount / 100 : 0,
-          originalPrice: meta.original_price ? parseFloat(meta.original_price) : undefined,
-          badge: meta.badge || undefined,
-          badgeColor: (meta.badge_color === 'bordo' ? 'bordo' : meta.badge_color === 'gold' ? 'gold' : undefined),
+          originalPrice: meta.original_price ? parseFloat(meta.original_price) : null,
+          badge: meta.badge || null,
+          badgeColor: meta.badge_color === 'bordo' ? 'bordo' : meta.badge_color === 'gold' ? 'gold' : 'bordo',
           rating: meta.rating ? parseFloat(meta.rating) : 4.5,
           reviews: meta.reviews ? parseInt(meta.reviews) : 0,
           stock: meta.stock ? parseInt(meta.stock) : 99,
           image: p.images?.[0] || '',
           images: p.images || [],
           description: p.description || '',
+          descriptionEn: meta.description_en || undefined,
           specs,
+          specsEn,
         }
       })
 
-    res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate')
-    res.status(200).json({ products })
+    res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=300')
+    return res.status(200).json({ products, source: 'stripe' })
+
   } catch (err) {
-    console.error('Erro ao obter produtos da Stripe:', err?.message || err)
-    // Falha graciosamente: o frontend usa o catálogo estático de reserva.
-    res.status(200).json({ products: [], error: 'stripe_unavailable' })
+    console.error('[products] Erro:', err)
+    return res.status(200).json({ products: [], source: 'error', error: err.message })
   }
 }

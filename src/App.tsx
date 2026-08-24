@@ -29,7 +29,7 @@ function useProductI18n() {
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
-type Page = 'home' | 'shop' | 'product' | 'contact' | 'about' | 'blog' | 'custom' | 'vestuario' | 'it'
+type Page = 'home' | 'shop' | 'product' | 'contact' | 'about' | 'blog' | 'custom' | 'vestuario' | 'it' | 'success'
 
 interface Product {
   id: number
@@ -1007,7 +1007,7 @@ function CartDrawer({ open, onClose, items, updateQty, remove }: {
   open: boolean; onClose: () => void; items: CartItem[]
   updateQty: (id: number, qty: number) => void; remove: (id: number) => void
 }) {
-  const { t } = useLang()
+  const { t, lang } = useLang()
   const pi = useProductI18n()
   const subtotal = items.reduce((s, i) => s + i.price * i.qty, 0)
   const shipping = subtotal >= SHIPPING_THRESHOLD ? 0 : SHIPPING_COST
@@ -1016,6 +1016,33 @@ function CartDrawer({ open, onClose, items, updateQty, remove }: {
   const [loading, setLoading] = React.useState(false)
   const [checkoutError, setCheckoutError] = React.useState('')
 
+  const [promoInput, setPromoInput] = React.useState('')
+  const [promoApplied, setPromoApplied] = React.useState<any>(null)
+  const [promoValidating, setPromoValidating] = React.useState(false)
+  const [promoError, setPromoError] = React.useState('')
+
+  async function validatePromo() {
+    if (!promoInput.trim()) return
+    setPromoValidating(true); setPromoError('')
+    try {
+      const r = await fetch('/api/promo/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: promoInput.trim(), cart_subtotal: subtotal }),
+      })
+      const data = await r.json()
+      if (data.valid) {
+        setPromoApplied(data)
+        setPromoError('')
+      } else {
+        setPromoError(data.error || 'Código inválido')
+        setPromoApplied(null)
+      }
+    } catch {
+      setPromoError('Erro de rede')
+    } finally { setPromoValidating(false) }
+  }
+
   async function handleCheckout() {
     setLoading(true)
     setCheckoutError('')
@@ -1023,7 +1050,12 @@ function CartDrawer({ open, onClose, items, updateQty, remove }: {
       const res = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items, origin: window.location.origin }),
+        body: JSON.stringify({
+          items,
+          origin: window.location.origin,
+          locale: lang || 'pt',
+          promo_code: promoApplied?.code || undefined,
+        }),
       })
       const data = await res.json()
       if (data.url) {
@@ -1126,17 +1158,73 @@ function CartDrawer({ open, onClose, items, updateQty, remove }: {
         {items.length > 0 && (
           <div style={{ padding: '20px 26px', borderTop: '1px solid var(--border)' }}>
 
+            {/* Código promo */}
+            <div style={{ marginBottom: 14 }}>
+              {!promoApplied ? (
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <input
+                    type="text"
+                    value={promoInput}
+                    onChange={e => setPromoInput(e.target.value.toUpperCase())}
+                    placeholder={t('cart_promo_placeholder')}
+                    onKeyDown={e => e.key === 'Enter' && validatePromo()}
+                    style={{
+                      flex: 1, background: 'var(--bg-2)', border: '1px solid var(--border)',
+                      color: 'var(--fg)', padding: '9px 12px', fontFamily: 'var(--f-sans)', fontSize: 12,
+                      letterSpacing: '.06em', outline: 'none', textTransform: 'uppercase',
+                    }}
+                  />
+                  <button
+                    onClick={validatePromo}
+                    disabled={promoValidating || !promoInput.trim()}
+                    style={{
+                      padding: '9px 14px', background: 'transparent', border: '1px solid var(--gold-3)',
+                      color: 'var(--gold)', fontSize: 10, letterSpacing: '.18em', textTransform: 'uppercase',
+                      fontWeight: 600, cursor: promoInput.trim() ? 'pointer' : 'not-allowed', opacity: promoInput.trim() ? 1 : 0.5,
+                    }}
+                  >
+                    {promoValidating ? '…' : t('cart_promo_apply')}
+                  </button>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: 'rgba(176,141,87,.1)', border: '1px solid var(--gold-3)' }}>
+                  <div>
+                    <div style={{ fontSize: 11, letterSpacing: '.14em', textTransform: 'uppercase', color: 'var(--gold)', fontWeight: 600 }}>
+                      {promoApplied.is_gift_card ? '🎁 ' : '✦ '}{promoApplied.code}
+                    </div>
+                    <div style={{ fontSize: 11, color: 'var(--fg-mute)', marginTop: 2 }}>
+                      -{promoApplied.discount_display} € {promoApplied.discount_type === 'percent' ? `(${promoApplied.discount_value}%)` : ''}
+                    </div>
+                  </div>
+                  <button onClick={() => { setPromoApplied(null); setPromoInput('') }} style={{ background: 'transparent', border: 'none', color: 'var(--fg-mute)', cursor: 'pointer', fontSize: 11 }}>
+                    ✕
+                  </button>
+                </div>
+              )}
+              {promoError && <div style={{ marginTop: 6, fontSize: 11, color: 'var(--bordo-3)' }}>⚠ {promoError}</div>}
+            </div>
+
             {/* Price breakdown */}
             <div style={{ marginBottom: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ fontSize: 13, color: 'var(--fg-mute)' }}>{t('cart_subtotal')}</span>
                 <span style={{ fontSize: 15 }}>{fmt(subtotal)}</span>
               </div>
+              {promoApplied && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: 13, color: 'var(--gold)' }}>− {t('cart_promo_discount')}</span>
+                  <span style={{ fontSize: 15, color: 'var(--gold)' }}>-{promoApplied.discount_display} €</span>
+                </div>
+              )}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ fontSize: 13, color: 'var(--fg-mute)' }}>{t('cart_shipping')}</span>
                 <span style={{ fontSize: 15, color: shipping === 0 ? 'var(--gold)' : 'var(--fg)' }}>
                   {shipping === 0 ? t('cart_free') : fmt(shipping)}
                 </span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: 11, color: 'var(--fg-mute)', opacity: 0.75 }}>{t('cart_tax_note')}</span>
+                <span style={{ fontSize: 11, color: 'var(--fg-mute)', opacity: 0.75 }}>{t('cart_tax_at_checkout')}</span>
               </div>
               <div style={{ height: 1, background: 'var(--border)', margin: '4px 0' }} />
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -3391,6 +3479,133 @@ function NewsletterForm() {
   )
 }
 
+// ─── SuccessPage ───────────────────────────────────────────────────────────────
+
+interface OrderSummary {
+  order_id: string
+  status: string
+  customer_name?: string
+  customer_email?: string
+  items: { name: string; qty: number; amount: number }[]
+  subtotal: number
+  tax: number
+  shipping: number
+  discount: number
+  total: number
+  currency: string
+  shipping_address?: {
+    line1?: string; line2?: string; city?: string; postal_code?: string; country?: string
+  } | null
+}
+
+function SuccessPage({ sessionId, setPage }: { sessionId: string | null; setPage: (p: Page) => void }) {
+  const { t } = useLang()
+  const [order, setOrder] = useState<OrderSummary | null>(null)
+  const [loadState, setLoadState] = useState<'loading' | 'ok' | 'error'>(sessionId ? 'loading' : 'error')
+
+  useEffect(() => {
+    if (!sessionId) { setLoadState('error'); return }
+    let cancelled = false
+    fetch(`/api/order/${encodeURIComponent(sessionId)}`)
+      .then(r => r.ok ? r.json() : Promise.reject())
+      .then(data => { if (!cancelled) { setOrder(data); setLoadState('ok') } })
+      .catch(() => { if (!cancelled) setLoadState('error') })
+    return () => { cancelled = true }
+  }, [sessionId])
+
+  return (
+    <div style={{ minHeight: '80vh' }}>
+      <div style={{ background: 'radial-gradient(700px 400px at 85% 20%, rgba(176,141,87,.16), transparent 60%), var(--bg-1)', borderBottom: '1px solid var(--border)', padding: '80px var(--pad-x) 60px', textAlign: 'center' }}>
+        <div style={{ maxWidth: 640, margin: '0 auto' }}>
+          <div style={{ width: 64, height: 64, margin: '0 auto 22px', borderRadius: '50%', border: '1px solid var(--gold-3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" strokeWidth="2.5"><polyline points="20 6 9 17 4 12" /></svg>
+          </div>
+          <Eyebrow text={t('success_title')} />
+          <h1 style={{ fontFamily: 'var(--f-display)', fontSize: 'clamp(32px,4.5vw,54px)', fontWeight: 500, margin: '18px 0 14px', lineHeight: 1.1 }}>
+            {t('success_title')}
+          </h1>
+          <p style={{ color: 'var(--fg-dim)', fontSize: 16, lineHeight: 1.7 }}>{t('success_subtitle')}</p>
+          {order?.order_id && (
+            <div style={{ marginTop: 22, display: 'inline-block', padding: '8px 18px', border: '1px solid var(--border)', background: 'var(--bg)', fontSize: 12, letterSpacing: '.1em' }}>
+              {t('success_order_number')}: <b style={{ color: 'var(--gold)' }}>{order.order_id}</b>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="wrap" style={{ padding: '56px var(--pad-x) 80px', maxWidth: 720, margin: '0 auto' }}>
+        {loadState === 'loading' && (
+          <div style={{ textAlign: 'center', color: 'var(--fg-mute)', padding: '40px 0' }}>{t('success_loading')}</div>
+        )}
+
+        {loadState === 'error' && (
+          <div style={{ textAlign: 'center', padding: '30px 0 10px' }}>
+            <p style={{ color: 'var(--fg-mute)', fontSize: 14, marginBottom: 6 }}>{t('success_error')}</p>
+            <p style={{ color: 'var(--fg-mute)', fontSize: 13, opacity: .8, maxWidth: '48ch', margin: '0 auto' }}>{t('success_error_sub')}</p>
+          </div>
+        )}
+
+        {loadState === 'ok' && order && (
+          <div style={{ border: '1px solid var(--border)', background: 'var(--bg-1)' }}>
+            <div style={{ padding: '22px 26px', borderBottom: '1px solid var(--border)' }}>
+              <div style={{ fontSize: 11, letterSpacing: '.18em', textTransform: 'uppercase', color: 'var(--fg-mute)', marginBottom: 10 }}>{t('success_items')}</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {order.items?.map((it, idx) => (
+                  <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14 }}>
+                    <span>{it.qty}× {it.name}</span>
+                    <span>{fmt(it.amount)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ padding: '20px 26px', borderBottom: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: 'var(--fg-mute)' }}>
+                <span>{t('success_subtotal')}</span><span>{fmt(order.subtotal)}</span>
+              </div>
+              {order.discount > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: 'var(--gold)' }}>
+                  <span>{t('success_discount')}</span><span>-{fmt(order.discount)}</span>
+                </div>
+              )}
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: 'var(--fg-mute)' }}>
+                <span>{t('success_shipping')}</span><span>{order.shipping === 0 ? t('cart_free') : fmt(order.shipping)}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: 'var(--fg-mute)' }}>
+                <span>{t('success_tax')}</span><span>{fmt(order.tax)}</span>
+              </div>
+              <div style={{ height: 1, background: 'var(--border)', margin: '4px 0' }} />
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: 11, letterSpacing: '.18em', textTransform: 'uppercase', color: 'var(--fg-mute)' }}>{t('success_total')}</span>
+                <span style={{ fontFamily: 'var(--f-display)', fontSize: 24, fontWeight: 600 }}>{fmt(order.total)}</span>
+              </div>
+            </div>
+
+            {order.shipping_address && (order.shipping_address.line1 || order.shipping_address.city) && (
+              <div style={{ padding: '20px 26px', borderBottom: '1px solid var(--border)' }}>
+                <div style={{ fontSize: 11, letterSpacing: '.18em', textTransform: 'uppercase', color: 'var(--fg-mute)', marginBottom: 8 }}>{t('success_shipping_address')}</div>
+                <div style={{ fontSize: 14, color: 'var(--fg-dim)', lineHeight: 1.6 }}>
+                  {order.shipping_address.line1}{order.shipping_address.line2 ? `, ${order.shipping_address.line2}` : ''}<br />
+                  {order.shipping_address.postal_code} {order.shipping_address.city}<br />
+                  {order.shipping_address.country}
+                </div>
+              </div>
+            )}
+
+            <div style={{ padding: '18px 26px', fontSize: 13, color: 'var(--fg-mute)' }}>
+              ✉ {t('success_email_sent')}
+            </div>
+          </div>
+        )}
+
+        <div style={{ textAlign: 'center', marginTop: 40 }}>
+          <PrimaryBtn onClick={() => setPage('shop')}>{t('success_back_shop')}</PrimaryBtn>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── App ─────────────────────────────────────────────────────────────────────
 
 export default function App() {
@@ -3406,6 +3621,7 @@ export default function App() {
   const [toast, setToast] = useState<string | null>(null)
   const [backTop, setBackTop] = useState(false)
   const [liveProducts, setLiveProducts] = useState<Product[]>([...ALL_PRODUCTS])
+  const [successSessionId, setSuccessSessionId] = useState<string | null>(null)
   const toastTimer = useRef<number | null>(null)
 
   useEffect(() => {
@@ -3424,13 +3640,15 @@ export default function App() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const status = params.get('pagamento')
+    const sid = params.get('session_id')
     if (status === 'sucesso') {
-      setToast(t('payment_success'))
+      setSuccessSessionId(sid)
+      setActivePage('success')
       setCartItems([])
-      window.history.replaceState({}, '', '/')
+      window.history.replaceState({}, '', window.location.pathname)
     } else if (status === 'cancelado') {
       setToast(t('payment_cancelled'))
-      window.history.replaceState({}, '', '/')
+      window.history.replaceState({}, '', window.location.pathname)
     }
   }, [])
 
@@ -3495,6 +3713,7 @@ export default function App() {
       {activePage === 'about' && <AboutPage setPage={setPage} />}
       {activePage === 'blog' && <BlogPage />}
       {activePage === 'custom' && <CustomizerV2 setPage={setPage} onAddToCart={(item) => { setCartItems(prev => [...prev, item]); setToast(item.name); if (toastTimer.current) clearTimeout(toastTimer.current); toastTimer.current = window.setTimeout(() => setToast(null), 2400); }} />}
+      {activePage === 'success' && <SuccessPage sessionId={successSessionId} setPage={setPage} />}
 
       <Footer setPage={setPage} />
 
