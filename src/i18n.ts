@@ -15,6 +15,11 @@ export const translations = {
     nav_about: 'Quem Somos',
     nav_cart: 'Carrinho',
 
+    // Theme
+    theme_toggle: 'Alternar modo claro / escuro',
+    theme_dark: 'Modo escuro',
+    theme_light: 'Modo claro',
+
     // Hero
     hero_eyebrow: 'Nova Coleção 2026',
     hero_title1: 'Moda com alma.',
@@ -523,6 +528,11 @@ export const translations = {
     nav_contact: 'Contact',
     nav_about: 'About Us',
     nav_cart: 'Cart',
+
+    // Theme
+    theme_toggle: 'Toggle light / dark mode',
+    theme_dark: 'Dark mode',
+    theme_light: 'Light mode',
 
     // Hero
     hero_eyebrow: 'New Collection 2026',

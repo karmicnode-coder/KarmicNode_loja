@@ -1,8 +1,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Inter:wght@300;400;500;600;700&display=swap');
 @import 'tailwindcss';
 
-/* ─── Design tokens ──────────────────────────────────────────────────────── */
-:root {
+/* ─── Design tokens (DARK mode — default) ────────────────────────────────── */
+:root, :root[data-theme="dark"] {
   --bordo:     #8B1E2D;
   --bordo-2:   #6E1522;
   --bordo-3:   #a83247;
@@ -18,11 +18,62 @@
   --fg:        #F5F2ED;
   --fg-dim:    #d9d4cb;
   --fg-mute:   #A7A7A7;
+  --shadow-color: 0,0,0;
+  /* Tokens para cores contextuais que dependem do modo */
+  --bg-rgb:            11,11,12;      /* rgba(11,11,12,X) */
+  --fg-rgb:            245,242,237;   /* rgba(245,242,237,X) */
+  --overlay-heavy:     rgba(11,11,12,.85);
+  --overlay-medium:    rgba(11,11,12,.65);
+  --overlay-light:     rgba(11,11,12,.4);
+  --glass-bg:          rgba(11,11,12,.72);
+  --glass-bg-scrolled: rgba(11,11,12,.96);
+  --btn-primary-fg:    #F5F2ED;   /* texto sobre bordo/gold */
   --f-display: 'Cormorant Garamond', 'Times New Roman', serif;
   --f-sans:    'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   --ease:      cubic-bezier(.2,.7,.2,1);
   --pad-x:     clamp(18px, 4vw, 56px);
   --maxw:      1280px;
+}
+
+/* ─── LIGHT mode ─────────────────────────────────────────────────────────── */
+:root[data-theme="light"] {
+  --bordo:     #8B1E2D;
+  --bordo-2:   #6E1522;
+  --bordo-3:   #a83247;
+  --gold:      #9A7A48;
+  --gold-2:    #7d6338;
+  --gold-3:    #B08D57;
+  --bg:        #FAF8F3;
+  --bg-1:      #F2EEE4;
+  --bg-2:      #E9E4D6;
+  --bg-3:      #DED8C7;
+  --border:    #d6d0c0;
+  --border-2:  #bfb8a6;
+  --fg:        #1A1815;
+  --fg-dim:    #3d3831;
+  --fg-mute:   #756f65;
+  --shadow-color: 76,66,50;
+  /* Contextuais invertidos para modo claro */
+  --bg-rgb:            250,248,243;
+  --fg-rgb:            26,24,21;
+  --overlay-heavy:     rgba(250,248,243,.88);
+  --overlay-medium:    rgba(250,248,243,.72);
+  --overlay-light:     rgba(250,248,243,.5);
+  --glass-bg:          rgba(250,248,243,.78);
+  --glass-bg-scrolled: rgba(250,248,243,.96);
+  --btn-primary-fg:    #F5F2ED;   /* mantém, bordo é sempre escuro */
+}
+
+/* ─── Transição suave entre temas ────────────────────────────────────────── */
+html {
+  transition: background-color .35s var(--ease);
+}
+body, [data-theme] {
+  transition: background-color .35s var(--ease), color .35s var(--ease), border-color .35s var(--ease);
+}
+/* Evita transição no primeiro paint (mais snappy) */
+html.no-theme-transition, html.no-theme-transition * {
+  transition: none !important;
 }
 
 /* ─── Reset ──────────────────────────────────────────────────────────────── */
@@ -125,25 +176,40 @@ input, textarea, select { font-family: inherit; }
 .kn-header-nav { display: flex; align-items: center; gap: 28px; flex: 1; justify-content: center; }
 .kn-mobile-toggle { display: none !important; }
 .kn-nav-mobile { display: none; }
+.kn-header-desktop-only { display: flex; }
+@media (max-width: 860px) {
+  .kn-header-desktop-only { display: none !important; }
+}
 
 /* ─── Responsive breakpoints ─────────────────────────────────────────────── */
+/* Laptop / tablet landscape (≤ 1100px) */
 @media (max-width: 1100px) {
   .kn-cat-grid { grid-template-columns: repeat(3, 1fr); }
   .kn-products-4 { grid-template-columns: repeat(3, 1fr); }
   .kn-footer-grid { grid-template-columns: 1fr 1fr; gap: 40px; }
   .kn-shop-layout { grid-template-columns: 200px 1fr; gap: 28px; }
+  .kn-cust-grid { grid-template-columns: 1fr 380px !important; }
 }
+
+/* Tablet portrait (≤ 900px) */
+@media (max-width: 900px) {
+  .kn-cust-grid { grid-template-columns: 1fr !important; gap: 32px !important; }
+  .kn-cust-grid > div:first-child { min-height: 400px !important; }
+}
+
+/* Tablet portrait / phablets (≤ 860px) */
 @media (max-width: 860px) {
-  .kn-hero-grid { grid-template-columns: 1fr; }
-  .kn-hero-right { display: none; }
+  :root { --pad-x: clamp(16px, 4vw, 32px); }
+  .kn-hero-grid { grid-template-columns: 1fr; gap: 40px; }
+  .kn-hero-right { display: block; order: -1; max-width: 320px; margin: 0 auto; }
   .kn-products-4 { grid-template-columns: repeat(2, 1fr); }
   .kn-products-3 { grid-template-columns: repeat(2, 1fr); }
   .kn-trust-grid { grid-template-columns: repeat(2, 1fr); }
   .kn-tst-grid { grid-template-columns: 1fr; }
-  .kn-product-detail { grid-template-columns: 1fr; }
+  .kn-product-detail { grid-template-columns: 1fr; gap: 32px; }
   .kn-contact-grid { grid-template-columns: 1fr; }
   .kn-promo-grid { grid-template-columns: 1fr; }
-  .kn-section-head { grid-template-columns: 1fr; }
+  .kn-section-head { grid-template-columns: 1fr; gap: 24px; }
   .kn-shop-layout { grid-template-columns: 1fr; }
   .kn-shop-sidebar { display: none; }
   .kn-header-nav { display: none !important; }
@@ -154,7 +220,7 @@ input, textarea, select { font-family: inherit; }
     position: fixed;
     inset: 0;
     top: 48px;
-    background: rgba(11,11,12,.98);
+    background: var(--overlay-heavy);
     backdrop-filter: blur(14px);
     padding: 40px var(--pad-x);
     gap: 28px;
@@ -162,14 +228,41 @@ input, textarea, select { font-family: inherit; }
     z-index: 49;
     overflow-y: auto;
   }
+  /* Cart drawer ocupa quase toda a largura */
+  .cart-drawer { width: 100vw !important; max-width: 440px !important; }
 }
+
+/* Mobile portrait (≤ 560px) */
 @media (max-width: 560px) {
-  .kn-cat-grid { grid-template-columns: repeat(3, 1fr); }
-  .kn-products-4 { grid-template-columns: repeat(2, 1fr); }
+  :root { --pad-x: clamp(14px, 3.5vw, 20px); }
+  /* Cart btn — só ícone (esconder "CARRINHO" label) */
+  .kn-cart-btn-label { display: none; }
+  .kn-cart-btn { padding: 9px 12px !important; }
+  .kn-cat-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .kn-cat-grid > * { padding: 20px 10px !important; }
+  .kn-products-4 { grid-template-columns: repeat(2, 1fr); gap: 12px; }
   .kn-products-3 { grid-template-columns: 1fr; }
   .kn-trust-grid { grid-template-columns: 1fr; }
-  .kn-footer-grid { grid-template-columns: 1fr; }
+  .kn-footer-grid { grid-template-columns: 1fr; gap: 32px; }
   .kn-promo-countdown { justify-content: center; }
+  /* Cart drawer full-screen em mobile */
+  .cart-drawer { width: 100vw !important; max-width: 100vw !important; }
+  /* Product page qty buttons + add-to-cart em coluna */
+  .kn-qty button { min-width: 44px; min-height: 44px; }
+  /* Botões maiores para touch */
+  button { min-height: 40px; }
+  /* Countdown mais compacto */
+  .kn-promo-countdown > div > div:first-child { font-size: clamp(32px, 10vw, 48px) !important; padding: 8px 12px !important; min-width: 60px !important; }
+  /* Tabs do produto */
+  .kn-tab { padding: 12px 14px !important; font-size: 11px !important; letter-spacing: .12em !important; }
+}
+
+/* Mobile portrait pequeno (≤ 420px) */
+@media (max-width: 420px) {
+  .kn-products-4 { grid-template-columns: 1fr; }
+  .kn-cat-grid { grid-template-columns: repeat(2, 1fr); }
+  /* Header: esconder alguns elementos secundários */
+  .kn-header-lang-toggle button { padding: 5px 8px !important; font-size: 9px !important; }
 }
 
 /* ─── Animations ──────────────────────────────────────────────────────────── */
