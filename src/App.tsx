@@ -868,7 +868,7 @@ function PrimaryBtn({ children, onClick, full, disabled }: { children: ReactNode
   return (
     <button onClick={disabled ? undefined : onClick} onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
       disabled={disabled}
-      style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 10, padding: '14px 28px', background: disabled ? 'var(--border)' : hov ? 'var(--bordo-2)' : 'var(--bordo)', border: 'none', color: disabled ? 'var(--fg-mute)' : '#F5F2ED', fontFamily: 'var(--f-sans)', fontSize: 12, letterSpacing: '.24em', textTransform: 'uppercase', fontWeight: 500, transition: 'background .2s ease', width: full ? '100%' : 'auto', cursor: disabled ? 'not-allowed' : 'pointer' }}>
+      style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 10, padding: '14px 28px', background: disabled ? 'var(--border)' : hov ? 'var(--bordo-2)' : 'var(--bordo)', border: 'none', color: disabled ? 'var(--fg-mute)' : 'var(--btn-primary-fg)', fontFamily: 'var(--f-sans)', fontSize: 12, letterSpacing: '.24em', textTransform: 'uppercase', fontWeight: 500, transition: 'background .2s ease', width: full ? '100%' : 'auto', cursor: disabled ? 'not-allowed' : 'pointer' }}>
       {children}
       {!disabled && <svg width="13" height="9" viewBox="0 0 14 10" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M1 5h12M9 1l4 4-4 4" /></svg>}
     </button>
@@ -902,7 +902,7 @@ function ProductCard({ p, onAdd, onOpen, wishlist, toggleWish }: {
 
       {/* Wishlist */}
       <button onClick={e => { e.stopPropagation(); toggleWish(p.id) }}
-        style={{ position: 'absolute', top: 12, right: 12, zIndex: 3, width: 32, height: 32, background: 'rgba(11,11,12,.7)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)' }}>
+        style={{ position: 'absolute', top: 12, right: 12, zIndex: 3, width: 32, height: 32, background: 'var(--overlay-medium)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)' }}>
         <svg width="14" height="14" viewBox="0 0 24 24" stroke={wishlist.has(p.id) ? 'var(--bordo)' : 'var(--fg-mute)'} strokeWidth="2" className={`kn-heart${wishlist.has(p.id) ? ' active' : ''}`} fill={wishlist.has(p.id) ? 'var(--bordo)' : 'none'}>
           <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
         </svg>
@@ -1328,7 +1328,7 @@ function NavDropdown({ label, active, subs, navigate, page, accent }: {
         {active && <span style={{ position: 'absolute', bottom: -2, left: 0, right: 0, height: 1, background: 'var(--gold)' }} />}
       </a>
       {open && (
-        <div style={{ position: 'absolute', top: '100%', left: -20, marginTop: 14, background: 'rgba(11,11,12,.98)', backdropFilter: 'blur(16px)', border: '1px solid var(--border)', minWidth: 240, padding: '10px 0', zIndex: 60, boxShadow: '0 20px 60px rgba(0,0,0,.6)' }}>
+        <div style={{ position: 'absolute', top: '100%', left: -20, marginTop: 14, background: 'var(--glass-bg-scrolled)', backdropFilter: 'blur(16px)', border: '1px solid var(--border)', minWidth: 240, padding: '10px 0', zIndex: 60, boxShadow: '0 20px 60px rgba(0,0,0,.6)' }}>
           <div style={{ padding: '6px 20px 10px', borderBottom: '1px solid var(--border)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 10 }}>
             <span style={{ width: 6, height: 6, borderRadius: '50%', background: accent || 'var(--gold)' }} />
             <span style={{ fontSize: 10, letterSpacing: '.24em', textTransform: 'uppercase', color: 'var(--fg-mute)' }}>{t('shop_subcategories')}</span>
@@ -1460,7 +1460,7 @@ function Header({ activePage, navigate, cartCount, openCart, lang, setLang }: {
           <NavDropdown label={t('vert_it')} active={activePage === 'it'} subs={IT_SUBS} navigate={navigate} page="it" accent="var(--bordo-3)" />
           {/* Personalizar destacado */}
           <a href="#" onClick={e => { e.preventDefault(); navigate('custom') }}
-            style={{ fontFamily: 'var(--f-sans)', fontSize: 11, letterSpacing: '.18em', textTransform: 'uppercase', fontWeight: 600, padding: '5px 14px', border: `1px solid ${activePage === 'custom' ? 'var(--gold)' : 'var(--gold-3)'}`, color: activePage === 'custom' ? '#0B0B0C' : 'var(--gold)', background: activePage === 'custom' ? 'var(--gold)' : 'transparent', display: 'inline-flex', alignItems: 'center', gap: 6, transition: 'all .2s ease' }}>
+            style={{ fontFamily: 'var(--f-sans)', fontSize: 11, letterSpacing: '.18em', textTransform: 'uppercase', fontWeight: 600, padding: '5px 14px', border: `1px solid ${activePage === 'custom' ? 'var(--gold)' : 'var(--gold-3)'}`, color: activePage === 'custom' ? 'var(--bg)' : 'var(--gold)', background: activePage === 'custom' ? 'var(--gold)' : 'transparent', display: 'inline-flex', alignItems: 'center', gap: 6, transition: 'all .2s ease' }}>
             <span style={{ fontSize: 12, lineHeight: 1 }}>✦</span>
             {t('header_customize')}
           </a>
@@ -1671,7 +1671,7 @@ function HomePage({ onAdd, onOpen, wishlist, toggleWish, setPage, products }: {
                 <div style={{ position: 'absolute', bottom: -1, left: -1, width: 20, height: 20, borderBottom: '1px solid var(--gold)', borderLeft: '1px solid var(--gold)', zIndex: 3 }} />
                 <div style={{ position: 'absolute', bottom: -1, right: -1, width: 20, height: 20, borderBottom: '1px solid var(--gold)', borderRight: '1px solid var(--gold)', zIndex: 3 }} />
                 <img src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=960&q=85" alt="Moda premium" style={{ width: '100%', display: 'block', filter: 'brightness(.82) saturate(.9)', border: '1px solid var(--border)' }} />
-                <div style={{ position: 'absolute', bottom: 22, left: 22, right: 22, background: 'rgba(11,11,12,.88)', backdropFilter: 'blur(12px)', border: '1px solid var(--border)', padding: '15px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                <div style={{ position: 'absolute', bottom: 22, left: 22, right: 22, background: 'var(--overlay-heavy)', backdropFilter: 'blur(12px)', border: '1px solid var(--border)', padding: '15px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
                   <div>
                     <div style={{ fontSize: 10, letterSpacing: '.22em', textTransform: 'uppercase', color: 'var(--gold)', marginBottom: 4 }}>{t('home_hero_feat_label')}</div>
                     <div style={{ fontFamily: 'var(--f-display)', fontSize: 16, fontWeight: 500 }}>{products[0]?.name || 'T-Shirt Essencial Algodão'}</div>
@@ -1681,7 +1681,7 @@ function HomePage({ onAdd, onOpen, wishlist, toggleWish, setPage, products }: {
                     </div>
                   </div>
                   <button onClick={() => products[0] && onAdd(products[0])}
-                    style={{ padding: '9px 14px', background: 'var(--bordo)', border: 'none', color: '#F5F2ED', fontSize: 10, letterSpacing: '.16em', textTransform: 'uppercase', fontWeight: 500, flexShrink: 0, whiteSpace: 'nowrap' }}>
+                    style={{ padding: '9px 14px', background: 'var(--bordo)', border: 'none', color: 'var(--btn-primary-fg)', fontSize: 10, letterSpacing: '.16em', textTransform: 'uppercase', fontWeight: 500, flexShrink: 0, whiteSpace: 'nowrap' }}>
                     {fmt(49)}
                   </button>
                 </div>
@@ -1713,14 +1713,14 @@ function HomePage({ onAdd, onOpen, wishlist, toggleWish, setPage, products }: {
         <div className="wrap">
           <div className="kn-promo-grid">
             <div>
-              <div style={{ display: 'inline-block', padding: '4px 14px', background: 'var(--bordo)', color: '#F5F2ED', fontSize: 10, letterSpacing: '.28em', textTransform: 'uppercase', fontWeight: 700, marginBottom: 22 }}>{t('home_promo_eyebrow')}</div>
+              <div style={{ display: 'inline-block', padding: '4px 14px', background: 'var(--bordo)', color: 'var(--btn-primary-fg)', fontSize: 10, letterSpacing: '.28em', textTransform: 'uppercase', fontWeight: 700, marginBottom: 22 }}>{t('home_promo_eyebrow')}</div>
               <h2 style={{ fontFamily: 'var(--f-display)', fontSize: 'clamp(34px,4vw,64px)', fontWeight: 500, margin: '0 0 22px', lineHeight: 1.05 }}
                 dangerouslySetInnerHTML={{ __html: t('home_promo_title').replace('<em>', '<em style="color:var(--gold);font-style:italic">') }} />
               <p style={{ color: 'var(--fg-dim)', fontSize: 16, maxWidth: '40ch', lineHeight: 1.65, marginBottom: 34 }}>
                 {t('home_promo_desc')}
               </p>
               <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
-                <button onClick={() => setPage('shop')} style={{ padding: '13px 28px', background: 'var(--gold)', border: 'none', color: '#0B0B0C', fontFamily: 'var(--f-sans)', fontSize: 11, letterSpacing: '.22em', textTransform: 'uppercase', fontWeight: 700 }}>{t('home_promo_cta1')}</button>
+                <button onClick={() => setPage('shop')} style={{ padding: '13px 28px', background: 'var(--gold)', border: 'none', color: 'var(--bg)', fontFamily: 'var(--f-sans)', fontSize: 11, letterSpacing: '.22em', textTransform: 'uppercase', fontWeight: 700 }}>{t('home_promo_cta1')}</button>
                 <GhostBtn onClick={() => setPage('contact')}>{t('home_promo_cta2')}</GhostBtn>
               </div>
             </div>
@@ -2058,7 +2058,7 @@ function ProductPage({ product, onAdd, onBack, wishlist, toggleWish, allProducts
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 14, marginBottom: 8 }}>
                 <span style={{ fontFamily: 'var(--f-display)', fontSize: 'clamp(32px,3.5vw,48px)', fontWeight: 600 }}>{fmt(product.price)}</span>
                 {product.originalPrice && <span style={{ fontSize: 16, color: 'var(--fg-mute)', textDecoration: 'line-through' }}>{fmt(product.originalPrice)}</span>}
-                {disc > 0 && <span style={{ padding: '3px 10px', background: 'var(--gold)', color: '#0B0B0C', fontSize: 12, fontWeight: 700 }}>−{disc}%</span>}
+                {disc > 0 && <span style={{ padding: '3px 10px', background: 'var(--gold)', color: 'var(--bg)', fontSize: 12, fontWeight: 700 }}>−{disc}%</span>}
               </div>
               {product.originalPrice && (
                 <div style={{ fontSize: 13, color: 'var(--fg-mute)' }}>{t('product_save')} <span style={{ color: 'var(--gold)', fontWeight: 600 }}>{fmt(product.originalPrice - product.price)}</span></div>
@@ -2075,7 +2075,7 @@ function ProductPage({ product, onAdd, onBack, wishlist, toggleWish, allProducts
                 <button onClick={() => setQty(q => Math.min(product.stock, q + 1))}>+</button>
               </div>
               <button onClick={() => { onAdd({ ...product, qty } as unknown as Product); setAdded(true); setTimeout(() => setAdded(false), 2000) }}
-                style={{ flex: 1, padding: '14px 20px', background: added ? '#2e7d32' : 'var(--bordo)', border: 'none', color: '#F5F2ED', fontFamily: 'var(--f-sans)', fontSize: 12, letterSpacing: '.22em', textTransform: 'uppercase', fontWeight: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'background .3s ease' }}>
+                style={{ flex: 1, padding: '14px 20px', background: added ? '#2e7d32' : 'var(--bordo)', border: 'none', color: 'var(--btn-primary-fg)', fontFamily: 'var(--f-sans)', fontSize: 12, letterSpacing: '.22em', textTransform: 'uppercase', fontWeight: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'background .3s ease' }}>
                 {added
                   ? <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12" /></svg> {t('product_added')}</>
                   : <><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 2L4 7v13h16V7L18 2Z" /><path d="M8 10c0 2 1.8 4 4 4s4-2 4-4" /></svg> {t('product_add_cart')}</>
@@ -2378,7 +2378,7 @@ function BlogCard({ post, onClick }: { post: BlogPost; onClick: () => void }) {
       style={{ background: 'var(--bg-1)', border: `1px solid ${hov ? 'var(--gold-3)' : 'var(--border)'}`, cursor: 'pointer', display: 'flex', flexDirection: 'column', transition: 'border-color .3s, transform .3s, box-shadow .3s', transform: hov ? 'translateY(-4px)' : 'none', boxShadow: hov ? '0 16px 48px rgba(0,0,0,.4)' : 'none' }}>
       <div style={{ position: 'relative', aspectRatio: '16/9', overflow: 'hidden', background: 'var(--bg-2)' }}>
         <img src={post.image} alt={title} style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform .7s ease', transform: hov ? 'scale(1.06)' : 'scale(1)' }} />
-        <div style={{ position: 'absolute', top: 14, left: 14, padding: '4px 10px', background: 'var(--bordo)', fontSize: 9, fontWeight: 700, letterSpacing: '.18em', textTransform: 'uppercase', color: '#F5F2ED' }}>{category}</div>
+        <div style={{ position: 'absolute', top: 14, left: 14, padding: '4px 10px', background: 'var(--bordo)', fontSize: 9, fontWeight: 700, letterSpacing: '.18em', textTransform: 'uppercase', color: 'var(--btn-primary-fg)' }}>{category}</div>
       </div>
       <div style={{ padding: '22px 24px 26px', flex: 1, display: 'flex', flexDirection: 'column', gap: 10 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, fontSize: 11, color: 'var(--fg-mute)', letterSpacing: '.08em' }}>
@@ -2407,7 +2407,7 @@ function BlogArticle({ post, onBack }: { post: BlogPost; onBack: () => void }) {
       {/* Hero */}
       <div style={{ position: 'relative', height: 'clamp(320px,45vh,500px)', overflow: 'hidden' }}>
         <img src={post.image} alt={title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(11,11,12,.3) 0%, rgba(11,11,12,.85) 100%)' }} />
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, var(--overlay-light) 0%, var(--overlay-heavy) 100%)' }} />
         <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: 'clamp(24px,4vw,48px) var(--pad-x)' }}>
           <div style={{ maxWidth: 'var(--maxw)', margin: '0 auto' }}>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '4px 12px', background: 'var(--bordo)', fontSize: 9, fontWeight: 700, letterSpacing: '.18em', textTransform: 'uppercase', marginBottom: 16 }}>{category}</div>
@@ -2859,7 +2859,7 @@ function EstimativaSticky({ total, unit, qty, hint, accent, t }: { total: number
   return (
     <div style={{
       position: 'sticky', top: 100, marginTop: 20,
-      padding: '20px 22px', border: `1px solid ${accent}55`, background: 'rgba(11,11,12,.85)', backdropFilter: 'blur(12px)',
+      padding: '20px 22px', border: `1px solid ${accent}55`, background: 'var(--overlay-heavy)', backdropFilter: 'blur(12px)',
       borderRadius: 4,
     }}>
       <div style={{ fontSize: 10, letterSpacing: '.28em', textTransform: 'uppercase', color: accent, fontWeight: 600, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -3084,7 +3084,7 @@ function CustomizerV2({ setPage, onAddToCart }: { setPage: (p: Page) => void; on
                 { g: 'it' as CustGroup, label: t('vert_it'), desc: t('cust_step0_it_desc'), acc: '#8B1E2D', icon: 'M-70 -40 L70 -40 L70 30 L-70 30 Z M-90 30 L90 30 L82 42 L-82 42 Z' },
               ]).map(opt => (
                 <button key={opt.g} onClick={() => { setGroup(opt.g); setStep(1); fireSparkle() }} style={{
-                  padding: '48px 32px', background: 'rgba(11,11,12,.65)', border: `1px solid ${opt.acc}55`, cursor: 'pointer', textAlign: 'left',
+                  padding: '48px 32px', background: 'var(--overlay-medium)', border: `1px solid ${opt.acc}55`, cursor: 'pointer', textAlign: 'left',
                   transition: 'all .3s var(--ease)', position: 'relative', overflow: 'hidden', minHeight: 320,
                 }}
                   onMouseEnter={e => {
@@ -3130,17 +3130,17 @@ function CustomizerV2({ setPage, onAddToCart }: { setPage: (p: Page) => void; on
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(180px,1fr))', gap: 14 }}>
                 {CUST_PRODUCTS.filter(p => p.group === group).map(p => (
                   <button key={p.id} onClick={() => { setProduct(p); setStep(2); fireSparkle() }} style={{
-                    padding: '24px 16px', background: 'rgba(11,11,12,.6)', border: `1px solid ${accent}33`, cursor: 'pointer',
+                    padding: '24px 16px', background: 'var(--overlay-medium)', border: `1px solid ${accent}33`, cursor: 'pointer',
                     transition: 'all .25s var(--ease)', textAlign: 'center', position: 'relative', minHeight: 200,
                     display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12,
                   }}
                     onMouseEnter={e => {
                       const el = e.currentTarget as HTMLElement
-                      el.style.borderColor = accent; el.style.transform = 'translateY(-4px)'; el.style.background = 'rgba(11,11,12,.85)'
+                      el.style.borderColor = accent; el.style.transform = 'translateY(-4px)'; el.style.background = 'var(--overlay-heavy)'
                     }}
                     onMouseLeave={e => {
                       const el = e.currentTarget as HTMLElement
-                      el.style.borderColor = `${accent}33`; el.style.transform = 'none'; el.style.background = 'rgba(11,11,12,.6)'
+                      el.style.borderColor = `${accent}33`; el.style.transform = 'none'; el.style.background = 'var(--overlay-medium)'
                     }}>
                     <svg viewBox="-100 -80 200 180" width="90" height="80">
                       <path d={p.icon} fill="none" stroke={accent} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
@@ -3332,7 +3332,7 @@ function CustomizerV2({ setPage, onAddToCart }: { setPage: (p: Page) => void; on
 
                   {/* Next */}
                   <button onClick={() => { setStep(3); fireSparkle() }} style={{
-                    marginTop: 20, width: '100%', padding: '18px', background: accent, border: 'none', color: '#0B0B0C',
+                    marginTop: 20, width: '100%', padding: '18px', background: accent, border: 'none', color: 'var(--bg)',
                     fontFamily: 'var(--f-sans)', fontSize: 12, letterSpacing: '.24em', textTransform: 'uppercase', fontWeight: 700,
                     cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, transition: 'transform .2s',
                   }}
@@ -3366,7 +3366,7 @@ function CustomizerV2({ setPage, onAddToCart }: { setPage: (p: Page) => void; on
                       fontSize: 11, letterSpacing: '.22em', textTransform: 'uppercase', fontWeight: 600, cursor: 'pointer',
                     }}>{t('cust_new_piece')}</button>
                     <button onClick={() => setPage('home')} style={{
-                      padding: '14px 28px', background: accent, border: 'none', color: '#0B0B0C',
+                      padding: '14px 28px', background: accent, border: 'none', color: 'var(--bg)',
                       fontSize: 11, letterSpacing: '.22em', textTransform: 'uppercase', fontWeight: 700, cursor: 'pointer',
                     }}>{t('cust_back_shop')}</button>
                   </div>
@@ -3438,7 +3438,7 @@ function CustomizerV2({ setPage, onAddToCart }: { setPage: (p: Page) => void; on
                       <span style={{ fontSize: 10, opacity: .7, letterSpacing: '.06em', textTransform: 'none' }}>{t('cust_cta_quote_sub')}</span>
                     </button>
                     <button onClick={() => handleSubmit('cart')} disabled={loading} style={{
-                      padding: '20px', background: accent, border: 'none', color: '#0B0B0C',
+                      padding: '20px', background: accent, border: 'none', color: 'var(--bg)',
                       fontFamily: 'var(--f-sans)', fontSize: 12, letterSpacing: '.22em', textTransform: 'uppercase', fontWeight: 700,
                       cursor: loading ? 'wait' : 'pointer', transition: 'transform .2s', display: 'flex', flexDirection: 'column', gap: 6,
                     }}
@@ -3480,7 +3480,7 @@ function CustomizerV2({ setPage, onAddToCart }: { setPage: (p: Page) => void; on
 function Footer({ setPage }: { setPage: (p: Page) => void }) {
   const { t, arr } = useLang()
   return (
-    <footer style={{ background: '#08080a', borderTop: '1px solid var(--border)', padding: 'clamp(56px,6vw,80px) var(--pad-x) 36px' }}>
+    <footer style={{ background: 'var(--bg-1)', borderTop: '1px solid var(--border)', padding: 'clamp(56px,6vw,80px) var(--pad-x) 36px' }}>
       <div style={{ maxWidth: 'var(--maxw)', margin: '0 auto' }}>
         <div className="kn-footer-grid">
           <div>
@@ -3568,7 +3568,7 @@ function Countdown() {
       <div className="kn-promo-countdown" style={{ display: 'flex', gap: 14 }}>
         {[['h', pad(time.h), t('countdown_hours')], ['m', pad(time.m), t('countdown_minutes')], ['s', pad(time.s), t('countdown_seconds')]].map(([, val, label]) => (
           <div key={label} style={{ textAlign: 'center' }}>
-            <div style={{ fontFamily: 'var(--f-display)', fontSize: 'clamp(44px,5.5vw,80px)', fontWeight: 500, lineHeight: 1, background: 'rgba(11,11,12,.5)', border: '1px solid var(--border)', padding: '12px 20px', minWidth: 80 }}>{val}</div>
+            <div style={{ fontFamily: 'var(--f-display)', fontSize: 'clamp(44px,5.5vw,80px)', fontWeight: 500, lineHeight: 1, background: 'var(--overlay-light)', border: '1px solid var(--border)', padding: '12px 20px', minWidth: 80 }}>{val}</div>
             <div style={{ fontSize: 9, letterSpacing: '.22em', textTransform: 'uppercase', color: 'var(--fg-mute)', marginTop: 8 }}>{label}</div>
           </div>
         ))}
@@ -3590,7 +3590,7 @@ function NewsletterForm() {
     <form onSubmit={e => { e.preventDefault(); if (email) setDone(true) }} style={{ display: 'flex', border: '1px solid var(--gold-3)' }}>
       <input type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder={t('newsletter_placeholder')}
         style={{ flex: 1, background: 'transparent', border: 'none', padding: '14px 18px', color: 'var(--fg)', fontFamily: 'var(--f-sans)', fontSize: 14, outline: 'none' }} />
-      <button type="submit" style={{ padding: '14px 22px', background: 'var(--gold)', border: 'none', color: '#0B0B0C', fontFamily: 'var(--f-sans)', fontSize: 11, letterSpacing: '.2em', textTransform: 'uppercase', fontWeight: 700, flexShrink: 0 }}>
+      <button type="submit" style={{ padding: '14px 22px', background: 'var(--gold)', border: 'none', color: 'var(--bg)', fontFamily: 'var(--f-sans)', fontSize: 11, letterSpacing: '.2em', textTransform: 'uppercase', fontWeight: 700, flexShrink: 0 }}>
         {t('newsletter_btn')}
       </button>
     </form>
