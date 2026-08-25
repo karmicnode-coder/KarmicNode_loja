@@ -20,6 +20,20 @@ export const translations = {
     theme_dark: 'Modo escuro',
     theme_light: 'Modo claro',
 
+    // 360°/3D Viewer
+    viewer_preset_angle: 'Ângulo predefinido',
+    viewer_front: 'Frente',
+    viewer_left: 'Esquerda',
+    viewer_right: 'Direita',
+    viewer_top: 'Topo',
+    viewer_bottom: 'Fundo',
+    viewer_back: 'Costas',
+    viewer_drag_hint: 'Arrasta para rodar',
+    viewer_reset: 'Repor ângulo',
+    viewer_360_title: 'Vê em 360°',
+    viewer_zoom_in: 'Ampliar',
+    viewer_zoom_out: 'Reduzir',
+
     // Hero
     hero_eyebrow: 'Nova Coleção 2026',
     hero_title1: 'Moda com alma.',
@@ -533,6 +547,20 @@ export const translations = {
     theme_toggle: 'Toggle light / dark mode',
     theme_dark: 'Dark mode',
     theme_light: 'Light mode',
+
+    // 360°/3D Viewer
+    viewer_preset_angle: 'Preset angle',
+    viewer_front: 'Front',
+    viewer_left: 'Left',
+    viewer_right: 'Right',
+    viewer_top: 'Top',
+    viewer_bottom: 'Bottom',
+    viewer_back: 'Back',
+    viewer_drag_hint: 'Drag to rotate',
+    viewer_reset: 'Reset angle',
+    viewer_360_title: 'See in 360°',
+    viewer_zoom_in: 'Zoom in',
+    viewer_zoom_out: 'Zoom out',
 
     // Hero
     hero_eyebrow: 'New Collection 2026',
