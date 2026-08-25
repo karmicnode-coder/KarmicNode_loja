@@ -51,6 +51,407 @@ function useProductI18n() {
   }
 }
 
+// ─── PRODUCT 360°/3D VIEWER ─────────────────────────────────────────────────
+// Fake 360°/3D com CSS transforms — pronto para ser substituído por Three.js
+// quando houver modelos .glb reais.
+
+// Mapa de ícones SVG por SKU (mesmo path usado nos placeholders das imagens dos produtos)
+const PROD_ICONS: Record<string, string> = {
+  // Vestuário
+  'KN-001': 'M-60 -30 L-90 -10 L-70 20 L-50 10 L-50 60 L50 60 L50 10 L70 20 L90 -10 L60 -30 L40 -30 C40 -10 20 0 0 0 C-20 0 -40 -10 -40 -30 Z',
+  'KN-002': 'M-55 -30 L-85 -5 L-65 20 L-50 10 L-50 60 L50 60 L50 10 L65 20 L85 -5 L55 -30 L20 -30 L15 -15 L-15 -15 L-20 -30 Z M-15 -15 L-10 15 L10 15 L15 -15',
+  'KN-003': 'M-55 -30 L-85 0 L-70 25 L-50 15 L-50 60 L50 60 L50 15 L70 25 L85 0 L55 -30 L20 -30 L0 -10 L-20 -30 Z M-30 0 L-30 55 M30 0 L30 55 M0 -10 L0 55',
+  'KN-004': 'M-60 -30 L-90 -5 L-70 25 L-50 15 L-50 65 L50 65 L50 15 L70 25 L90 -5 L60 -30 L40 -30 C40 -10 20 0 0 0 C-20 0 -40 -10 -40 -30 Z',
+  'KN-005': 'M-60 -25 L-90 5 L-70 30 L-50 20 L-50 70 L50 70 L50 20 L70 30 L90 5 L60 -25 C60 -50 -60 -50 -60 -25 Z M-25 -20 L-15 30 L15 30 L25 -20',
+  'KN-006': 'M-60 -30 L-85 0 L-70 25 L-55 15 L-55 65 L-10 65 L-10 -25 L10 -25 L10 65 L55 65 L55 15 L70 25 L85 0 L60 -30 Z M-10 -25 L0 -15 L10 -25',
+  'KN-007': 'M-60 -25 L-85 -5 L-70 25 L-50 15 L-50 65 L50 65 L50 15 L70 25 L85 -5 L60 -25 L60 -35 L-60 -35 Z',
+  'KN-008': 'M-35 -25 L-35 70 L-5 70 L-5 -25 Z M5 -25 L5 70 L35 70 L35 -25 Z M-30 0 L-30 20 L-10 20 L-10 0 M10 0 L10 20 L30 20 L30 0',
+  'KN-009': 'M-35 -25 L-40 70 L-8 70 L-3 -25 Z M3 -25 L8 70 L40 70 L35 -25 Z M-35 -25 L35 -25',
+  'KN-010': 'M-25 -25 L-55 70 L55 70 L25 -25 Z M-25 -25 L25 -25 M-10 -25 L-10 -35 L10 -35 L10 -25',
+  'KN-011': 'M-30 -15 L-60 70 L60 70 L30 -15 Z M-30 -15 L30 -15',
+  'KN-012': 'M-45 -20 L-60 20 L-45 30 L-40 70 L-10 70 L-10 10 L10 10 L10 70 L40 70 L45 30 L60 20 L45 -20 L20 -20 L0 -5 L-20 -20 Z',
+  'KN-013': 'M-28 -20 L-32 70 L-8 70 L-4 -20 Z M4 -20 L8 70 L32 70 L28 -20 Z M-30 -20 L30 -20',
+  'KN-014': 'M-60 20 L-70 45 L60 45 L70 25 L60 5 L20 5 L-5 -15 L-40 0 L-55 15 Z',
+  'KN-015': 'M-60 20 L-70 45 L60 45 L70 25 L60 5 L20 5 L-5 -15 L-40 0 L-55 15 Z',
+  'KN-016': 'M-45 15 L45 15 L45 -5 C45 -30 -45 -30 -45 -5 Z M-45 15 L60 20 L60 30 L-45 30 Z',
+  'KN-017': 'M-50 -20 L50 -20 L50 35 L-50 35 Z M-50 -5 L50 -5',
+  'KN-018': 'M-45 -10 L-45 60 L45 60 L45 -10 Z M-25 -10 C-25 -35 25 -35 25 -10',
+  // IT
+  'KN-019': 'M-60 -30 L60 -30 L60 45 L-60 45 Z M-75 50 L75 50 L70 55 L-70 55 Z',
+  'KN-020': 'M-45 -30 L45 -30 L45 30 L-45 30 Z',
+  'KN-021': 'M-70 -15 L70 -15 L70 25 L-70 25 Z M-60 -5 L-40 -5 M-30 -5 L-10 -5 M0 -5 L20 -5 M30 -5 L50 -5 M-60 15 L60 15',
+  'KN-022': 'M-25 -30 C-45 -30 -45 40 -25 40 L25 40 C45 40 45 -30 25 -30 Z M0 -30 L0 5',
+  'KN-023': 'M-70 -30 L70 -30 L70 30 L-70 30 Z M-55 -15 L55 -15 M-55 0 L55 0 M-55 15 L55 15',
+  'KN-024': 'M-50 5 C-50 -50 50 -50 50 5 M-58 0 L-40 0 L-40 40 L-58 40 Z M40 0 L58 0 L58 40 L40 40 Z',
+  'KN-025': 'M0 0 m-30 0 a30 30 0 1 0 60 0 a30 30 0 1 0 -60 0 M0 0 m-15 0 a15 15 0 1 0 30 0 a15 15 0 1 0 -30 0',
+  'KN-026': 'M-30 -45 L30 -45 L30 45 L-30 45 Z M-15 -25 L-15 -15 L-5 -15 L-15 5 L-15 -5 L-25 -5 Z M-15 30 L15 30',
+  'KN-027': 'M-30 -30 L30 -30 L30 25 L-30 25 Z M-10 25 L-10 40 M10 25 L10 40 M-15 -15 L-15 -5 L-5 -5 L-15 15 L-15 5 L-25 5 Z',
+  'KN-028': 'M-30 -50 L30 -50 L30 50 L-30 50 Z M-15 -38 L15 -38 M10 -30 L25 -30 L25 -15 L10 -15 Z',
+  'KN-029': 'M-35 -30 L35 -30 L35 25 L-35 25 Z M0 25 L0 42 L-15 52 M0 42 L15 52 M0 0 m-8 0 a8 8 0 1 0 16 0 a8 8 0 1 0 -16 0',
+}
+
+// ─── PRODUCT 360°/3D VIEWER (Fake 3D com CSS + SVG) ─────────────────────
+// Fluido a 60fps: RAF loop escreve transforms direto no DOM, sem React re-render.
+// Inércia física (momentum + fricção), snap easing para presets, GPU compositing.
+
+
+// Product360Viewer — fake 3D fluido a 60fps
+function Product360Viewer({
+  iconPath, color, accent, overlayImage, overlayText, overlayX, overlayY,
+  size = 'large', showPresets = true, showHint = true, autoRotate = false,
+  productLabel,
+}: {
+  iconPath: string
+  color: string
+  accent?: string
+  overlayImage?: string
+  overlayText?: string
+  overlayX?: number
+  overlayY?: number
+  size?: 'large' | 'medium' | 'card'
+  showPresets?: boolean
+  showHint?: boolean
+  autoRotate?: boolean
+  productLabel?: string
+}) {
+  const { t } = useLang()
+  // Ângulos em refs (não state) — atualizados a cada frame sem re-render
+  const rxRef = useRef(-8)
+  const ryRef = useRef(-12)
+  const vxRef = useRef(0)
+  const vyRef = useRef(0)
+  const targetRef = useRef<{ rx: number; ry: number } | null>(null)
+  const productRef = useRef<HTMLDivElement>(null)
+  const shadowRef = useRef<HTMLDivElement>(null)
+  const glossStopsRef = useRef<{ start: SVGStopElement | null; mid: SVGStopElement | null; end: SVGStopElement | null }>({ start: null, mid: null, end: null })
+  const draggingRef = useRef(false)
+  const dragStart = useRef<{ x: number; y: number; rx: number; ry: number } | null>(null)
+  const lastMove = useRef<{ x: number; y: number; time: number } | null>(null)
+
+  const [activePreset, setActivePreset] = useState<'front' | 'left' | 'right' | 'top' | 'bottom' | 'back'>('front')
+  const [presetOpen, setPresetOpen] = useState(false)
+  const [showHintUi, setShowHintUi] = useState(true)
+  const [cardHover, setCardHover] = useState(false)
+
+  const isLight = ['#F5F2ED', '#B08D57', '#e8c84a', '#808080'].includes(color)
+  const acc = accent || '#B08D57'
+
+  const sizes = size === 'large'
+    ? { minH: 480, svgSize: 380, iconScale: 1.1 }
+    : size === 'medium'
+    ? { minH: 380, svgSize: 320, iconScale: 1 }
+    : { minH: 180, svgSize: 200, iconScale: 1.3 }
+
+  const applyRotation = () => {
+    const product = productRef.current
+    const shadow = shadowRef.current
+    if (!product) return
+    const rx = rxRef.current
+    const ry = ryRef.current
+    product.style.transform = `translate3d(0,0,0) rotateX(${rx}deg) rotateY(${ry}deg)`
+    if (shadow) {
+      const shadowScale = Math.max(0.4, 1 - Math.abs(rx) / 150)
+      const shadowSkew = ry * 0.15
+      const blur = 8 + Math.abs(shadowSkew * 0.2)
+      shadow.style.transform = `scaleX(${shadowScale}) skewX(${shadowSkew}deg)`
+      shadow.style.filter = `blur(${blur}px)`
+    }
+    const glossX = Math.sin((ry * Math.PI) / 180) * 40 + 50
+    if (glossStopsRef.current.start) glossStopsRef.current.start.setAttribute('offset', Math.max(0, glossX - 20) + '%')
+    if (glossStopsRef.current.mid) glossStopsRef.current.mid.setAttribute('offset', glossX + '%')
+    if (glossStopsRef.current.end) glossStopsRef.current.end.setAttribute('offset', Math.min(100, glossX + 20) + '%')
+  }
+
+  useEffect(() => {
+    let raf: number
+    const FRICTION = 0.94
+    const SNAP_EASE = 0.14
+    const MIN_V = 0.03
+
+    const tick = () => {
+      if (autoRotate && !draggingRef.current && !targetRef.current) {
+        ryRef.current += 0.35
+      }
+      if (size === 'card' && !draggingRef.current) {
+        const targetRx = cardHover ? -5 : 0
+        const targetRy = cardHover ? 15 : 0
+        rxRef.current += (targetRx - rxRef.current) * 0.08
+        ryRef.current += (targetRy - ryRef.current) * 0.08
+      }
+      if (targetRef.current && !draggingRef.current) {
+        const tgt = targetRef.current
+        rxRef.current += (tgt.rx - rxRef.current) * SNAP_EASE
+        ryRef.current += (tgt.ry - ryRef.current) * SNAP_EASE
+        if (Math.abs(tgt.rx - rxRef.current) < 0.1 && Math.abs(tgt.ry - ryRef.current) < 0.1) {
+          rxRef.current = tgt.rx; ryRef.current = tgt.ry
+          targetRef.current = null
+        }
+      }
+      if (!draggingRef.current && !targetRef.current) {
+        if (Math.abs(vxRef.current) > MIN_V || Math.abs(vyRef.current) > MIN_V) {
+          rxRef.current = Math.max(-89, Math.min(89, rxRef.current + vxRef.current))
+          ryRef.current += vyRef.current
+          vxRef.current *= FRICTION
+          vyRef.current *= FRICTION
+        } else {
+          vxRef.current = 0; vyRef.current = 0
+        }
+      }
+      applyRotation()
+      raf = requestAnimationFrame(tick)
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [autoRotate, cardHover, size])
+
+  const onPointerDown = (e: React.PointerEvent) => {
+    if (size === 'card') return
+    draggingRef.current = true
+    setShowHintUi(false)
+    targetRef.current = null
+    vxRef.current = 0; vyRef.current = 0
+    dragStart.current = { x: e.clientX, y: e.clientY, rx: rxRef.current, ry: ryRef.current }
+    lastMove.current = { x: e.clientX, y: e.clientY, time: performance.now() }
+    try { (e.target as Element).setPointerCapture(e.pointerId) } catch {}
+  }
+  const onPointerMove = (e: React.PointerEvent) => {
+    if (!draggingRef.current || !dragStart.current) return
+    const dx = e.clientX - dragStart.current.x
+    const dy = e.clientY - dragStart.current.y
+    rxRef.current = Math.max(-89, Math.min(89, dragStart.current.rx - dy * 0.5))
+    ryRef.current = dragStart.current.ry + dx * 0.5
+    const now = performance.now()
+    if (lastMove.current) {
+      const dt = Math.max(1, now - lastMove.current.time)
+      vyRef.current = ((e.clientX - lastMove.current.x) / dt) * 0.5 * 16.67
+      vxRef.current = -((e.clientY - lastMove.current.y) / dt) * 0.5 * 16.67
+    }
+    lastMove.current = { x: e.clientX, y: e.clientY, time: now }
+  }
+  const onPointerUp = (e: React.PointerEvent) => {
+    draggingRef.current = false
+    try { (e.target as Element).releasePointerCapture(e.pointerId) } catch {}
+  }
+
+  const applyPreset = (preset: 'front' | 'left' | 'right' | 'top' | 'bottom' | 'back') => {
+    setActivePreset(preset)
+    setPresetOpen(false)
+    vxRef.current = 0; vyRef.current = 0
+    const map = {
+      front: { rx: 0, ry: 0 },
+      left: { rx: 0, ry: -70 },
+      right: { rx: 0, ry: 70 },
+      top: { rx: -70, ry: 0 },
+      bottom: { rx: 70, ry: 0 },
+      back: { rx: 0, ry: 180 },
+    }
+    if (preset === 'back' && ryRef.current < 0) {
+      targetRef.current = { rx: 0, ry: -180 }
+    } else {
+      targetRef.current = map[preset]
+    }
+  }
+  const resetView = () => {
+    setActivePreset('front')
+    vxRef.current = 0; vyRef.current = 0
+    targetRef.current = { rx: -8, ry: -12 }
+  }
+
+  const setGlossRef = (which: 'start' | 'mid' | 'end') => (el: SVGStopElement | null) => {
+    glossStopsRef.current[which] = el
+  }
+  const glossId = `viewer-gloss-${size}-${sizes.svgSize}`
+
+  return (
+    <div
+      onMouseEnter={() => size === 'card' && setCardHover(true)}
+      onMouseLeave={() => size === 'card' && setCardHover(false)}
+      style={{
+        position: 'relative', width: '100%', minHeight: sizes.minH,
+        background: size === 'card' ? 'transparent' : `radial-gradient(600px 400px at 50% 40%, ${acc}22, transparent 70%), var(--bg-2)`,
+        border: size === 'card' ? 'none' : '1px solid var(--border)',
+        overflow: 'hidden', borderRadius: 4,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        userSelect: 'none', touchAction: 'none',
+        cursor: size !== 'card' ? 'grab' : 'default',
+      }}
+    >
+      {size !== 'card' && (
+        <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0.28, mixBlendMode: 'overlay', pointerEvents: 'none' }}>
+          <filter id={`viewer-grain-${size}`}><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="4" /><feColorMatrix values="0 0 0 0 0.75 0 0 0 0 0.6 0 0 0 0 0.4 0 0 0 0.15 0" /></filter>
+          <rect width="100%" height="100%" filter={`url(#viewer-grain-${size})`} />
+        </svg>
+      )}
+
+      {size === 'large' && [
+        { t: 12, l: 12, borders: 'top left' },
+        { t: 12, r: 12, borders: 'top right' },
+        { b: 12, l: 12, borders: 'bottom left' },
+        { b: 12, r: 12, borders: 'bottom right' },
+      ].map((c, i) => (
+        <div key={i} style={{
+          position: 'absolute', width: 20, height: 20, pointerEvents: 'none',
+          top: c.t as any, bottom: c.b as any, left: c.l as any, right: c.r as any,
+          borderTop: c.borders.includes('top') ? `1px solid ${acc}` : 'none',
+          borderBottom: c.borders.includes('bottom') ? `1px solid ${acc}` : 'none',
+          borderLeft: c.borders.includes('left') ? `1px solid ${acc}` : 'none',
+          borderRight: c.borders.includes('right') ? `1px solid ${acc}` : 'none',
+        } as any} />
+      ))}
+
+      <div
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerUp}
+        style={{
+          position: 'relative', perspective: 1400, perspectiveOrigin: '50% 40%',
+          width: sizes.svgSize + 40, height: sizes.svgSize + 40,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}
+      >
+        {size !== 'card' && (
+          <div ref={shadowRef} style={{
+            position: 'absolute', bottom: '10%',
+            width: `${sizes.svgSize * 0.6}px`, height: `${sizes.svgSize * 0.06}px`,
+            background: 'radial-gradient(ellipse at center, rgba(0,0,0,.55), transparent 70%)',
+            filter: 'blur(10px)', transformOrigin: 'center',
+            pointerEvents: 'none', willChange: 'transform, filter',
+          }} />
+        )}
+
+        <div
+          ref={productRef}
+          style={{
+            transformStyle: 'preserve-3d',
+            willChange: 'transform',
+            backfaceVisibility: 'visible',
+            filter: 'drop-shadow(0 20px 30px rgba(0,0,0,.35))',
+          }}
+        >
+          <svg viewBox="-120 -100 240 220" width={sizes.svgSize} height={sizes.svgSize * (220 / 240)} shapeRendering="geometricPrecision">
+            <defs>
+              <linearGradient id={glossId} x1="0" y1="0" x2="1" y2="1">
+                <stop ref={setGlossRef('start')} offset="30%" stopColor="#fff" stopOpacity="0" />
+                <stop ref={setGlossRef('mid')} offset="50%" stopColor="#fff" stopOpacity={isLight ? 0.12 : 0.16} />
+                <stop ref={setGlossRef('end')} offset="70%" stopColor="#fff" stopOpacity="0" />
+              </linearGradient>
+            </defs>
+            <g transform={`translate(0 5) scale(${sizes.iconScale})`}>
+              <g transform="translate(1.5 1.5)" opacity="0.35">
+                <path d={iconPath} fill={color} stroke="none" />
+              </g>
+              <path d={iconPath} fill={color} stroke={isLight ? '#00000035' : '#ffffff22'} strokeWidth="1.2" />
+              <path d={iconPath} fill={`url(#${glossId})`} />
+              {overlayImage && (
+                <image href={overlayImage} x={(overlayX ?? 0) - 20} y={(overlayY ?? 0) - 20} width={40} height={40} preserveAspectRatio="xMidYMid meet" />
+              )}
+              {overlayText && (
+                <text x={overlayX ?? 0} y={(overlayY ?? 0) + (overlayImage ? 12 : 0)} textAnchor="middle" fontFamily="Inter, sans-serif" fontSize={8} fontWeight="600" fill={isLight ? '#0B0B0C' : '#F5F2ED'}>
+                  {overlayText.slice(0, 20)}
+                </text>
+              )}
+            </g>
+          </svg>
+        </div>
+
+        {productLabel && size === 'large' && (
+          <div style={{
+            position: 'absolute', bottom: -8, left: '50%', transform: 'translateX(-50%)',
+            padding: '4px 14px', background: 'var(--overlay-heavy)', border: `1px solid ${acc}55`, backdropFilter: 'blur(8px)',
+            fontSize: 10, letterSpacing: '.24em', textTransform: 'uppercase', color: acc, whiteSpace: 'nowrap',
+          }}>
+            {productLabel}
+          </div>
+        )}
+      </div>
+
+      {size === 'large' && showPresets && (
+        <>
+          <div style={{ position: 'absolute', top: 20, right: 20, display: 'flex', flexDirection: 'column', gap: 10, zIndex: 5 }}>
+            <button onClick={resetView} title={t('viewer_reset')}
+              style={{
+                width: 40, height: 40, borderRadius: '50%', background: 'var(--overlay-heavy)', border: 'none', color: 'var(--bg)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 4px 14px rgba(0,0,0,.35)',
+                transition: 'transform .2s',
+              }}
+              onMouseEnter={e => (e.currentTarget.style.transform = 'scale(1.08)')}
+              onMouseLeave={e => (e.currentTarget.style.transform = 'scale(1)')}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M3 12a9 9 0 0 1 15-6.7L21 8M21 3v5h-5M21 12a9 9 0 0 1-15 6.7L3 16M3 21v-5h5"/>
+              </svg>
+            </button>
+            <button onClick={() => setPresetOpen(v => !v)} title={t('viewer_preset_angle')}
+              style={{
+                width: 40, height: 40, borderRadius: '50%',
+                background: presetOpen ? acc : 'var(--overlay-heavy)',
+                border: 'none', color: presetOpen ? '#F5F2ED' : '#0B0B0C',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+                boxShadow: '0 4px 14px rgba(0,0,0,.35)', transition: 'all .2s',
+              }}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <circle cx="5" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" />
+              </svg>
+            </button>
+          </div>
+
+          {presetOpen && (
+            <div style={{
+              position: 'absolute', bottom: 84, left: '50%', transform: 'translateX(-50%)',
+              background: 'var(--overlay-heavy)', backdropFilter: 'blur(16px)',
+              border: '1px solid var(--border)', padding: '14px 18px 16px', zIndex: 10,
+              boxShadow: '0 20px 60px rgba(0,0,0,.7)', minWidth: 260,
+              animation: 'kn-fadeUp .3s var(--ease) both',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <span style={{ fontSize: 11, letterSpacing: '.2em', textTransform: 'uppercase', color: 'var(--fg-mute)', fontWeight: 500 }}>
+                  {t('viewer_preset_angle')}
+                </span>
+                <button onClick={() => setPresetOpen(false)}
+                  style={{ background: 'transparent', border: 'none', color: 'var(--fg-mute)', cursor: 'pointer', padding: 4, lineHeight: 0 }}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12" /></svg>
+                </button>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+                {(['front','left','top','back','right','bottom'] as const).map(p => (
+                  <button key={p} onClick={() => applyPreset(p)}
+                    style={{
+                      padding: '9px 4px', background: activePreset === p ? 'var(--fg)' : 'transparent',
+                      color: activePreset === p ? '#0B0B0C' : 'var(--fg)',
+                      border: `1px solid ${activePreset === p ? 'var(--fg)' : 'var(--border-2)'}`,
+                      fontSize: 12, cursor: 'pointer', transition: 'all .15s',
+                      fontFamily: 'var(--f-sans)', fontWeight: activePreset === p ? 600 : 400,
+                    }}>
+                    {t(('viewer_' + p) as TKey)}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {showHint && showHintUi && !presetOpen && (
+            <div style={{
+              position: 'absolute', bottom: 14, left: '50%', transform: 'translateX(-50%)',
+              padding: '5px 12px', background: 'var(--overlay-medium)', backdropFilter: 'blur(6px)',
+              border: `1px solid ${acc}44`, fontSize: 10, letterSpacing: '.16em', textTransform: 'uppercase',
+              color: 'var(--fg-mute)', display: 'flex', alignItems: 'center', gap: 8,
+              transition: 'opacity .3s', pointerEvents: 'none',
+            }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <path d="M9 5H7a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-2M15 5h4v4M20 4l-9 9" />
+              </svg>
+              {t('viewer_drag_hint')}
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  )
+}
+
+
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 type Page = 'home' | 'shop' | 'product' | 'contact' | 'about' | 'blog' | 'custom' | 'vestuario' | 'it' | 'success'
@@ -910,8 +1311,18 @@ function ProductCard({ p, onAdd, onOpen, wishlist, toggleWish }: {
 
       {/* Image */}
       <div style={{ position: 'relative', aspectRatio: '4/3', overflow: 'hidden', background: 'var(--bg-2)' }} onClick={() => onOpen(p)}>
-        <img src={p.image} alt={pi.pName(p)} style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform .7s ease', transform: hov ? 'scale(1.06)' : 'scale(1)' }} />
-        <div style={{ position: 'absolute', inset: 0, background: 'rgba(11,11,12,.52)', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: hov ? 1 : 0, transition: 'opacity .3s ease', zIndex: 2 }}>
+        {/* 360° card preview */}
+        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: `radial-gradient(360px 260px at 50% 45%, ${p.vertical === 'it' ? '#8B1E2D' : '#B08D57'}18, transparent 65%), var(--bg-2)` }}>
+          <Product360Viewer
+            iconPath={PROD_ICONS[p.sku || '' || 'KN-001'] || PROD_ICONS['KN-001']}
+            color={p.vertical === 'it' ? '#8B1E2D' : '#B08D57'}
+            accent={p.vertical === 'it' ? '#8B1E2D' : '#B08D57'}
+            size="card"
+            showPresets={false}
+            showHint={false}
+          />
+        </div>
+        <div style={{ position: 'absolute', inset: 0, background: 'var(--overlay-medium)', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: hov ? 1 : 0, transition: 'opacity .3s ease', zIndex: 2 }}>
           <button onClick={e => { e.stopPropagation(); onOpen(p) }}
             style={{ padding: '10px 20px', background: 'var(--bg-1)', border: '1px solid var(--gold-3)', color: 'var(--fg)', fontFamily: 'var(--f-sans)', fontSize: 10, letterSpacing: '.2em', textTransform: 'uppercase', fontWeight: 500 }}>
             {t('card_view_product')}
@@ -1997,7 +2408,6 @@ function ProductPage({ product, onAdd, onBack, wishlist, toggleWish, allProducts
 }) {
   const { t } = useLang()
   const pi = useProductI18n()
-  const [activeImg, setActiveImg] = useState(0)
   const [qty, setQty] = useState(1)
   const [tab, setTab] = useState<'desc' | 'specs' | 'reviews'>('desc')
   const [added, setAdded] = useState(false)
@@ -2021,26 +2431,29 @@ function ProductPage({ product, onAdd, onBack, wishlist, toggleWish, allProducts
 
       <div className="wrap" style={{ padding: '48px var(--pad-x) 80px' }}>
         <div className="kn-product-detail">
-          {/* Gallery */}
+          {/* Gallery — 360°/3D Viewer */}
           <div>
-            <div style={{ position: 'relative', aspectRatio: '4/3', overflow: 'hidden', background: 'var(--bg-2)', border: '1px solid var(--border)', marginBottom: 12 }}>
-              <img src={product.images[activeImg] || product.image} alt={pi.pName(product)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            <div style={{ position: 'relative' }}>
+              <Product360Viewer
+                iconPath={PROD_ICONS[product.sku || '' || 'KN-001'] || PROD_ICONS['KN-001']}
+                color={product.vertical === 'it' ? '#8B1E2D' : '#B08D57'}
+                accent={product.vertical === 'it' ? '#8B1E2D' : '#B08D57'}
+                size="large"
+                showPresets={true}
+                showHint={true}
+                productLabel={pi.pName(product)}
+              />
               {product.badge && (
-                <div style={{ position: 'absolute', top: 16, left: 16, padding: '5px 12px', fontSize: 10, fontWeight: 700, letterSpacing: '.18em', textTransform: 'uppercase' }} className={product.badgeColor === 'bordo' ? 'kn-badge-bordo' : 'kn-badge-gold'}>
+                <div style={{ position: 'absolute', top: 16, left: 16, padding: '5px 12px', fontSize: 10, fontWeight: 700, letterSpacing: '.18em', textTransform: 'uppercase', zIndex: 6 }} className={product.badgeColor === 'bordo' ? 'kn-badge-bordo' : 'kn-badge-gold'}>
                   {pi.pBadge(product)}
                 </div>
               )}
             </div>
-            {product.images.length > 1 && (
-              <div style={{ display: 'flex', gap: 10 }}>
-                {product.images.map((img, i) => (
-                  <button key={i} onClick={() => setActiveImg(i)}
-                    style={{ width: 72, aspectRatio: '4/3', overflow: 'hidden', border: `1px solid ${i === activeImg ? 'var(--gold)' : 'var(--border)'}`, background: 'var(--bg-2)', padding: 0, transition: 'border-color .2s' }}>
-                    <img src={img} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  </button>
-                ))}
-              </div>
-            )}
+            {/* Eyebrow "Ver em 360°" */}
+            <div style={{ marginTop: 14, display: 'flex', alignItems: 'center', gap: 8, fontSize: 10, letterSpacing: '.24em', textTransform: 'uppercase', color: 'var(--gold)', fontWeight: 500 }}>
+              <span style={{ width: 24, height: 1, background: 'var(--gold)' }} />
+              {t('viewer_360_title')}
+            </div>
           </div>
 
           {/* Info */}
@@ -2729,83 +3142,35 @@ function LivePreview({ product, baseColor, uploadUrl, textOverlay, position, gro
   position: string; group: CustGroup; t: (k: TKey) => string
 }) {
   const accent = group === 'it' ? '#8B1E2D' : '#B08D57'
-  const [mounted, setMounted] = useState(false)
-  useEffect(() => { setMounted(true) }, [])
-
   const pos = CUST_POSITIONS.find(p => p.id === position) || CUST_POSITIONS[0]
-  const isLight = ['#F5F2ED', '#B08D57', '#e8c84a', '#808080'].includes(baseColor)
 
   return (
-    <div style={{
-      position: 'sticky', top: 100, minHeight: 520, display: 'flex', alignItems: 'center', justifyContent: 'center',
-      background: `radial-gradient(600px 400px at 50% 40%, ${accent}22, transparent 70%), var(--bg-2)`,
-      border: '1px solid var(--border)', overflow: 'hidden', borderRadius: 4,
-    }}>
-      {/* Grain */}
-      <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0.35, mixBlendMode: 'overlay', pointerEvents: 'none' }}>
-        <filter id="cust-grain"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7" /><feColorMatrix values="0 0 0 0 0.75 0 0 0 0 0.6 0 0 0 0 0.4 0 0 0 0.15 0" /></filter>
-        <rect width="100%" height="100%" filter="url(#cust-grain)" />
-      </svg>
-
-      {/* Corner brackets */}
-      {[{ t: 12, l: 12, b: 'B', b2: 'L' }, { t: 12, r: 12, b: 'B', b2: 'R' }, { b: 12, l: 12, b1: 'T', b2: 'L' }, { b: 12, r: 12, b1: 'T', b2: 'R' }].map((c, i) => (
-        <div key={i} style={{
-          position: 'absolute', width: 24, height: 24, pointerEvents: 'none',
-          top: c.t as any, bottom: c.b as any, left: c.l as any, right: c.r as any,
-          borderTop: c.b1 !== 'T' && (c.b === 'B' || c.t) ? `1px solid ${accent}` : 'none',
-          borderBottom: c.b === 12 ? `1px solid ${accent}` : 'none',
-          borderLeft: c.b2 === 'L' ? `1px solid ${accent}` : 'none',
-          borderRight: c.b2 === 'R' ? `1px solid ${accent}` : 'none',
-        } as any} />
-      ))}
-
+    <div style={{ position: 'sticky', top: 100 }}>
       {product ? (
-        <div style={{
-          position: 'relative',
-          animation: mounted ? 'kn-float 4s ease-in-out infinite, kn-fadeUp .6s var(--ease) both' : 'none',
-          filter: 'drop-shadow(0 20px 30px rgba(0,0,0,.4))',
-        }}>
-          <svg viewBox="-120 -100 240 220" width="380" height="360" style={{ maxWidth: '100%' }}>
-            {/* Produto — cor base viva */}
-            <g transform="translate(0 5)">
-              <path d={product.icon} fill={baseColor} stroke={isLight ? '#00000030' : '#ffffff20'} strokeWidth="1.2" />
-              {/* Design/upload sobreposto */}
-              {uploadUrl && product.hasPosition && (
-                <image href={uploadUrl} x={pos.x - 20} y={pos.y - 20} width={40} height={40} preserveAspectRatio="xMidYMid meet" />
-              )}
-              {uploadUrl && !product.hasPosition && (
-                <image href={uploadUrl} x={-30} y={-15} width={60} height={30} preserveAspectRatio="xMidYMid meet" />
-              )}
-              {/* Texto */}
-              {textOverlay && (
-                <text
-                  x={product.hasPosition ? pos.x : 0}
-                  y={product.hasPosition ? pos.y + (uploadUrl ? 12 : 0) : (uploadUrl ? 12 : 5)}
-                  textAnchor="middle"
-                  fontFamily="Inter, sans-serif"
-                  fontSize={product.hasPosition ? 8 : 10}
-                  fontWeight="600"
-                  fill={isLight ? '#0B0B0C' : '#F5F2ED'}
-                >
-                  {textOverlay.slice(0, 20)}
-                </text>
-              )}
-            </g>
-          </svg>
-
-          {/* Label do produto */}
-          <div style={{
-            position: 'absolute', bottom: -12, left: '50%', transform: 'translateX(-50%)',
-            padding: '4px 14px', background: 'rgba(11,11,12,.85)', border: `1px solid ${accent}55`, backdropFilter: 'blur(8px)',
-            fontSize: 10, letterSpacing: '.24em', textTransform: 'uppercase', color: accent, whiteSpace: 'nowrap',
-          }}>
-            {t(('cust_prod_' + product.id.replace('-', '_')) as TKey)}
-          </div>
-        </div>
+        <Product360Viewer
+          iconPath={product.icon}
+          color={baseColor}
+          accent={accent}
+          overlayImage={uploadUrl || undefined}
+          overlayText={textOverlay || undefined}
+          overlayX={product.hasPosition ? pos.x : 0}
+          overlayY={product.hasPosition ? pos.y : 0}
+          size="large"
+          showPresets={true}
+          showHint={true}
+          productLabel={t(('cust_prod_' + product.id.replace('-', '_')) as TKey)}
+        />
       ) : (
-        <div style={{ textAlign: 'center', color: 'var(--fg-mute)', padding: 40 }}>
-          <div style={{ fontFamily: 'var(--f-display)', fontSize: 22, marginBottom: 8, color: accent, opacity: .7 }}>{t('cust_preview_title')}</div>
-          <div style={{ fontSize: 13 }}>{t('cust_preview_sub')}</div>
+        <div style={{
+          minHeight: 480, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          background: `radial-gradient(600px 400px at 50% 40%, ${accent}22, transparent 70%), var(--bg-2)`,
+          border: '1px solid var(--border)', borderRadius: 4,
+          textAlign: 'center', color: 'var(--fg-mute)', padding: 40,
+        }}>
+          <div>
+            <div style={{ fontFamily: 'var(--f-display)', fontSize: 22, marginBottom: 8, color: accent, opacity: .7 }}>{t('cust_preview_title')}</div>
+            <div style={{ fontSize: 13 }}>{t('cust_preview_sub')}</div>
+          </div>
         </div>
       )}
     </div>
