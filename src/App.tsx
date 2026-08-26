@@ -4091,6 +4091,31 @@ function SuccessPage({ sessionId, setPage }: { sessionId: string | null; setPage
 
 // ─── App ─────────────────────────────────────────────────────────────────────
 
+// ─── URL Routing ────────────────────────────────────────────────────────
+const PAGE_TO_PATH: Record<Page, string> = {
+  home: '/',
+  vestuario: '/vestuario',
+  it: '/it',
+  shop: '/loja',
+  custom: '/personalizar',
+  blog: '/blog',
+  contact: '/contacto',
+  about: '/sobre',
+  product: '/produto',
+  success: '/sucesso',
+}
+const PATH_TO_PAGE: Record<string, Page> = {
+  '/': 'home',
+  '/vestuario': 'vestuario',
+  '/it': 'it',
+  '/loja': 'shop',
+  '/personalizar': 'custom',
+  '/blog': 'blog',
+  '/contacto': 'contact',
+  '/sobre': 'about',
+  '/sucesso': 'success',
+}
+
 export default function App() {
   const [lang, setLang] = useState<Lang>('pt')
   const t = createT(lang)
@@ -4120,25 +4145,77 @@ export default function App() {
     return () => window.removeEventListener('scroll', h)
   }, [])
 
+  // Ler estado inicial da URL (uma vez, no primeiro render)
   useEffect(() => {
+    const path = window.location.pathname
     const params = new URLSearchParams(window.location.search)
+
+    // Success/cancel do Stripe
     const status = params.get('pagamento')
     const sid = params.get('session_id')
     if (status === 'sucesso') {
       setSuccessSessionId(sid)
       setActivePage('success')
       setCartItems([])
-      window.history.replaceState({}, '', window.location.pathname)
+      window.history.replaceState({ page: 'success' }, '', '/sucesso')
+      return
     } else if (status === 'cancelado') {
       setToast(t('payment_cancelled'))
-      window.history.replaceState({}, '', window.location.pathname)
+      window.history.replaceState({ page: 'home' }, '', '/')
+      return
     }
+
+    // Product page: /produto/:sku
+    if (path.startsWith('/produto/')) {
+      const sku = decodeURIComponent(path.slice('/produto/'.length))
+      const p = ALL_PRODUCTS.find(x => (x.sku || String(x.id)) === sku)
+      if (p) {
+        setActiveProduct(p)
+        setActivePage('product')
+        return
+      }
+    }
+
+    // Rotas normais
+    const page = PATH_TO_PAGE[path]
+    if (page) {
+      setActivePage(page)
+    } else if (path !== '/') {
+      window.history.replaceState({ page: 'home' }, '', '/')
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Listener para back/forward do browser
+  useEffect(() => {
+    const onPop = () => {
+      const path = window.location.pathname
+      if (path.startsWith('/produto/')) {
+        const sku = decodeURIComponent(path.slice('/produto/'.length))
+        const p = ALL_PRODUCTS.find(x => (x.sku || String(x.id)) === sku)
+        if (p) { setActiveProduct(p); setActivePage('product'); return }
+      }
+      const page = PATH_TO_PAGE[path]
+      if (page) {
+        setActivePage(page)
+        setActiveProduct(null)
+      } else {
+        setActivePage('home')
+      }
+    }
+    window.addEventListener('popstate', onPop)
+    return () => window.removeEventListener('popstate', onPop)
   }, [])
 
   const navigate = useCallback((p: Page, filter?: string) => {
     setActivePage(p)
     setActiveProduct(null)
     if (p === 'shop' || p === 'vestuario' || p === 'it') setShopFilter(filter ?? 'Todos')
+    // Atualizar URL
+    const newPath = PAGE_TO_PATH[p] || '/'
+    if (window.location.pathname !== newPath) {
+      window.history.pushState({ page: p }, '', newPath)
+    }
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }, [])
 
@@ -4147,6 +4224,11 @@ export default function App() {
   const openProduct = useCallback((p: Product) => {
     setActiveProduct(p)
     setActivePage('product')
+    // URL /produto/{sku}
+    const newPath = '/produto/' + encodeURIComponent(p.sku || String(p.id))
+    if (window.location.pathname !== newPath) {
+      window.history.pushState({ page: 'product', sku: p.sku }, '', newPath)
+    }
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }, [])
 
