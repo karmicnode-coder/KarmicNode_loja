@@ -76,18 +76,19 @@ const PROD_ICONS: Record<string, string> = {
   'KN-016': 'M-45 15 L45 15 L45 -5 C45 -30 -45 -30 -45 -5 Z M-45 15 L60 20 L60 30 L-45 30 Z',
   'KN-017': 'M-50 -20 L50 -20 L50 35 L-50 35 Z M-50 -5 L50 -5',
   'KN-018': 'M-45 -10 L-45 60 L45 60 L45 -10 Z M-25 -10 C-25 -35 25 -35 25 -10',
-  // IT
-  'KN-019': 'M-60 -30 L60 -30 L60 45 L-60 45 Z M-75 50 L75 50 L70 55 L-70 55 Z',
-  'KN-020': 'M-45 -30 L45 -30 L45 30 L-45 30 Z',
-  'KN-021': 'M-70 -15 L70 -15 L70 25 L-70 25 Z M-60 -5 L-40 -5 M-30 -5 L-10 -5 M0 -5 L20 -5 M30 -5 L50 -5 M-60 15 L60 15',
-  'KN-022': 'M-25 -30 C-45 -30 -45 40 -25 40 L25 40 C45 40 45 -30 25 -30 Z M0 -30 L0 5',
-  'KN-023': 'M-70 -30 L70 -30 L70 30 L-70 30 Z M-55 -15 L55 -15 M-55 0 L55 0 M-55 15 L55 15',
-  'KN-024': 'M-50 5 C-50 -50 50 -50 50 5 M-58 0 L-40 0 L-40 40 L-58 40 Z M40 0 L58 0 L58 40 L40 40 Z',
-  'KN-025': 'M0 0 m-30 0 a30 30 0 1 0 60 0 a30 30 0 1 0 -60 0 M0 0 m-15 0 a15 15 0 1 0 30 0 a15 15 0 1 0 -30 0',
-  'KN-026': 'M-30 -45 L30 -45 L30 45 L-30 45 Z M-15 -25 L-15 -15 L-5 -15 L-15 5 L-15 -5 L-25 -5 Z M-15 30 L15 30',
-  'KN-027': 'M-30 -30 L30 -30 L30 25 L-30 25 Z M-10 25 L-10 40 M10 25 L10 40 M-15 -15 L-15 -5 L-5 -5 L-15 15 L-15 5 L-25 5 Z',
-  'KN-028': 'M-30 -50 L30 -50 L30 50 L-30 50 Z M-15 -38 L15 -38 M10 -30 L25 -30 L25 -15 L10 -15 Z',
-  'KN-029': 'M-35 -30 L35 -30 L35 25 L-35 25 Z M0 25 L0 42 L-15 52 M0 42 L15 52 M0 0 m-8 0 a8 8 0 1 0 16 0 a8 8 0 1 0 -16 0',
+  // Atelier
+  'KN-ATL-001': 'M-60 -30 L-90 -10 L-70 20 L-50 10 L-50 60 L50 60 L50 10 L70 20 L90 -10 L60 -30 L40 -30 C40 -10 20 0 0 0 C-20 0 -40 -10 -40 -30 Z M0 25 m-14 0 a14 14 0 1 0 28 0 a14 14 0 1 0 -28 0',
+  'KN-ATL-002': 'M-55 -30 L-85 -5 L-65 20 L-50 10 L-50 60 L50 60 L50 10 L65 20 L85 -5 L55 -30 L20 -30 L15 -15 L-15 -15 L-20 -30 Z M-15 -15 L-10 15 L10 15 L15 -15',
+  'KN-ATL-003': 'M-55 -30 L-85 0 L-70 25 L-50 15 L-50 60 L50 60 L50 15 L70 25 L85 0 L55 -30 L20 -30 L0 -10 L-20 -30 Z M-30 0 L-30 55 M30 0 L30 55 M0 -10 L0 55',
+  'KN-ATL-004': 'M-60 -30 L-90 -5 L-70 25 L-50 15 L-50 65 L50 65 L50 15 L70 25 L90 -5 L60 -30 L40 -30 C40 -10 20 0 0 0 C-20 0 -40 -10 -40 -30 Z',
+  'KN-ATL-005': 'M-60 -25 L-90 5 L-70 30 L-50 20 L-50 70 L50 70 L50 20 L70 30 L90 5 L60 -25 C60 -50 -60 -50 -60 -25 Z M-25 -20 L-15 30 L15 30 L25 -20',
+  'KN-ATL-006': 'M-60 -30 L-85 0 L-70 25 L-55 15 L-55 65 L-10 65 L-10 -25 L10 -25 L10 65 L55 65 L55 15 L70 25 L85 0 L60 -30 Z M-10 -25 L0 -15 L10 -25',
+  // Casa
+  'KN-CASA-001': 'M-50 -50 L50 -50 L50 50 L-50 50 Z M-20 0 L0 -18 L20 0 L0 18 Z',
+  'KN-CASA-002': 'M-70 -45 L70 -45 L70 45 L-70 45 Z M-70 -25 L70 -25 M-70 -5 L70 -5 M-70 15 L70 15',
+  'KN-CASA-003': 'M-30 -20 L30 -20 L30 45 L-30 45 Z M0 -20 L0 -35 M-6 -40 C-6 -46 6 -46 6 -40 C6 -34 -6 -34 -6 -40',
+  'KN-CASA-004': 'M-45 -35 L-70 0 L-55 20 L-40 10 L-40 70 L40 70 L40 10 L55 20 L70 0 L45 -35 L20 -35 L0 -20 L-20 -35 Z',
+  'KN-CASA-005': 'M-40 -55 L40 -55 L40 55 L-40 55 Z M-25 -30 L25 -30 M-25 -15 L15 -15 M-25 0 L25 0',
 }
 
 // ─── PRODUCT 360°/3D VIEWER (Fake 3D com CSS + SVG) ─────────────────────
@@ -454,7 +455,7 @@ function Product360Viewer({
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
-type Page = 'home' | 'shop' | 'product' | 'contact' | 'about' | 'blog' | 'custom' | 'vestuario' | 'it' | 'success'
+type Page = 'home' | 'shop' | 'product' | 'contact' | 'about' | 'blog' | 'custom' | 'vestuario' | 'atelier' | 'casa' | 'success'
 
 interface Product {
   id: number
@@ -469,7 +470,7 @@ interface Product {
   name: string
   category: string
   subcategory?: string
-  vertical?: 'vestuario' | 'it'
+  vertical?: 'vestuario' | 'atelier' | 'casa'
   customizable?: boolean
   tags: string[]
   price: number
@@ -1006,202 +1007,202 @@ const ALL_PRODUCTS: Product[] = [
     specs: [{ label: 'Material', value: 'Tecido técnico impermeável' }, { label: 'Capacidade', value: '16 Litros' }, { label: 'Peso', value: '300g' }, { label: 'Cores', value: 'Preto, Navy, Verde-oliva, Bordeaux, Bege' }],
   },
   {
-    id: 19, sku: 'KN-019', name: 'Portátil Ultrafino 13" M-Series',
-    category: 'Computadores', subcategory: 'Computadores', vertical: 'it',
-    tags: ['computadores'],
-    price: 1299, originalPrice: null,
-    badge: 'Premium', badgeColor: 'gold',
-    rating: 4.9, reviews: 140, stock: 15,
+    id: 19, sku: 'KN-ATL-001', name: 'T-shirt Numerada — Karmic Edition',
+    category: 'Edições Limitadas', subcategory: 'Atelier', vertical: 'atelier',
+    tags: ['atelier', 'limitada', 'numerada'],
+    price: 89.99, originalPrice: null,
+    badge: 'Edição Limitada', badgeColor: 'gold',
+    rating: 5.0, reviews: 42, stock: 20,
     customizable: false,
-    image: 'data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 800 600%22 preserveAspectRatio=%22xMidYMid slice%22><defs><radialGradient id=%22g%22 cx=%2250%%22 cy=%2240%%22 r=%2270%%22><stop offset=%220%%22 stop-color=%22%238B1E2D%22 stop-opacity=%22.35%22/><stop offset=%22100%%22 stop-color=%22%230B0B0C%22 stop-opacity=%221%22/></radialGradient><pattern id=%22p%22 width=%2240%22 height=%2240%22 patternUnits=%22userSpaceOnUse%22><path d=%22M0 20 L40 20 M20 0 L20 40%22 stroke=%22%238B1E2D%22 stroke-width=%22.5%22 opacity=%22.08%22/></pattern></defs><rect width=%22800%22 height=%22600%22 fill=%22url(%23g)%22/><rect width=%22800%22 height=%22600%22 fill=%22url(%23p)%22/><g transform=%22translate(400 260)%22 fill=%22none%22 stroke=%22%238B1E2D%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 opacity=%22.85%22><rect x=%22-60%22 y=%22-30%22 width=%22120%22 height=%2275%22 rx=%224%22/><path d=%22M-75 50 L75 50 L70 55 L-70 55 Z%22/></g><text x=%22400%22 y=%22450%22 font-family=%22Georgia, serif%22 font-size=%2230%22 fill=%22%238B1E2D%22 opacity=%22.95%22 text-anchor=%22middle%22 font-style=%22italic%22>Computadores</text><text x=%22400%22 y=%22490%22 font-family=%22Inter, sans-serif%22 font-size=%2211%22 fill=%22%23F5F2ED%22 opacity=%22.5%22 text-anchor=%22middle%22 letter-spacing=%224%22>KARMIC · NODE</text></svg>',
-    images: ['data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 800 600%22 preserveAspectRatio=%22xMidYMid slice%22><defs><radialGradient id=%22g%22 cx=%2250%%22 cy=%2240%%22 r=%2270%%22><stop offset=%220%%22 stop-color=%22%238B1E2D%22 stop-opacity=%22.35%22/><stop offset=%22100%%22 stop-color=%22%230B0B0C%22 stop-opacity=%221%22/></radialGradient><pattern id=%22p%22 width=%2240%22 height=%2240%22 patternUnits=%22userSpaceOnUse%22><path d=%22M0 20 L40 20 M20 0 L20 40%22 stroke=%22%238B1E2D%22 stroke-width=%22.5%22 opacity=%22.08%22/></pattern></defs><rect width=%22800%22 height=%22600%22 fill=%22url(%23g)%22/><rect width=%22800%22 height=%22600%22 fill=%22url(%23p)%22/><g transform=%22translate(400 260)%22 fill=%22none%22 stroke=%22%238B1E2D%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 opacity=%22.85%22><rect x=%22-60%22 y=%22-30%22 width=%22120%22 height=%2275%22 rx=%224%22/><path d=%22M-75 50 L75 50 L70 55 L-70 55 Z%22/></g><text x=%22400%22 y=%22450%22 font-family=%22Georgia, serif%22 font-size=%2230%22 fill=%22%238B1E2D%22 opacity=%22.95%22 text-anchor=%22middle%22 font-style=%22italic%22>Computadores</text><text x=%22400%22 y=%22490%22 font-family=%22Inter, sans-serif%22 font-size=%2211%22 fill=%22%23F5F2ED%22 opacity=%22.5%22 text-anchor=%22middle%22 letter-spacing=%224%22>KARMIC · NODE</text></svg>'],
-    description: 'Processador de nova geração 8-core CPU / 10-core GPU. Ecrã Liquid Retina 13.6", 16GB RAM, 512GB SSD.',
-    nameEn: 'Ultrathin 13" M-Series Laptop',
-    descriptionEn: 'Next-gen 8-core CPU / 10-core GPU processor. 13.6" Liquid Retina display, 16GB RAM, 512GB SSD.',
-    categoryEn: 'Computers',
-    subcategoryEn: 'Computers',
-    specsEn: [{ label: 'CPU', value: '8-core M-Series' }, { label: 'RAM', value: '16GB unified' }, { label: 'Storage', value: '512GB SSD' }, { label: 'Display', value: '13.6" Liquid Retina' }, { label: 'Battery life', value: 'Up to 18h' }],
-    specs: [{ label: 'CPU', value: '8-core M-Series' }, { label: 'RAM', value: '16GB unificada' }, { label: 'Armazenamento', value: '512GB SSD' }, { label: 'Ecrã', value: '13.6" Liquid Retina' }, { label: 'Autonomia', value: 'Até 18h' }],
+    image: 'data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 800 600%22 preserveAspectRatio=%22xMidYMid slice%22><defs><radialGradient id=%22g%22 cx=%2250%%22 cy=%2240%%22 r=%2270%%22><stop offset=%220%%22 stop-color=%22%23B08D57%22 stop-opacity=%22.35%22/><stop offset=%22100%%22 stop-color=%22%230B0B0C%22 stop-opacity=%221%22/></radialGradient><pattern id=%22p%22 width=%2240%22 height=%2240%22 patternUnits=%22userSpaceOnUse%22><path d=%22M0 20 L40 20 M20 0 L20 40%22 stroke=%22%23B08D57%22 stroke-width=%22.5%22 opacity=%22.08%22/></pattern></defs><rect width=%22800%22 height=%22600%22 fill=%22url(%23g)%22/><rect width=%22800%22 height=%22600%22 fill=%22url(%23p)%22/><g transform=%22translate(400 260)%22 fill=%22none%22 stroke=%22%23B08D57%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 opacity=%22.85%22><path d=%22M-60 -30 L-90 -10 L-70 20 L-50 10 L-50 60 L50 60 L50 10 L70 20 L90 -10 L60 -30 L40 -30 C40 -10 20 0 0 0 C-20 0 -40 -10 -40 -30 Z%22/><circle cx=%220%22 cy=%2225%22 r=%2214%22/><text x=%220%22 y=%2230%22 font-size=%2216%22 text-anchor=%22middle%22 fill=%22currentColor%22>01</text></g><text x=%22400%22 y=%22450%22 font-family=%22Georgia, serif%22 font-size=%2230%22 fill=%22%23B08D57%22 opacity=%22.95%22 text-anchor=%22middle%22 font-style=%22italic%22>Edições Limitadas</text><text x=%22400%22 y=%22490%22 font-family=%22Inter, sans-serif%22 font-size=%2211%22 fill=%22%23F5F2ED%22 opacity=%22.5%22 text-anchor=%22middle%22 letter-spacing=%224%22>KARMIC · NODE</text></svg>',
+    images: ['data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 800 600%22 preserveAspectRatio=%22xMidYMid slice%22><defs><radialGradient id=%22g%22 cx=%2250%%22 cy=%2240%%22 r=%2270%%22><stop offset=%220%%22 stop-color=%22%23B08D57%22 stop-opacity=%22.35%22/><stop offset=%22100%%22 stop-color=%22%230B0B0C%22 stop-opacity=%221%22/></radialGradient><pattern id=%22p%22 width=%2240%22 height=%2240%22 patternUnits=%22userSpaceOnUse%22><path d=%22M0 20 L40 20 M20 0 L20 40%22 stroke=%22%23B08D57%22 stroke-width=%22.5%22 opacity=%22.08%22/></pattern></defs><rect width=%22800%22 height=%22600%22 fill=%22url(%23g)%22/><rect width=%22800%22 height=%22600%22 fill=%22url(%23p)%22/><g transform=%22translate(400 260)%22 fill=%22none%22 stroke=%22%23B08D57%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 opacity=%22.85%22><path d=%22M-60 -30 L-90 -10 L-70 20 L-50 10 L-50 60 L50 60 L50 10 L70 20 L90 -10 L60 -30 L40 -30 C40 -10 20 0 0 0 C-20 0 -40 -10 -40 -30 Z%22/></g><text x=%22400%22 y=%22450%22 font-family=%22Georgia, serif%22 font-size=%2230%22 fill=%22%23B08D57%22 opacity=%22.95%22 text-anchor=%22middle%22 font-style=%22italic%22>Edições Limitadas</text><text x=%22400%22 y=%22490%22 font-family=%22Inter, sans-serif%22 font-size=%2211%22 fill=%22%23F5F2ED%22 opacity=%22.5%22 text-anchor=%22middle%22 letter-spacing=%224%22>KARMIC · NODE</text></svg>'],
+    description: 'Peça numerada 001-020. Algodão pima orgânico 240gsm, bordado à mão, etiqueta de linho com o teu número.',
+    nameEn: 'Numbered T-shirt — Karmic Edition',
+    descriptionEn: 'Numbered piece 001-020. Organic pima cotton 240gsm, hand embroidery, linen label with your number.',
+    categoryEn: 'Limited Editions',
+    subcategoryEn: 'Atelier',
+    specsEn: [{ label: 'Edition', value: 'Limited to 20 units' }, { label: 'Material', value: 'Organic pima cotton' }, { label: 'Weight', value: '240gsm' }, { label: 'Details', value: 'Hand embroidery' }, { label: 'Certification', value: 'GOTS + Fair Trade' }],
+    specs: [{ label: 'Edição', value: 'Limitada a 20 unidades' }, { label: 'Material', value: 'Algodão pima orgânico' }, { label: 'Gramagem', value: '240gsm' }, { label: 'Detalhes', value: 'Bordado à mão' }, { label: 'Certificação', value: 'GOTS + Fair Trade' }],
   },
   {
-    id: 20, sku: 'KN-020', name: 'Mini PC Core i7 Compacto',
-    category: 'Computadores', subcategory: 'Computadores', vertical: 'it',
-    tags: ['computadores'],
-    price: 589, originalPrice: null,
+    id: 20, sku: 'KN-ATL-002', name: 'Casaco Ribatejo — Coleção Cápsula',
+    category: 'Edições Limitadas', subcategory: 'Atelier', vertical: 'atelier',
+    tags: ['atelier', 'casaco', 'capsula'],
+    price: 349, originalPrice: null,
+    badge: 'Cápsula Outono', badgeColor: 'bordo',
+    rating: 4.9, reviews: 18, stock: 15,
+    customizable: false,
+    image: 'data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 800 600%22 preserveAspectRatio=%22xMidYMid slice%22><defs><radialGradient id=%22g%22 cx=%2250%%22 cy=%2240%%22 r=%2270%%22><stop offset=%220%%22 stop-color=%22%23B08D57%22 stop-opacity=%22.35%22/><stop offset=%22100%%22 stop-color=%22%230B0B0C%22 stop-opacity=%221%22/></radialGradient><pattern id=%22p%22 width=%2240%22 height=%2240%22 patternUnits=%22userSpaceOnUse%22><path d=%22M0 20 L40 20 M20 0 L20 40%22 stroke=%22%23B08D57%22 stroke-width=%22.5%22 opacity=%22.08%22/></pattern></defs><rect width=%22800%22 height=%22600%22 fill=%22url(%23g)%22/><rect width=%22800%22 height=%22600%22 fill=%22url(%23p)%22/><g transform=%22translate(400 260)%22 fill=%22none%22 stroke=%22%23B08D57%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 opacity=%22.85%22><path d=%22M-55 -30 L-85 -5 L-65 20 L-50 10 L-50 60 L50 60 L50 10 L65 20 L85 -5 L55 -30 L20 -30 L15 -15 L-15 -15 L-20 -30 Z M-15 -15 L-10 15 L10 15 L15 -15%22/></g><text x=%22400%22 y=%22450%22 font-family=%22Georgia, serif%22 font-size=%2230%22 fill=%22%23B08D57%22 opacity=%22.95%22 text-anchor=%22middle%22 font-style=%22italic%22>Edições Limitadas</text><text x=%22400%22 y=%22490%22 font-family=%22Inter, sans-serif%22 font-size=%2211%22 fill=%22%23F5F2ED%22 opacity=%22.5%22 text-anchor=%22middle%22 letter-spacing=%224%22>KARMIC · NODE</text></svg>',
+    images: ['data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 800 600%22 preserveAspectRatio=%22xMidYMid slice%22><defs><radialGradient id=%22g%22 cx=%2250%%22 cy=%2240%%22 r=%2270%%22><stop offset=%220%%22 stop-color=%22%23B08D57%22 stop-opacity=%22.35%22/><stop offset=%22100%%22 stop-color=%22%230B0B0C%22 stop-opacity=%221%22/></radialGradient><pattern id=%22p%22 width=%2240%22 height=%2240%22 patternUnits=%22userSpaceOnUse%22><path d=%22M0 20 L40 20 M20 0 L20 40%22 stroke=%22%23B08D57%22 stroke-width=%22.5%22 opacity=%22.08%22/></pattern></defs><rect width=%22800%22 height=%22600%22 fill=%22url(%23g)%22/><rect width=%22800%22 height=%22600%22 fill=%22url(%23p)%22/><g transform=%22translate(400 260)%22 fill=%22none%22 stroke=%22%23B08D57%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 opacity=%22.85%22><path d=%22M-55 -30 L-85 -5 L-65 20 L-50 10 L-50 60 L50 60 L50 10 L65 20 L85 -5 L55 -30 L20 -30 L15 -15 L-15 -15 L-20 -30 Z M-15 -15 L-10 15 L10 15 L15 -15%22/></g><text x=%22400%22 y=%22450%22 font-family=%22Georgia, serif%22 font-size=%2230%22 fill=%22%23B08D57%22 opacity=%22.95%22 text-anchor=%22middle%22 font-style=%22italic%22>Edições Limitadas</text><text x=%22400%22 y=%22490%22 font-family=%22Inter, sans-serif%22 font-size=%2211%22 fill=%22%23F5F2ED%22 opacity=%22.5%22 text-anchor=%22middle%22 letter-spacing=%224%22>KARMIC · NODE</text></svg>'],
+    description: 'Casaco de lã virgem portuguesa, forro de seda. Homenagem ao Ribatejo. Produção artesanal em Cartaxo.',
+    nameEn: 'Ribatejo Coat — Capsule Collection',
+    descriptionEn: 'Portuguese virgin wool coat, silk lining. Homage to Ribatejo. Artisanal production in Cartaxo.',
+    categoryEn: 'Limited Editions',
+    subcategoryEn: 'Atelier',
+    specs: [{ label: 'Edição', value: '15 peças únicas' }, { label: 'Material', value: 'Lã virgem PT + forro seda' }, { label: 'Origem', value: 'Feito em Cartaxo, Portugal' }, { label: 'Assinatura', value: 'Etiqueta assinada' }],
+    specsEn: [{ label: 'Edition', value: '15 unique pieces' }, { label: 'Material', value: 'PT virgin wool + silk lining' }, { label: 'Origin', value: 'Made in Cartaxo, Portugal' }, { label: 'Signature', value: 'Signed label' }],
+  },
+  {
+    id: 21, sku: 'KN-ATL-003', name: 'Vestido Cerimónia — Bordado Artesanal',
+    category: 'Edições Limitadas', subcategory: 'Atelier', vertical: 'atelier',
+    tags: ['atelier', 'vestido', 'bordado'],
+    price: 429, originalPrice: null,
+    badge: 'Peça Única', badgeColor: 'gold',
+    rating: 5.0, reviews: 12, stock: 8,
+    customizable: false,
+    image: 'data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 800 600%22 preserveAspectRatio=%22xMidYMid slice%22><defs><radialGradient id=%22g%22 cx=%2250%%22 cy=%2240%%22 r=%2270%%22><stop offset=%220%%22 stop-color=%22%23B08D57%22 stop-opacity=%22.35%22/><stop offset=%22100%%22 stop-color=%22%230B0B0C%22 stop-opacity=%221%22/></radialGradient><pattern id=%22p%22 width=%2240%22 height=%2240%22 patternUnits=%22userSpaceOnUse%22><path d=%22M0 20 L40 20 M20 0 L20 40%22 stroke=%22%23B08D57%22 stroke-width=%22.5%22 opacity=%22.08%22/></pattern></defs><rect width=%22800%22 height=%22600%22 fill=%22url(%23g)%22/><rect width=%22800%22 height=%22600%22 fill=%22url(%23p)%22/><g transform=%22translate(400 260)%22 fill=%22none%22 stroke=%22%23B08D57%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 opacity=%22.85%22><path d=%22M-55 -30 L-85 0 L-70 25 L-50 15 L-50 60 L50 60 L50 15 L70 25 L85 0 L55 -30 L20 -30 L0 -10 L-20 -30 Z M-30 0 L-30 55 M30 0 L30 55 M0 -10 L0 55%22/></g><text x=%22400%22 y=%22450%22 font-family=%22Georgia, serif%22 font-size=%2230%22 fill=%22%23B08D57%22 opacity=%22.95%22 text-anchor=%22middle%22 font-style=%22italic%22>Edições Limitadas</text><text x=%22400%22 y=%22490%22 font-family=%22Inter, sans-serif%22 font-size=%2211%22 fill=%22%23F5F2ED%22 opacity=%22.5%22 text-anchor=%22middle%22 letter-spacing=%224%22>KARMIC · NODE</text></svg>',
+    images: ['data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 800 600%22 preserveAspectRatio=%22xMidYMid slice%22><defs><radialGradient id=%22g%22 cx=%2250%%22 cy=%2240%%22 r=%2270%%22><stop offset=%220%%22 stop-color=%22%23B08D57%22 stop-opacity=%22.35%22/><stop offset=%22100%%22 stop-color=%22%230B0B0C%22 stop-opacity=%221%22/></radialGradient><pattern id=%22p%22 width=%2240%22 height=%2240%22 patternUnits=%22userSpaceOnUse%22><path d=%22M0 20 L40 20 M20 0 L20 40%22 stroke=%22%23B08D57%22 stroke-width=%22.5%22 opacity=%22.08%22/></pattern></defs><rect width=%22800%22 height=%22600%22 fill=%22url(%23g)%22/><rect width=%22800%22 height=%22600%22 fill=%22url(%23p)%22/><g transform=%22translate(400 260)%22 fill=%22none%22 stroke=%22%23B08D57%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 opacity=%22.85%22><path d=%22M-55 -30 L-85 0 L-70 25 L-50 15 L-50 60 L50 60 L50 15 L70 25 L85 0 L55 -30 L20 -30 L0 -10 L-20 -30 Z M-30 0 L-30 55 M30 0 L30 55 M0 -10 L0 55%22/></g><text x=%22400%22 y=%22450%22 font-family=%22Georgia, serif%22 font-size=%2230%22 fill=%22%23B08D57%22 opacity=%22.95%22 text-anchor=%22middle%22 font-style=%22italic%22>Edições Limitadas</text><text x=%22400%22 y=%22490%22 font-family=%22Inter, sans-serif%22 font-size=%2211%22 fill=%22%23F5F2ED%22 opacity=%22.5%22 text-anchor=%22middle%22 letter-spacing=%224%22>KARMIC · NODE</text></svg>'],
+    description: 'Vestido midi com bordados à mão inspirados em azulejaria portuguesa. Feito sob encomenda.',
+    nameEn: 'Ceremony Dress — Hand Embroidered',
+    descriptionEn: 'Midi dress with hand embroidery inspired by Portuguese tile art. Made to order.',
+    categoryEn: 'Limited Editions',
+    subcategoryEn: 'Atelier',
+    specs: [{ label: 'Produção', value: 'Sob encomenda (4-6 sem.)' }, { label: 'Material', value: 'Viscose EcoVero' }, { label: 'Bordado', value: '100% artesanal' }, { label: 'Inspiração', value: 'Azulejaria PT séc. XVIII' }],
+    specsEn: [{ label: 'Production', value: 'Made to order (4-6 weeks)' }, { label: 'Material', value: 'EcoVero viscose' }, { label: 'Embroidery', value: '100% handmade' }, { label: 'Inspiration', value: '18th century PT tiles' }],
+  },
+  {
+    id: 22, sku: 'KN-ATL-004', name: 'Camisa de Linho — Signature Collection',
+    category: 'Edições Limitadas', subcategory: 'Atelier', vertical: 'atelier',
+    tags: ['atelier', 'linho', 'signature'],
+    price: 189, originalPrice: null,
+    badge: 'Signature', badgeColor: 'gold',
+    rating: 4.9, reviews: 34, stock: 25,
+    customizable: false,
+    image: 'data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 800 600%22 preserveAspectRatio=%22xMidYMid slice%22><defs><radialGradient id=%22g%22 cx=%2250%%22 cy=%2240%%22 r=%2270%%22><stop offset=%220%%22 stop-color=%22%23B08D57%22 stop-opacity=%22.35%22/><stop offset=%22100%%22 stop-color=%22%230B0B0C%22 stop-opacity=%221%22/></radialGradient><pattern id=%22p%22 width=%2240%22 height=%2240%22 patternUnits=%22userSpaceOnUse%22><path d=%22M0 20 L40 20 M20 0 L20 40%22 stroke=%22%23B08D57%22 stroke-width=%22.5%22 opacity=%22.08%22/></pattern></defs><rect width=%22800%22 height=%22600%22 fill=%22url(%23g)%22/><rect width=%22800%22 height=%22600%22 fill=%22url(%23p)%22/><g transform=%22translate(400 260)%22 fill=%22none%22 stroke=%22%23B08D57%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 opacity=%22.85%22><path d=%22M-60 -30 L-90 -5 L-70 25 L-50 15 L-50 65 L50 65 L50 15 L70 25 L90 -5 L60 -30 L40 -30 C40 -10 20 0 0 0 C-20 0 -40 -10 -40 -30 Z%22/></g><text x=%22400%22 y=%22450%22 font-family=%22Georgia, serif%22 font-size=%2230%22 fill=%22%23B08D57%22 opacity=%22.95%22 text-anchor=%22middle%22 font-style=%22italic%22>Edições Limitadas</text><text x=%22400%22 y=%22490%22 font-family=%22Inter, sans-serif%22 font-size=%2211%22 fill=%22%23F5F2ED%22 opacity=%22.5%22 text-anchor=%22middle%22 letter-spacing=%224%22>KARMIC · NODE</text></svg>',
+    images: ['data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 800 600%22 preserveAspectRatio=%22xMidYMid slice%22><defs><radialGradient id=%22g%22 cx=%2250%%22 cy=%2240%%22 r=%2270%%22><stop offset=%220%%22 stop-color=%22%23B08D57%22 stop-opacity=%22.35%22/><stop offset=%22100%%22 stop-color=%22%230B0B0C%22 stop-opacity=%221%22/></radialGradient><pattern id=%22p%22 width=%2240%22 height=%2240%22 patternUnits=%22userSpaceOnUse%22><path d=%22M0 20 L40 20 M20 0 L20 40%22 stroke=%22%23B08D57%22 stroke-width=%22.5%22 opacity=%22.08%22/></pattern></defs><rect width=%22800%22 height=%22600%22 fill=%22url(%23g)%22/><rect width=%22800%22 height=%22600%22 fill=%22url(%23p)%22/><g transform=%22translate(400 260)%22 fill=%22none%22 stroke=%22%23B08D57%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 opacity=%22.85%22><path d=%22M-60 -30 L-90 -5 L-70 25 L-50 15 L-50 65 L50 65 L50 15 L70 25 L90 -5 L60 -30 L40 -30 C40 -10 20 0 0 0 C-20 0 -40 -10 -40 -30 Z%22/></g><text x=%22400%22 y=%22450%22 font-family=%22Georgia, serif%22 font-size=%2230%22 fill=%22%23B08D57%22 opacity=%22.95%22 text-anchor=%22middle%22 font-style=%22italic%22>Edições Limitadas</text><text x=%22400%22 y=%22490%22 font-family=%22Inter, sans-serif%22 font-size=%2211%22 fill=%22%23F5F2ED%22 opacity=%22.5%22 text-anchor=%22middle%22 letter-spacing=%224%22>KARMIC · NODE</text></svg>'],
+    description: 'Linho europeu de gama alta, corte relaxado. Botões de madeira certificada. Coleção mestre.',
+    nameEn: 'Linen Shirt — Signature Collection',
+    descriptionEn: 'High-end European linen, relaxed cut. Certified wood buttons. Master collection.',
+    categoryEn: 'Limited Editions',
+    subcategoryEn: 'Atelier',
+    specs: [{ label: 'Material', value: 'Linho europeu 180gsm' }, { label: 'Botões', value: 'Madeira FSC certificada' }, { label: 'Corte', value: 'Relaxado, unissex' }, { label: 'Origem', value: 'Tecelagem em Portugal' }],
+    specsEn: [{ label: 'Material', value: 'European linen 180gsm' }, { label: 'Buttons', value: 'FSC certified wood' }, { label: 'Cut', value: 'Relaxed, unisex' }, { label: 'Origin', value: 'Woven in Portugal' }],
+  },
+  {
+    id: 23, sku: 'KN-ATL-005', name: 'Blazer Alfaiataria — Made-to-Measure',
+    category: 'Edições Limitadas', subcategory: 'Atelier', vertical: 'atelier',
+    tags: ['atelier', 'blazer', 'alfaiataria'],
+    price: 549, originalPrice: null,
+    badge: 'Sob Medida', badgeColor: 'bordo',
+    rating: 5.0, reviews: 8, stock: 10,
+    customizable: false,
+    image: 'data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 800 600%22 preserveAspectRatio=%22xMidYMid slice%22><defs><radialGradient id=%22g%22 cx=%2250%%22 cy=%2240%%22 r=%2270%%22><stop offset=%220%%22 stop-color=%22%23B08D57%22 stop-opacity=%22.35%22/><stop offset=%22100%%22 stop-color=%22%230B0B0C%22 stop-opacity=%221%22/></radialGradient><pattern id=%22p%22 width=%2240%22 height=%2240%22 patternUnits=%22userSpaceOnUse%22><path d=%22M0 20 L40 20 M20 0 L20 40%22 stroke=%22%23B08D57%22 stroke-width=%22.5%22 opacity=%22.08%22/></pattern></defs><rect width=%22800%22 height=%22600%22 fill=%22url(%23g)%22/><rect width=%22800%22 height=%22600%22 fill=%22url(%23p)%22/><g transform=%22translate(400 260)%22 fill=%22none%22 stroke=%22%23B08D57%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 opacity=%22.85%22><path d=%22M-60 -25 L-90 5 L-70 30 L-50 20 L-50 70 L50 70 L50 20 L70 30 L90 5 L60 -25 C60 -50 -60 -50 -60 -25 Z M-25 -20 L-15 30 L15 30 L25 -20%22/></g><text x=%22400%22 y=%22450%22 font-family=%22Georgia, serif%22 font-size=%2230%22 fill=%22%23B08D57%22 opacity=%22.95%22 text-anchor=%22middle%22 font-style=%22italic%22>Edições Limitadas</text><text x=%22400%22 y=%22490%22 font-family=%22Inter, sans-serif%22 font-size=%2211%22 fill=%22%23F5F2ED%22 opacity=%22.5%22 text-anchor=%22middle%22 letter-spacing=%224%22>KARMIC · NODE</text></svg>',
+    images: ['data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 800 600%22 preserveAspectRatio=%22xMidYMid slice%22><defs><radialGradient id=%22g%22 cx=%2250%%22 cy=%2240%%22 r=%2270%%22><stop offset=%220%%22 stop-color=%22%23B08D57%22 stop-opacity=%22.35%22/><stop offset=%22100%%22 stop-color=%22%230B0B0C%22 stop-opacity=%221%22/></radialGradient><pattern id=%22p%22 width=%2240%22 height=%2240%22 patternUnits=%22userSpaceOnUse%22><path d=%22M0 20 L40 20 M20 0 L20 40%22 stroke=%22%23B08D57%22 stroke-width=%22.5%22 opacity=%22.08%22/></pattern></defs><rect width=%22800%22 height=%22600%22 fill=%22url(%23g)%22/><rect width=%22800%22 height=%22600%22 fill=%22url(%23p)%22/><g transform=%22translate(400 260)%22 fill=%22none%22 stroke=%22%23B08D57%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 opacity=%22.85%22><path d=%22M-60 -25 L-90 5 L-70 30 L-50 20 L-50 70 L50 70 L50 20 L70 30 L90 5 L60 -25 C60 -50 -60 -50 -60 -25 Z M-25 -20 L-15 30 L15 30 L25 -20%22/></g><text x=%22400%22 y=%22450%22 font-family=%22Georgia, serif%22 font-size=%2230%22 fill=%22%23B08D57%22 opacity=%22.95%22 text-anchor=%22middle%22 font-style=%22italic%22>Edições Limitadas</text><text x=%22400%22 y=%22490%22 font-family=%22Inter, sans-serif%22 font-size=%2211%22 fill=%22%23F5F2ED%22 opacity=%22.5%22 text-anchor=%22middle%22 letter-spacing=%224%22>KARMIC · NODE</text></svg>'],
+    description: 'Blazer feito sob medida por alfaiate português. Lã Loro Piana ou merino, à tua escolha. 3 provas incluídas.',
+    nameEn: 'Tailored Blazer — Made-to-Measure',
+    descriptionEn: 'Blazer made to measure by Portuguese tailor. Loro Piana or merino wool, your choice. 3 fittings included.',
+    categoryEn: 'Limited Editions',
+    subcategoryEn: 'Atelier',
+    specs: [{ label: 'Confecção', value: 'Sob medida completa' }, { label: 'Provas', value: '3 provas incluídas' }, { label: 'Material', value: 'Loro Piana ou merino' }, { label: 'Prazo', value: '6-8 semanas' }],
+    specsEn: [{ label: 'Tailoring', value: 'Full made-to-measure' }, { label: 'Fittings', value: '3 fittings included' }, { label: 'Material', value: 'Loro Piana or merino' }, { label: 'Delivery', value: '6-8 weeks' }],
+  },
+  {
+    id: 24, sku: 'KN-ATL-006', name: 'Kimono Karmic — Colab Artista',
+    category: 'Edições Limitadas', subcategory: 'Atelier', vertical: 'atelier',
+    tags: ['atelier', 'kimono', 'colaboracao'],
+    price: 279, originalPrice: null,
+    badge: 'Colaboração', badgeColor: 'gold',
+    rating: 4.9, reviews: 22, stock: 30,
+    customizable: false,
+    image: 'data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 800 600%22 preserveAspectRatio=%22xMidYMid slice%22><defs><radialGradient id=%22g%22 cx=%2250%%22 cy=%2240%%22 r=%2270%%22><stop offset=%220%%22 stop-color=%22%23B08D57%22 stop-opacity=%22.35%22/><stop offset=%22100%%22 stop-color=%22%230B0B0C%22 stop-opacity=%221%22/></radialGradient><pattern id=%22p%22 width=%2240%22 height=%2240%22 patternUnits=%22userSpaceOnUse%22><path d=%22M0 20 L40 20 M20 0 L20 40%22 stroke=%22%23B08D57%22 stroke-width=%22.5%22 opacity=%22.08%22/></pattern></defs><rect width=%22800%22 height=%22600%22 fill=%22url(%23g)%22/><rect width=%22800%22 height=%22600%22 fill=%22url(%23p)%22/><g transform=%22translate(400 260)%22 fill=%22none%22 stroke=%22%23B08D57%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 opacity=%22.85%22><path d=%22M-60 -30 L-85 0 L-70 25 L-55 15 L-55 65 L-10 65 L-10 -25 L10 -25 L10 65 L55 65 L55 15 L70 25 L85 0 L60 -30 Z M-10 -25 L0 -15 L10 -25%22/></g><text x=%22400%22 y=%22450%22 font-family=%22Georgia, serif%22 font-size=%2230%22 fill=%22%23B08D57%22 opacity=%22.95%22 text-anchor=%22middle%22 font-style=%22italic%22>Edições Limitadas</text><text x=%22400%22 y=%22490%22 font-family=%22Inter, sans-serif%22 font-size=%2211%22 fill=%22%23F5F2ED%22 opacity=%22.5%22 text-anchor=%22middle%22 letter-spacing=%224%22>KARMIC · NODE</text></svg>',
+    images: ['data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 800 600%22 preserveAspectRatio=%22xMidYMid slice%22><defs><radialGradient id=%22g%22 cx=%2250%%22 cy=%2240%%22 r=%2270%%22><stop offset=%220%%22 stop-color=%22%23B08D57%22 stop-opacity=%22.35%22/><stop offset=%22100%%22 stop-color=%22%230B0B0C%22 stop-opacity=%221%22/></radialGradient><pattern id=%22p%22 width=%2240%22 height=%2240%22 patternUnits=%22userSpaceOnUse%22><path d=%22M0 20 L40 20 M20 0 L20 40%22 stroke=%22%23B08D57%22 stroke-width=%22.5%22 opacity=%22.08%22/></pattern></defs><rect width=%22800%22 height=%22600%22 fill=%22url(%23g)%22/><rect width=%22800%22 height=%22600%22 fill=%22url(%23p)%22/><g transform=%22translate(400 260)%22 fill=%22none%22 stroke=%22%23B08D57%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 opacity=%22.85%22><path d=%22M-60 -30 L-85 0 L-70 25 L-55 15 L-55 65 L-10 65 L-10 -25 L10 -25 L10 65 L55 65 L55 15 L70 25 L85 0 L60 -30 Z M-10 -25 L0 -15 L10 -25%22/></g><text x=%22400%22 y=%22450%22 font-family=%22Georgia, serif%22 font-size=%2230%22 fill=%22%23B08D57%22 opacity=%22.95%22 text-anchor=%22middle%22 font-style=%22italic%22>Edições Limitadas</text><text x=%22400%22 y=%22490%22 font-family=%22Inter, sans-serif%22 font-size=%2211%22 fill=%22%23F5F2ED%22 opacity=%22.5%22 text-anchor=%22middle%22 letter-spacing=%224%22>KARMIC · NODE</text></svg>'],
+    description: 'Colaboração com artista visual português. Estampado exclusivo, cada peça numerada. 30 unidades no mundo.',
+    nameEn: 'Karmic Kimono — Artist Collab',
+    descriptionEn: 'Collaboration with Portuguese visual artist. Exclusive print, each piece numbered. 30 units worldwide.',
+    categoryEn: 'Limited Editions',
+    subcategoryEn: 'Atelier',
+    specs: [{ label: 'Colaboração', value: 'Artista visual PT (Anon.)' }, { label: 'Edição', value: '30 numeradas' }, { label: 'Material', value: 'Viscose crepe' }, { label: 'Estampado', value: 'Sublimação eco-friendly' }],
+    specsEn: [{ label: 'Collaboration', value: 'PT visual artist' }, { label: 'Edition', value: '30 numbered' }, { label: 'Material', value: 'Crepe viscose' }, { label: 'Print', value: 'Eco-friendly sublimation' }],
+  },
+  {
+    id: 25, sku: 'KN-CASA-001', name: 'Almofada Karmic — Linho Bordado',
+    category: 'Almofadas', subcategory: 'Têxtil Lar', vertical: 'casa',
+    tags: ['casa', 'almofada', 'linho'],
+    price: 49.99, originalPrice: null,
     badge: null, badgeColor: 'gold',
-    rating: 4.6, reviews: 85, stock: 12,
-    customizable: false,
-    image: 'data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 800 600%22 preserveAspectRatio=%22xMidYMid slice%22><defs><radialGradient id=%22g%22 cx=%2250%%22 cy=%2240%%22 r=%2270%%22><stop offset=%220%%22 stop-color=%22%238B1E2D%22 stop-opacity=%22.35%22/><stop offset=%22100%%22 stop-color=%22%230B0B0C%22 stop-opacity=%221%22/></radialGradient><pattern id=%22p%22 width=%2240%22 height=%2240%22 patternUnits=%22userSpaceOnUse%22><path d=%22M0 20 L40 20 M20 0 L20 40%22 stroke=%22%238B1E2D%22 stroke-width=%22.5%22 opacity=%22.08%22/></pattern></defs><rect width=%22800%22 height=%22600%22 fill=%22url(%23g)%22/><rect width=%22800%22 height=%22600%22 fill=%22url(%23p)%22/><g transform=%22translate(400 260)%22 fill=%22none%22 stroke=%22%238B1E2D%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 opacity=%22.85%22><rect x=%22-45%22 y=%22-30%22 width=%2290%22 height=%2260%22 rx=%223%22/><circle cx=%220%22 cy=%220%22 r=%223%22/><path d=%22M-30 -20 L-15 -20 M-30 -10 L-15 -10%22/></g><text x=%22400%22 y=%22450%22 font-family=%22Georgia, serif%22 font-size=%2230%22 fill=%22%238B1E2D%22 opacity=%22.95%22 text-anchor=%22middle%22 font-style=%22italic%22>Computadores</text><text x=%22400%22 y=%22490%22 font-family=%22Inter, sans-serif%22 font-size=%2211%22 fill=%22%23F5F2ED%22 opacity=%22.5%22 text-anchor=%22middle%22 letter-spacing=%224%22>KARMIC · NODE</text></svg>',
-    images: ['data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 800 600%22 preserveAspectRatio=%22xMidYMid slice%22><defs><radialGradient id=%22g%22 cx=%2250%%22 cy=%2240%%22 r=%2270%%22><stop offset=%220%%22 stop-color=%22%238B1E2D%22 stop-opacity=%22.35%22/><stop offset=%22100%%22 stop-color=%22%230B0B0C%22 stop-opacity=%221%22/></radialGradient><pattern id=%22p%22 width=%2240%22 height=%2240%22 patternUnits=%22userSpaceOnUse%22><path d=%22M0 20 L40 20 M20 0 L20 40%22 stroke=%22%238B1E2D%22 stroke-width=%22.5%22 opacity=%22.08%22/></pattern></defs><rect width=%22800%22 height=%22600%22 fill=%22url(%23g)%22/><rect width=%22800%22 height=%22600%22 fill=%22url(%23p)%22/><g transform=%22translate(400 260)%22 fill=%22none%22 stroke=%22%238B1E2D%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 opacity=%22.85%22><rect x=%22-45%22 y=%22-30%22 width=%2290%22 height=%2260%22 rx=%223%22/><circle cx=%220%22 cy=%220%22 r=%223%22/><path d=%22M-30 -20 L-15 -20 M-30 -10 L-15 -10%22/></g><text x=%22400%22 y=%22450%22 font-family=%22Georgia, serif%22 font-size=%2230%22 fill=%22%238B1E2D%22 opacity=%22.95%22 text-anchor=%22middle%22 font-style=%22italic%22>Computadores</text><text x=%22400%22 y=%22490%22 font-family=%22Inter, sans-serif%22 font-size=%2211%22 fill=%22%23F5F2ED%22 opacity=%22.5%22 text-anchor=%22middle%22 letter-spacing=%224%22>KARMIC · NODE</text></svg>'],
-    description: 'Processador Intel Core i7, suporte até 4 ecrãs 4K, WiFi 6E. Poder de secretária num formato compacto.',
-    nameEn: 'Compact Core i7 Mini PC',
-    descriptionEn: 'Intel Core i7 processor, supports up to 4× 4K displays, WiFi 6E. Desktop power in a compact form.',
-    categoryEn: 'Computers',
-    subcategoryEn: 'Computers',
-    specsEn: [{ label: 'CPU', value: 'Intel Core i7 (13th gen)' }, { label: 'RAM', value: '16GB DDR4' }, { label: 'Storage', value: '512GB NVMe' }, { label: 'Network', value: 'WiFi 6E + BT 5.3' }, { label: 'Outputs', value: '4× 4K display' }],
-    specs: [{ label: 'CPU', value: 'Intel Core i7 (13ª gen)' }, { label: 'RAM', value: '16GB DDR4' }, { label: 'Armazenamento', value: '512GB NVMe' }, { label: 'Rede', value: 'WiFi 6E + BT 5.3' }, { label: 'Saídas', value: '4× ecrã 4K' }],
+    rating: 4.8, reviews: 128, stock: 40,
+    customizable: true,
+    image: 'data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 800 600%22 preserveAspectRatio=%22xMidYMid slice%22><defs><radialGradient id=%22g%22 cx=%2250%%22 cy=%2240%%22 r=%2270%%22><stop offset=%220%%22 stop-color=%22%23B08D57%22 stop-opacity=%22.35%22/><stop offset=%22100%%22 stop-color=%22%230B0B0C%22 stop-opacity=%221%22/></radialGradient><pattern id=%22p%22 width=%2240%22 height=%2240%22 patternUnits=%22userSpaceOnUse%22><path d=%22M0 20 L40 20 M20 0 L20 40%22 stroke=%22%23B08D57%22 stroke-width=%22.5%22 opacity=%22.08%22/></pattern></defs><rect width=%22800%22 height=%22600%22 fill=%22url(%23g)%22/><rect width=%22800%22 height=%22600%22 fill=%22url(%23p)%22/><g transform=%22translate(400 260)%22 fill=%22none%22 stroke=%22%23B08D57%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 opacity=%22.85%22><rect x=%22-50%22 y=%22-50%22 width=%22100%22 height=%22100%22 rx=%228%22/><path d=%22M-20 0 L0 -18 L20 0 L0 18 Z%22/></g><text x=%22400%22 y=%22450%22 font-family=%22Georgia, serif%22 font-size=%2230%22 fill=%22%23B08D57%22 opacity=%22.95%22 text-anchor=%22middle%22 font-style=%22italic%22>Têxtil Lar</text><text x=%22400%22 y=%22490%22 font-family=%22Inter, sans-serif%22 font-size=%2211%22 fill=%22%23F5F2ED%22 opacity=%22.5%22 text-anchor=%22middle%22 letter-spacing=%224%22>KARMIC · NODE</text></svg>',
+    images: ['data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 800 600%22 preserveAspectRatio=%22xMidYMid slice%22><defs><radialGradient id=%22g%22 cx=%2250%%22 cy=%2240%%22 r=%2270%%22><stop offset=%220%%22 stop-color=%22%23B08D57%22 stop-opacity=%22.35%22/><stop offset=%22100%%22 stop-color=%22%230B0B0C%22 stop-opacity=%221%22/></radialGradient><pattern id=%22p%22 width=%2240%22 height=%2240%22 patternUnits=%22userSpaceOnUse%22><path d=%22M0 20 L40 20 M20 0 L20 40%22 stroke=%22%23B08D57%22 stroke-width=%22.5%22 opacity=%22.08%22/></pattern></defs><rect width=%22800%22 height=%22600%22 fill=%22url(%23g)%22/><rect width=%22800%22 height=%22600%22 fill=%22url(%23p)%22/><g transform=%22translate(400 260)%22 fill=%22none%22 stroke=%22%23B08D57%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 opacity=%22.85%22><rect x=%22-50%22 y=%22-50%22 width=%22100%22 height=%22100%22 rx=%228%22/><path d=%22M-20 0 L0 -18 L20 0 L0 18 Z%22/></g><text x=%22400%22 y=%22450%22 font-family=%22Georgia, serif%22 font-size=%2230%22 fill=%22%23B08D57%22 opacity=%22.95%22 text-anchor=%22middle%22 font-style=%22italic%22>Têxtil Lar</text><text x=%22400%22 y=%22490%22 font-family=%22Inter, sans-serif%22 font-size=%2211%22 fill=%22%23F5F2ED%22 opacity=%22.5%22 text-anchor=%22middle%22 letter-spacing=%224%22>KARMIC · NODE</text></svg>'],
+    description: 'Capa de almofada em linho natural com bordado Karmic. 50×50cm. Inclui enchimento em pena.',
+    nameEn: 'Karmic Cushion — Embroidered Linen',
+    descriptionEn: 'Natural linen cushion cover with Karmic embroidery. 50×50cm. Feather insert included.',
+    categoryEn: 'Cushions',
+    subcategoryEn: 'Home Textile',
+    specs: [{ label: 'Tamanho', value: '50×50 cm' }, { label: 'Material', value: 'Linho natural 100%' }, { label: 'Bordado', value: 'Logo Karmic ✦' }, { label: 'Enchimento', value: 'Pena natural incluída' }],
+    specsEn: [{ label: 'Size', value: '50×50 cm' }, { label: 'Material', value: '100% natural linen' }, { label: 'Embroidery', value: 'Karmic ✦ logo' }, { label: 'Filling', value: 'Natural feather included' }],
   },
   {
-    id: 21, sku: 'KN-021', name: 'Teclado Mecânico Sem Fios',
-    category: 'Periféricos', subcategory: 'Periféricos', vertical: 'it',
-    tags: ['periféricos'],
+    id: 26, sku: 'KN-CASA-002', name: 'Manta Karmic — Lã Merino',
+    category: 'Mantas', subcategory: 'Têxtil Lar', vertical: 'casa',
+    tags: ['casa', 'manta', 'la'],
+    price: 129, originalPrice: null,
+    badge: 'Popular', badgeColor: 'bordo',
+    rating: 4.9, reviews: 86, stock: 30,
+    customizable: false,
+    image: 'data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 800 600%22 preserveAspectRatio=%22xMidYMid slice%22><defs><radialGradient id=%22g%22 cx=%2250%%22 cy=%2240%%22 r=%2270%%22><stop offset=%220%%22 stop-color=%22%23B08D57%22 stop-opacity=%22.35%22/><stop offset=%22100%%22 stop-color=%22%230B0B0C%22 stop-opacity=%221%22/></radialGradient><pattern id=%22p%22 width=%2240%22 height=%2240%22 patternUnits=%22userSpaceOnUse%22><path d=%22M0 20 L40 20 M20 0 L20 40%22 stroke=%22%23B08D57%22 stroke-width=%22.5%22 opacity=%22.08%22/></pattern></defs><rect width=%22800%22 height=%22600%22 fill=%22url(%23g)%22/><rect width=%22800%22 height=%22600%22 fill=%22url(%23p)%22/><g transform=%22translate(400 260)%22 fill=%22none%22 stroke=%22%23B08D57%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 opacity=%22.85%22><rect x=%22-70%22 y=%22-45%22 width=%22140%22 height=%2290%22 rx=%224%22/><path d=%22M-70 -25 L70 -25 M-70 -5 L70 -5 M-70 15 L70 15%22 opacity=%22.5%22/></g><text x=%22400%22 y=%22450%22 font-family=%22Georgia, serif%22 font-size=%2230%22 fill=%22%23B08D57%22 opacity=%22.95%22 text-anchor=%22middle%22 font-style=%22italic%22>Têxtil Lar</text><text x=%22400%22 y=%22490%22 font-family=%22Inter, sans-serif%22 font-size=%2211%22 fill=%22%23F5F2ED%22 opacity=%22.5%22 text-anchor=%22middle%22 letter-spacing=%224%22>KARMIC · NODE</text></svg>',
+    images: ['data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 800 600%22 preserveAspectRatio=%22xMidYMid slice%22><defs><radialGradient id=%22g%22 cx=%2250%%22 cy=%2240%%22 r=%2270%%22><stop offset=%220%%22 stop-color=%22%23B08D57%22 stop-opacity=%22.35%22/><stop offset=%22100%%22 stop-color=%22%230B0B0C%22 stop-opacity=%221%22/></radialGradient><pattern id=%22p%22 width=%2240%22 height=%2240%22 patternUnits=%22userSpaceOnUse%22><path d=%22M0 20 L40 20 M20 0 L20 40%22 stroke=%22%23B08D57%22 stroke-width=%22.5%22 opacity=%22.08%22/></pattern></defs><rect width=%22800%22 height=%22600%22 fill=%22url(%23g)%22/><rect width=%22800%22 height=%22600%22 fill=%22url(%23p)%22/><g transform=%22translate(400 260)%22 fill=%22none%22 stroke=%22%23B08D57%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 opacity=%22.85%22><rect x=%22-70%22 y=%22-45%22 width=%22140%22 height=%2290%22 rx=%224%22/><path d=%22M-70 -25 L70 -25 M-70 -5 L70 -5 M-70 15 L70 15%22 opacity=%22.5%22/></g><text x=%22400%22 y=%22450%22 font-family=%22Georgia, serif%22 font-size=%2230%22 fill=%22%23B08D57%22 opacity=%22.95%22 text-anchor=%22middle%22 font-style=%22italic%22>Têxtil Lar</text><text x=%22400%22 y=%22490%22 font-family=%22Inter, sans-serif%22 font-size=%2211%22 fill=%22%23F5F2ED%22 opacity=%22.5%22 text-anchor=%22middle%22 letter-spacing=%224%22>KARMIC · NODE</text></svg>'],
+    description: 'Manta em lã merino portuguesa, tecelagem tradicional. Padrão exclusivo Karmic. 130×180cm.',
+    nameEn: 'Karmic Throw — Merino Wool',
+    descriptionEn: 'Portuguese merino wool throw, traditional weaving. Exclusive Karmic pattern. 130×180cm.',
+    categoryEn: 'Throws',
+    subcategoryEn: 'Home Textile',
+    specs: [{ label: 'Dimensões', value: '130 × 180 cm' }, { label: 'Material', value: 'Lã merino portuguesa' }, { label: 'Tecelagem', value: 'Artesanal tradicional' }, { label: 'Padrão', value: 'Exclusivo Karmic' }],
+    specsEn: [{ label: 'Dimensions', value: '130 × 180 cm' }, { label: 'Material', value: 'Portuguese merino wool' }, { label: 'Weaving', value: 'Traditional artisanal' }, { label: 'Pattern', value: 'Karmic exclusive' }],
+  },
+  {
+    id: 27, sku: 'KN-CASA-003', name: 'Vela Aromática — Ritual Karmic',
+    category: 'Aromas', subcategory: 'Ambiente', vertical: 'casa',
+    tags: ['casa', 'vela', 'aroma'],
+    price: 39.99, originalPrice: null,
+    badge: 'Bestseller', badgeColor: 'bordo',
+    rating: 4.9, reviews: 340, stock: 80,
+    customizable: false,
+    image: 'data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 800 600%22 preserveAspectRatio=%22xMidYMid slice%22><defs><radialGradient id=%22g%22 cx=%2250%%22 cy=%2240%%22 r=%2270%%22><stop offset=%220%%22 stop-color=%22%23B08D57%22 stop-opacity=%22.35%22/><stop offset=%22100%%22 stop-color=%22%230B0B0C%22 stop-opacity=%221%22/></radialGradient><pattern id=%22p%22 width=%2240%22 height=%2240%22 patternUnits=%22userSpaceOnUse%22><path d=%22M0 20 L40 20 M20 0 L20 40%22 stroke=%22%23B08D57%22 stroke-width=%22.5%22 opacity=%22.08%22/></pattern></defs><rect width=%22800%22 height=%22600%22 fill=%22url(%23g)%22/><rect width=%22800%22 height=%22600%22 fill=%22url(%23p)%22/><g transform=%22translate(400 260)%22 fill=%22none%22 stroke=%22%23B08D57%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 opacity=%22.85%22><rect x=%22-30%22 y=%22-20%22 width=%2260%22 height=%2265%22 rx=%224%22/><path d=%22M0 -20 L0 -35 M-6 -40 C-6 -46 6 -46 6 -40 C6 -34 -6 -34 -6 -40%22 fill=%22currentColor%22/></g><text x=%22400%22 y=%22450%22 font-family=%22Georgia, serif%22 font-size=%2230%22 fill=%22%23B08D57%22 opacity=%22.95%22 text-anchor=%22middle%22 font-style=%22italic%22>Ambiente</text><text x=%22400%22 y=%22490%22 font-family=%22Inter, sans-serif%22 font-size=%2211%22 fill=%22%23F5F2ED%22 opacity=%22.5%22 text-anchor=%22middle%22 letter-spacing=%224%22>KARMIC · NODE</text></svg>',
+    images: ['data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 800 600%22 preserveAspectRatio=%22xMidYMid slice%22><defs><radialGradient id=%22g%22 cx=%2250%%22 cy=%2240%%22 r=%2270%%22><stop offset=%220%%22 stop-color=%22%23B08D57%22 stop-opacity=%22.35%22/><stop offset=%22100%%22 stop-color=%22%230B0B0C%22 stop-opacity=%221%22/></radialGradient><pattern id=%22p%22 width=%2240%22 height=%2240%22 patternUnits=%22userSpaceOnUse%22><path d=%22M0 20 L40 20 M20 0 L20 40%22 stroke=%22%23B08D57%22 stroke-width=%22.5%22 opacity=%22.08%22/></pattern></defs><rect width=%22800%22 height=%22600%22 fill=%22url(%23g)%22/><rect width=%22800%22 height=%22600%22 fill=%22url(%23p)%22/><g transform=%22translate(400 260)%22 fill=%22none%22 stroke=%22%23B08D57%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 opacity=%22.85%22><rect x=%22-30%22 y=%22-20%22 width=%2260%22 height=%2265%22 rx=%224%22/><path d=%22M0 -20 L0 -35 M-6 -40 C-6 -46 6 -46 6 -40 C6 -34 -6 -34 -6 -40%22 fill=%22currentColor%22/></g><text x=%22400%22 y=%22450%22 font-family=%22Georgia, serif%22 font-size=%2230%22 fill=%22%23B08D57%22 opacity=%22.95%22 text-anchor=%22middle%22 font-style=%22italic%22>Ambiente</text><text x=%22400%22 y=%22490%22 font-family=%22Inter, sans-serif%22 font-size=%2211%22 fill=%22%23F5F2ED%22 opacity=%22.5%22 text-anchor=%22middle%22 letter-spacing=%224%22>KARMIC · NODE</text></svg>'],
+    description: 'Vela em cera de soja com essências naturais: alfazema, bergamota e sândalo. 250g, 50h de duração.',
+    nameEn: 'Aromatic Candle — Karmic Ritual',
+    descriptionEn: 'Soy wax candle with natural essences: lavender, bergamot and sandalwood. 250g, 50h burn time.',
+    categoryEn: 'Fragrance',
+    subcategoryEn: 'Ambience',
+    specs: [{ label: 'Cera', value: 'Soja natural 100%' }, { label: 'Notas', value: 'Alfazema · Bergamota · Sândalo' }, { label: 'Peso', value: '250g' }, { label: 'Duração', value: '~50 horas' }],
+    specsEn: [{ label: 'Wax', value: '100% natural soy' }, { label: 'Notes', value: 'Lavender · Bergamot · Sandalwood' }, { label: 'Weight', value: '250g' }, { label: 'Burn time', value: '~50 hours' }],
+  },
+  {
+    id: 28, sku: 'KN-CASA-004', name: 'Roupão Spa — Algodão Egípcio',
+    category: 'Banho', subcategory: 'Têxtil Lar', vertical: 'casa',
+    tags: ['casa', 'roupao', 'banho'],
     price: 119, originalPrice: null,
     badge: 'Premium', badgeColor: 'gold',
-    rating: 4.8, reviews: 340, stock: 28,
-    customizable: false,
-    image: 'data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 800 600%22 preserveAspectRatio=%22xMidYMid slice%22><defs><radialGradient id=%22g%22 cx=%2250%%22 cy=%2240%%22 r=%2270%%22><stop offset=%220%%22 stop-color=%22%238B1E2D%22 stop-opacity=%22.35%22/><stop offset=%22100%%22 stop-color=%22%230B0B0C%22 stop-opacity=%221%22/></radialGradient><pattern id=%22p%22 width=%2240%22 height=%2240%22 patternUnits=%22userSpaceOnUse%22><path d=%22M0 20 L40 20 M20 0 L20 40%22 stroke=%22%238B1E2D%22 stroke-width=%22.5%22 opacity=%22.08%22/></pattern></defs><rect width=%22800%22 height=%22600%22 fill=%22url(%23g)%22/><rect width=%22800%22 height=%22600%22 fill=%22url(%23p)%22/><g transform=%22translate(400 260)%22 fill=%22none%22 stroke=%22%238B1E2D%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 opacity=%22.85%22><rect x=%22-70%22 y=%22-15%22 width=%22140%22 height=%2240%22 rx=%224%22/><path d=%22M-60 -5 L-40 -5 M-30 -5 L-10 -5 M0 -5 L20 -5 M30 -5 L50 -5 M-60 15 L60 15%22/></g><text x=%22400%22 y=%22450%22 font-family=%22Georgia, serif%22 font-size=%2230%22 fill=%22%238B1E2D%22 opacity=%22.95%22 text-anchor=%22middle%22 font-style=%22italic%22>Periféricos</text><text x=%22400%22 y=%22490%22 font-family=%22Inter, sans-serif%22 font-size=%2211%22 fill=%22%23F5F2ED%22 opacity=%22.5%22 text-anchor=%22middle%22 letter-spacing=%224%22>KARMIC · NODE</text></svg>',
-    images: ['data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 800 600%22 preserveAspectRatio=%22xMidYMid slice%22><defs><radialGradient id=%22g%22 cx=%2250%%22 cy=%2240%%22 r=%2270%%22><stop offset=%220%%22 stop-color=%22%238B1E2D%22 stop-opacity=%22.35%22/><stop offset=%22100%%22 stop-color=%22%230B0B0C%22 stop-opacity=%221%22/></radialGradient><pattern id=%22p%22 width=%2240%22 height=%2240%22 patternUnits=%22userSpaceOnUse%22><path d=%22M0 20 L40 20 M20 0 L20 40%22 stroke=%22%238B1E2D%22 stroke-width=%22.5%22 opacity=%22.08%22/></pattern></defs><rect width=%22800%22 height=%22600%22 fill=%22url(%23g)%22/><rect width=%22800%22 height=%22600%22 fill=%22url(%23p)%22/><g transform=%22translate(400 260)%22 fill=%22none%22 stroke=%22%238B1E2D%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 opacity=%22.85%22><rect x=%22-70%22 y=%22-15%22 width=%22140%22 height=%2240%22 rx=%224%22/><path d=%22M-60 -5 L-40 -5 M-30 -5 L-10 -5 M0 -5 L20 -5 M30 -5 L50 -5 M-60 15 L60 15%22/></g><text x=%22400%22 y=%22450%22 font-family=%22Georgia, serif%22 font-size=%2230%22 fill=%22%238B1E2D%22 opacity=%22.95%22 text-anchor=%22middle%22 font-style=%22italic%22>Periféricos</text><text x=%22400%22 y=%22490%22 font-family=%22Inter, sans-serif%22 font-size=%2211%22 fill=%22%23F5F2ED%22 opacity=%22.5%22 text-anchor=%22middle%22 letter-spacing=%224%22>KARMIC · NODE</text></svg>'],
-    description: 'Teclas côncavas retroiluminadas, digitação fluida e silenciosa. Multi-dispositivo com Bluetooth.',
-    nameEn: 'Wireless Mechanical Keyboard',
-    descriptionEn: 'Backlit concave keys, fluid quiet typing. Multi-device with Bluetooth.',
-    categoryEn: 'Peripherals',
-    subcategoryEn: 'Peripherals',
-    specsEn: [{ label: 'Connection', value: 'BT / USB-C / 2.4GHz' }, { label: 'Backlight', value: 'Yes, adjustable' }, { label: 'Devices', value: 'Up to 3 simultaneous' }, { label: 'Battery life', value: 'Up to 10 days' }],
-    specs: [{ label: 'Ligação', value: 'BT / USB-C / 2.4GHz' }, { label: 'Retroiluminação', value: 'Sim, ajustável' }, { label: 'Dispositivos', value: 'Até 3 simultâneos' }, { label: 'Autonomia', value: 'Até 10 dias' }],
+    rating: 4.8, reviews: 156, stock: 35,
+    customizable: true,
+    image: 'data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 800 600%22 preserveAspectRatio=%22xMidYMid slice%22><defs><radialGradient id=%22g%22 cx=%2250%%22 cy=%2240%%22 r=%2270%%22><stop offset=%220%%22 stop-color=%22%23B08D57%22 stop-opacity=%22.35%22/><stop offset=%22100%%22 stop-color=%22%230B0B0C%22 stop-opacity=%221%22/></radialGradient><pattern id=%22p%22 width=%2240%22 height=%2240%22 patternUnits=%22userSpaceOnUse%22><path d=%22M0 20 L40 20 M20 0 L20 40%22 stroke=%22%23B08D57%22 stroke-width=%22.5%22 opacity=%22.08%22/></pattern></defs><rect width=%22800%22 height=%22600%22 fill=%22url(%23g)%22/><rect width=%22800%22 height=%22600%22 fill=%22url(%23p)%22/><g transform=%22translate(400 260)%22 fill=%22none%22 stroke=%22%23B08D57%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 opacity=%22.85%22><path d=%22M-45 -35 L-70 0 L-55 20 L-40 10 L-40 70 L40 70 L40 10 L55 20 L70 0 L45 -35 L20 -35 L0 -20 L-20 -35 Z%22/></g><text x=%22400%22 y=%22450%22 font-family=%22Georgia, serif%22 font-size=%2230%22 fill=%22%23B08D57%22 opacity=%22.95%22 text-anchor=%22middle%22 font-style=%22italic%22>Têxtil Lar</text><text x=%22400%22 y=%22490%22 font-family=%22Inter, sans-serif%22 font-size=%2211%22 fill=%22%23F5F2ED%22 opacity=%22.5%22 text-anchor=%22middle%22 letter-spacing=%224%22>KARMIC · NODE</text></svg>',
+    images: ['data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 800 600%22 preserveAspectRatio=%22xMidYMid slice%22><defs><radialGradient id=%22g%22 cx=%2250%%22 cy=%2240%%22 r=%2270%%22><stop offset=%220%%22 stop-color=%22%23B08D57%22 stop-opacity=%22.35%22/><stop offset=%22100%%22 stop-color=%22%230B0B0C%22 stop-opacity=%221%22/></radialGradient><pattern id=%22p%22 width=%2240%22 height=%2240%22 patternUnits=%22userSpaceOnUse%22><path d=%22M0 20 L40 20 M20 0 L20 40%22 stroke=%22%23B08D57%22 stroke-width=%22.5%22 opacity=%22.08%22/></pattern></defs><rect width=%22800%22 height=%22600%22 fill=%22url(%23g)%22/><rect width=%22800%22 height=%22600%22 fill=%22url(%23p)%22/><g transform=%22translate(400 260)%22 fill=%22none%22 stroke=%22%23B08D57%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 opacity=%22.85%22><path d=%22M-45 -35 L-70 0 L-55 20 L-40 10 L-40 70 L40 70 L40 10 L55 20 L70 0 L45 -35 L20 -35 L0 -20 L-20 -35 Z%22/></g><text x=%22400%22 y=%22450%22 font-family=%22Georgia, serif%22 font-size=%2230%22 fill=%22%23B08D57%22 opacity=%22.95%22 text-anchor=%22middle%22 font-style=%22italic%22>Têxtil Lar</text><text x=%22400%22 y=%22490%22 font-family=%22Inter, sans-serif%22 font-size=%2211%22 fill=%22%23F5F2ED%22 opacity=%22.5%22 text-anchor=%22middle%22 letter-spacing=%224%22>KARMIC · NODE</text></svg>'],
+    description: 'Roupão em algodão egípcio 550gsm, ultra-macio. Bordado Karmic personalizável. Como um SPA em casa.',
+    nameEn: 'Spa Robe — Egyptian Cotton',
+    descriptionEn: 'Egyptian cotton robe 550gsm, ultra-soft. Customizable Karmic embroidery. SPA at home.',
+    categoryEn: 'Bath',
+    subcategoryEn: 'Home Textile',
+    specs: [{ label: 'Material', value: 'Algodão egípcio 550gsm' }, { label: 'Tamanhos', value: 'S · M · L · XL · XXL' }, { label: 'Cores', value: 'Off-white · Bordô · Preto' }, { label: 'Personalizável', value: 'Bordado até 20 letras' }],
+    specsEn: [{ label: 'Material', value: 'Egyptian cotton 550gsm' }, { label: 'Sizes', value: 'S · M · L · XL · XXL' }, { label: 'Colors', value: 'Off-white · Bordeaux · Black' }, { label: 'Customizable', value: 'Embroidery up to 20 letters' }],
   },
   {
-    id: 22, sku: 'KN-022', name: 'Rato Sem Fios Ergonómico 8K DPI',
-    category: 'Periféricos', subcategory: 'Periféricos', vertical: 'it',
-    tags: ['periféricos'],
-    price: 109, originalPrice: null,
-    badge: 'Bestseller', badgeColor: 'bordo',
-    rating: 4.9, reviews: 410, stock: 32,
-    customizable: false,
-    image: 'data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 800 600%22 preserveAspectRatio=%22xMidYMid slice%22><defs><radialGradient id=%22g%22 cx=%2250%%22 cy=%2240%%22 r=%2270%%22><stop offset=%220%%22 stop-color=%22%238B1E2D%22 stop-opacity=%22.35%22/><stop offset=%22100%%22 stop-color=%22%230B0B0C%22 stop-opacity=%221%22/></radialGradient><pattern id=%22p%22 width=%2240%22 height=%2240%22 patternUnits=%22userSpaceOnUse%22><path d=%22M0 20 L40 20 M20 0 L20 40%22 stroke=%22%238B1E2D%22 stroke-width=%22.5%22 opacity=%22.08%22/></pattern></defs><rect width=%22800%22 height=%22600%22 fill=%22url(%23g)%22/><rect width=%22800%22 height=%22600%22 fill=%22url(%23p)%22/><g transform=%22translate(400 260)%22 fill=%22none%22 stroke=%22%238B1E2D%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 opacity=%22.85%22><path d=%22M-25 -30 C-45 -30 -45 40 -25 40 L25 40 C45 40 45 -30 25 -30 Z%22/><path d=%22M0 -30 L0 5%22/></g><text x=%22400%22 y=%22450%22 font-family=%22Georgia, serif%22 font-size=%2230%22 fill=%22%238B1E2D%22 opacity=%22.95%22 text-anchor=%22middle%22 font-style=%22italic%22>Periféricos</text><text x=%22400%22 y=%22490%22 font-family=%22Inter, sans-serif%22 font-size=%2211%22 fill=%22%23F5F2ED%22 opacity=%22.5%22 text-anchor=%22middle%22 letter-spacing=%224%22>KARMIC · NODE</text></svg>',
-    images: ['data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 800 600%22 preserveAspectRatio=%22xMidYMid slice%22><defs><radialGradient id=%22g%22 cx=%2250%%22 cy=%2240%%22 r=%2270%%22><stop offset=%220%%22 stop-color=%22%238B1E2D%22 stop-opacity=%22.35%22/><stop offset=%22100%%22 stop-color=%22%230B0B0C%22 stop-opacity=%221%22/></radialGradient><pattern id=%22p%22 width=%2240%22 height=%2240%22 patternUnits=%22userSpaceOnUse%22><path d=%22M0 20 L40 20 M20 0 L20 40%22 stroke=%22%238B1E2D%22 stroke-width=%22.5%22 opacity=%22.08%22/></pattern></defs><rect width=%22800%22 height=%22600%22 fill=%22url(%23g)%22/><rect width=%22800%22 height=%22600%22 fill=%22url(%23p)%22/><g transform=%22translate(400 260)%22 fill=%22none%22 stroke=%22%238B1E2D%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 opacity=%22.85%22><path d=%22M-25 -30 C-45 -30 -45 40 -25 40 L25 40 C45 40 45 -30 25 -30 Z%22/><path d=%22M0 -30 L0 5%22/></g><text x=%22400%22 y=%22450%22 font-family=%22Georgia, serif%22 font-size=%2230%22 fill=%22%238B1E2D%22 opacity=%22.95%22 text-anchor=%22middle%22 font-style=%22italic%22>Periféricos</text><text x=%22400%22 y=%22490%22 font-family=%22Inter, sans-serif%22 font-size=%2211%22 fill=%22%23F5F2ED%22 opacity=%22.5%22 text-anchor=%22middle%22 letter-spacing=%224%22>KARMIC · NODE</text></svg>'],
-    description: 'Sensor 8K DPI silencioso, roda de aço, formato ergonómico para produtividade prolongada.',
-    nameEn: '8K DPI Ergonomic Wireless Mouse',
-    descriptionEn: 'Quiet 8K DPI sensor, steel wheel, ergonomic form for extended productivity.',
-    categoryEn: 'Peripherals',
-    subcategoryEn: 'Peripherals',
-    specsEn: [{ label: 'Sensor', value: '8000 DPI' }, { label: 'Buttons', value: '7 programmable' }, { label: 'Connection', value: 'BT / USB / 2.4GHz' }, { label: 'Battery life', value: 'Up to 70 days' }],
-    specs: [{ label: 'Sensor', value: '8000 DPI' }, { label: 'Botões', value: '7 programáveis' }, { label: 'Ligação', value: 'BT / USB / 2.4GHz' }, { label: 'Autonomia', value: 'Até 70 dias' }],
-  },
-  {
-    id: 23, sku: 'KN-023', name: 'Tapete Rato XXL Antiderrapante',
-    category: 'Periféricos', subcategory: 'Periféricos', vertical: 'it',
-    tags: ['periféricos'],
-    price: 29.99, originalPrice: null,
+    id: 29, sku: 'KN-CASA-005', name: 'Poster Karmic — Impressão Museológica',
+    category: 'Arte', subcategory: 'Decoração', vertical: 'casa',
+    tags: ['casa', 'poster', 'arte'],
+    price: 34.99, originalPrice: null,
     badge: null, badgeColor: 'gold',
-    rating: 4.7, reviews: 290, stock: 40,
+    rating: 4.7, reviews: 92, stock: 60,
     customizable: true,
-    image: 'data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 800 600%22 preserveAspectRatio=%22xMidYMid slice%22><defs><radialGradient id=%22g%22 cx=%2250%%22 cy=%2240%%22 r=%2270%%22><stop offset=%220%%22 stop-color=%22%238B1E2D%22 stop-opacity=%22.35%22/><stop offset=%22100%%22 stop-color=%22%230B0B0C%22 stop-opacity=%221%22/></radialGradient><pattern id=%22p%22 width=%2240%22 height=%2240%22 patternUnits=%22userSpaceOnUse%22><path d=%22M0 20 L40 20 M20 0 L20 40%22 stroke=%22%238B1E2D%22 stroke-width=%22.5%22 opacity=%22.08%22/></pattern></defs><rect width=%22800%22 height=%22600%22 fill=%22url(%23g)%22/><rect width=%22800%22 height=%22600%22 fill=%22url(%23p)%22/><g transform=%22translate(400 260)%22 fill=%22none%22 stroke=%22%238B1E2D%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 opacity=%22.85%22><rect x=%22-70%22 y=%22-30%22 width=%22140%22 height=%2260%22 rx=%226%22/><path d=%22M-55 -15 L55 -15 M-55 0 L55 0 M-55 15 L55 15%22 opacity=%22.4%22/></g><text x=%22400%22 y=%22450%22 font-family=%22Georgia, serif%22 font-size=%2230%22 fill=%22%238B1E2D%22 opacity=%22.95%22 text-anchor=%22middle%22 font-style=%22italic%22>Periféricos</text><text x=%22400%22 y=%22490%22 font-family=%22Inter, sans-serif%22 font-size=%2211%22 fill=%22%23F5F2ED%22 opacity=%22.5%22 text-anchor=%22middle%22 letter-spacing=%224%22>KARMIC · NODE</text></svg>',
-    images: ['data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 800 600%22 preserveAspectRatio=%22xMidYMid slice%22><defs><radialGradient id=%22g%22 cx=%2250%%22 cy=%2240%%22 r=%2270%%22><stop offset=%220%%22 stop-color=%22%238B1E2D%22 stop-opacity=%22.35%22/><stop offset=%22100%%22 stop-color=%22%230B0B0C%22 stop-opacity=%221%22/></radialGradient><pattern id=%22p%22 width=%2240%22 height=%2240%22 patternUnits=%22userSpaceOnUse%22><path d=%22M0 20 L40 20 M20 0 L20 40%22 stroke=%22%238B1E2D%22 stroke-width=%22.5%22 opacity=%22.08%22/></pattern></defs><rect width=%22800%22 height=%22600%22 fill=%22url(%23g)%22/><rect width=%22800%22 height=%22600%22 fill=%22url(%23p)%22/><g transform=%22translate(400 260)%22 fill=%22none%22 stroke=%22%238B1E2D%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 opacity=%22.85%22><rect x=%22-70%22 y=%22-30%22 width=%22140%22 height=%2260%22 rx=%226%22/><path d=%22M-55 -15 L55 -15 M-55 0 L55 0 M-55 15 L55 15%22 opacity=%22.4%22/></g><text x=%22400%22 y=%22450%22 font-family=%22Georgia, serif%22 font-size=%2230%22 fill=%22%238B1E2D%22 opacity=%22.95%22 text-anchor=%22middle%22 font-style=%22italic%22>Periféricos</text><text x=%22400%22 y=%22490%22 font-family=%22Inter, sans-serif%22 font-size=%2211%22 fill=%22%23F5F2ED%22 opacity=%22.5%22 text-anchor=%22middle%22 letter-spacing=%224%22>KARMIC · NODE</text></svg>'],
-    description: 'Base em borracha antiderrapante de 4mm, tecido micro-tecido de alta densidade. Superfície gaming/office.',
-    nameEn: 'XXL Non-slip Mousepad',
-    descriptionEn: '4mm non-slip rubber base, high-density micro-textile surface. Gaming/office grade.',
-    categoryEn: 'Peripherals',
-    subcategoryEn: 'Peripherals',
-    specsEn: [{ label: 'Dimensions', value: '90×40cm' }, { label: 'Thickness', value: '4mm' }, { label: 'Surface', value: 'Micro-textile' }, { label: 'Colors', value: 'Solid Black, Black/Burgundy, Custom' }],
-    specs: [{ label: 'Dimensões', value: '90×40cm' }, { label: 'Espessura', value: '4mm' }, { label: 'Superfície', value: 'Micro-tecido' }, { label: 'Cores', value: 'Preto liso, Preto/Bordeaux, Custom' }],
-  },
-  {
-    id: 24, sku: 'KN-024', name: 'Auscultadores Wireless ANC',
-    category: 'Áudio', subcategory: 'Áudio e Imagem', vertical: 'it',
-    tags: ['áudio', 'imagem'],
-    price: 329, originalPrice: null,
-    badge: 'Premium', badgeColor: 'gold',
-    rating: 4.9, reviews: 210, stock: 20,
-    customizable: false,
-    image: 'data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 800 600%22 preserveAspectRatio=%22xMidYMid slice%22><defs><radialGradient id=%22g%22 cx=%2250%%22 cy=%2240%%22 r=%2270%%22><stop offset=%220%%22 stop-color=%22%238B1E2D%22 stop-opacity=%22.35%22/><stop offset=%22100%%22 stop-color=%22%230B0B0C%22 stop-opacity=%221%22/></radialGradient><pattern id=%22p%22 width=%2240%22 height=%2240%22 patternUnits=%22userSpaceOnUse%22><path d=%22M0 20 L40 20 M20 0 L20 40%22 stroke=%22%238B1E2D%22 stroke-width=%22.5%22 opacity=%22.08%22/></pattern></defs><rect width=%22800%22 height=%22600%22 fill=%22url(%23g)%22/><rect width=%22800%22 height=%22600%22 fill=%22url(%23p)%22/><g transform=%22translate(400 260)%22 fill=%22none%22 stroke=%22%238B1E2D%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 opacity=%22.85%22><path d=%22M-50 5 C-50 -50 50 -50 50 5%22/><rect x=%22-58%22 y=%220%22 width=%2218%22 height=%2240%22 rx=%226%22/><rect x=%2240%22 y=%220%22 width=%2218%22 height=%2240%22 rx=%226%22/></g><text x=%22400%22 y=%22450%22 font-family=%22Georgia, serif%22 font-size=%2230%22 fill=%22%238B1E2D%22 opacity=%22.95%22 text-anchor=%22middle%22 font-style=%22italic%22>Áudio e Imagem</text><text x=%22400%22 y=%22490%22 font-family=%22Inter, sans-serif%22 font-size=%2211%22 fill=%22%23F5F2ED%22 opacity=%22.5%22 text-anchor=%22middle%22 letter-spacing=%224%22>KARMIC · NODE</text></svg>',
-    images: ['data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 800 600%22 preserveAspectRatio=%22xMidYMid slice%22><defs><radialGradient id=%22g%22 cx=%2250%%22 cy=%2240%%22 r=%2270%%22><stop offset=%220%%22 stop-color=%22%238B1E2D%22 stop-opacity=%22.35%22/><stop offset=%22100%%22 stop-color=%22%230B0B0C%22 stop-opacity=%221%22/></radialGradient><pattern id=%22p%22 width=%2240%22 height=%2240%22 patternUnits=%22userSpaceOnUse%22><path d=%22M0 20 L40 20 M20 0 L20 40%22 stroke=%22%238B1E2D%22 stroke-width=%22.5%22 opacity=%22.08%22/></pattern></defs><rect width=%22800%22 height=%22600%22 fill=%22url(%23g)%22/><rect width=%22800%22 height=%22600%22 fill=%22url(%23p)%22/><g transform=%22translate(400 260)%22 fill=%22none%22 stroke=%22%238B1E2D%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 opacity=%22.85%22><path d=%22M-50 5 C-50 -50 50 -50 50 5%22/><rect x=%22-58%22 y=%220%22 width=%2218%22 height=%2240%22 rx=%226%22/><rect x=%2240%22 y=%220%22 width=%2218%22 height=%2240%22 rx=%226%22/></g><text x=%22400%22 y=%22450%22 font-family=%22Georgia, serif%22 font-size=%2230%22 fill=%22%238B1E2D%22 opacity=%22.95%22 text-anchor=%22middle%22 font-style=%22italic%22>Áudio e Imagem</text><text x=%22400%22 y=%22490%22 font-family=%22Inter, sans-serif%22 font-size=%2211%22 fill=%22%23F5F2ED%22 opacity=%22.5%22 text-anchor=%22middle%22 letter-spacing=%224%22>KARMIC · NODE</text></svg>'],
-    description: 'Cancelamento de Ruído líder de mercado, som Hi-Res e 30h de bateria. Silêncio, ao teu comando.',
-    nameEn: 'ANC Wireless Headphones',
-    descriptionEn: 'Market-leading noise cancellation, Hi-Res audio and 30h battery. Silence, on command.',
-    categoryEn: 'Audio',
-    subcategoryEn: 'Audio & Video',
-    specsEn: [{ label: 'ANC', value: 'Adaptive, market leader' }, { label: 'Audio', value: 'Hi-Res LDAC' }, { label: 'Battery life', value: '30h with ANC' }, { label: 'Fast charge', value: '3min = 3h' }],
-    specs: [{ label: 'ANC', value: 'Adaptativo, líder mercado' }, { label: 'Áudio', value: 'Hi-Res LDAC' }, { label: 'Autonomia', value: '30h com ANC' }, { label: 'Carga rápida', value: '3min = 3h' }],
-  },
-  {
-    id: 25, sku: 'KN-025', name: 'Webcam HD 1080p com Correção Luz',
-    category: 'Imagem', subcategory: 'Áudio e Imagem', vertical: 'it',
-    tags: ['áudio', 'imagem'],
-    price: 74.99, originalPrice: null,
-    badge: 'Popular', badgeColor: 'bordo',
-    rating: 4.7, reviews: 360, stock: 35,
-    customizable: false,
-    image: 'data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 800 600%22 preserveAspectRatio=%22xMidYMid slice%22><defs><radialGradient id=%22g%22 cx=%2250%%22 cy=%2240%%22 r=%2270%%22><stop offset=%220%%22 stop-color=%22%238B1E2D%22 stop-opacity=%22.35%22/><stop offset=%22100%%22 stop-color=%22%230B0B0C%22 stop-opacity=%221%22/></radialGradient><pattern id=%22p%22 width=%2240%22 height=%2240%22 patternUnits=%22userSpaceOnUse%22><path d=%22M0 20 L40 20 M20 0 L20 40%22 stroke=%22%238B1E2D%22 stroke-width=%22.5%22 opacity=%22.08%22/></pattern></defs><rect width=%22800%22 height=%22600%22 fill=%22url(%23g)%22/><rect width=%22800%22 height=%22600%22 fill=%22url(%23p)%22/><g transform=%22translate(400 260)%22 fill=%22none%22 stroke=%22%238B1E2D%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 opacity=%22.85%22><circle cx=%220%22 cy=%220%22 r=%2230%22/><circle cx=%220%22 cy=%220%22 r=%2215%22/><circle cx=%220%22 cy=%220%22 r=%225%22 fill=%22currentColor%22/><path d=%22M-40 -30 L-50 -40 M40 -30 L50 -40%22/></g><text x=%22400%22 y=%22450%22 font-family=%22Georgia, serif%22 font-size=%2230%22 fill=%22%238B1E2D%22 opacity=%22.95%22 text-anchor=%22middle%22 font-style=%22italic%22>Áudio e Imagem</text><text x=%22400%22 y=%22490%22 font-family=%22Inter, sans-serif%22 font-size=%2211%22 fill=%22%23F5F2ED%22 opacity=%22.5%22 text-anchor=%22middle%22 letter-spacing=%224%22>KARMIC · NODE</text></svg>',
-    images: ['data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 800 600%22 preserveAspectRatio=%22xMidYMid slice%22><defs><radialGradient id=%22g%22 cx=%2250%%22 cy=%2240%%22 r=%2270%%22><stop offset=%220%%22 stop-color=%22%238B1E2D%22 stop-opacity=%22.35%22/><stop offset=%22100%%22 stop-color=%22%230B0B0C%22 stop-opacity=%221%22/></radialGradient><pattern id=%22p%22 width=%2240%22 height=%2240%22 patternUnits=%22userSpaceOnUse%22><path d=%22M0 20 L40 20 M20 0 L20 40%22 stroke=%22%238B1E2D%22 stroke-width=%22.5%22 opacity=%22.08%22/></pattern></defs><rect width=%22800%22 height=%22600%22 fill=%22url(%23g)%22/><rect width=%22800%22 height=%22600%22 fill=%22url(%23p)%22/><g transform=%22translate(400 260)%22 fill=%22none%22 stroke=%22%238B1E2D%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 opacity=%22.85%22><circle cx=%220%22 cy=%220%22 r=%2230%22/><circle cx=%220%22 cy=%220%22 r=%2215%22/><circle cx=%220%22 cy=%220%22 r=%225%22 fill=%22currentColor%22/><path d=%22M-40 -30 L-50 -40 M40 -30 L50 -40%22/></g><text x=%22400%22 y=%22450%22 font-family=%22Georgia, serif%22 font-size=%2230%22 fill=%22%238B1E2D%22 opacity=%22.95%22 text-anchor=%22middle%22 font-style=%22italic%22>Áudio e Imagem</text><text x=%22400%22 y=%22490%22 font-family=%22Inter, sans-serif%22 font-size=%2211%22 fill=%22%23F5F2ED%22 opacity=%22.5%22 text-anchor=%22middle%22 letter-spacing=%224%22>KARMIC · NODE</text></svg>'],
-    description: 'Vídeo Full HD 1080p a 30fps, microfones estéreo duplos, correção automática de luz.',
-    nameEn: '1080p HD Webcam with Light Correction',
-    descriptionEn: 'Full HD 1080p video at 30fps, dual stereo microphones, automatic light correction.',
-    categoryEn: 'Video',
-    subcategoryEn: 'Audio & Video',
-    specsEn: [{ label: 'Resolution', value: '1080p @ 30fps' }, { label: 'Focus', value: 'Autofocus' }, { label: 'Audio', value: 'Dual stereo' }, { label: 'Compatibility', value: 'Windows / macOS / Linux' }],
-    specs: [{ label: 'Resolução', value: '1080p @ 30fps' }, { label: 'Foco', value: 'Autofoco' }, { label: 'Áudio', value: 'Estéreo duplo' }, { label: 'Compatibilidade', value: 'Windows / macOS / Linux' }],
-  },
-  {
-    id: 26, sku: 'KN-026', name: 'Power Bank 24.000mAh 140W',
-    category: 'Energia', subcategory: 'Energia e Conectividade', vertical: 'it',
-    tags: ['energia', 'conectividade'],
-    price: 129.99, originalPrice: null,
-    badge: 'Premium', badgeColor: 'gold',
-    rating: 4.8, reviews: 250, stock: 25,
-    customizable: false,
-    image: 'data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 800 600%22 preserveAspectRatio=%22xMidYMid slice%22><defs><radialGradient id=%22g%22 cx=%2250%%22 cy=%2240%%22 r=%2270%%22><stop offset=%220%%22 stop-color=%22%238B1E2D%22 stop-opacity=%22.35%22/><stop offset=%22100%%22 stop-color=%22%230B0B0C%22 stop-opacity=%221%22/></radialGradient><pattern id=%22p%22 width=%2240%22 height=%2240%22 patternUnits=%22userSpaceOnUse%22><path d=%22M0 20 L40 20 M20 0 L20 40%22 stroke=%22%238B1E2D%22 stroke-width=%22.5%22 opacity=%22.08%22/></pattern></defs><rect width=%22800%22 height=%22600%22 fill=%22url(%23g)%22/><rect width=%22800%22 height=%22600%22 fill=%22url(%23p)%22/><g transform=%22translate(400 260)%22 fill=%22none%22 stroke=%22%238B1E2D%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 opacity=%22.85%22><rect x=%22-30%22 y=%22-45%22 width=%2260%22 height=%2290%22 rx=%226%22/><path d=%22M-15 -25 L-15 -15 L-5 -15 L-15 5 L-15 -5 L-25 -5 Z%22 fill=%22currentColor%22/><rect x=%22-15%22 y=%2230%22 width=%2230%22 height=%226%22 rx=%221%22/></g><text x=%22400%22 y=%22450%22 font-family=%22Georgia, serif%22 font-size=%2230%22 fill=%22%238B1E2D%22 opacity=%22.95%22 text-anchor=%22middle%22 font-style=%22italic%22>Energia e Conectividade</text><text x=%22400%22 y=%22490%22 font-family=%22Inter, sans-serif%22 font-size=%2211%22 fill=%22%23F5F2ED%22 opacity=%22.5%22 text-anchor=%22middle%22 letter-spacing=%224%22>KARMIC · NODE</text></svg>',
-    images: ['data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 800 600%22 preserveAspectRatio=%22xMidYMid slice%22><defs><radialGradient id=%22g%22 cx=%2250%%22 cy=%2240%%22 r=%2270%%22><stop offset=%220%%22 stop-color=%22%238B1E2D%22 stop-opacity=%22.35%22/><stop offset=%22100%%22 stop-color=%22%230B0B0C%22 stop-opacity=%221%22/></radialGradient><pattern id=%22p%22 width=%2240%22 height=%2240%22 patternUnits=%22userSpaceOnUse%22><path d=%22M0 20 L40 20 M20 0 L20 40%22 stroke=%22%238B1E2D%22 stroke-width=%22.5%22 opacity=%22.08%22/></pattern></defs><rect width=%22800%22 height=%22600%22 fill=%22url(%23g)%22/><rect width=%22800%22 height=%22600%22 fill=%22url(%23p)%22/><g transform=%22translate(400 260)%22 fill=%22none%22 stroke=%22%238B1E2D%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 opacity=%22.85%22><rect x=%22-30%22 y=%22-45%22 width=%2260%22 height=%2290%22 rx=%226%22/><path d=%22M-15 -25 L-15 -15 L-5 -15 L-15 5 L-15 -5 L-25 -5 Z%22 fill=%22currentColor%22/><rect x=%22-15%22 y=%2230%22 width=%2230%22 height=%226%22 rx=%221%22/></g><text x=%22400%22 y=%22450%22 font-family=%22Georgia, serif%22 font-size=%2230%22 fill=%22%238B1E2D%22 opacity=%22.95%22 text-anchor=%22middle%22 font-style=%22italic%22>Energia e Conectividade</text><text x=%22400%22 y=%22490%22 font-family=%22Inter, sans-serif%22 font-size=%2211%22 fill=%22%23F5F2ED%22 opacity=%22.5%22 text-anchor=%22middle%22 letter-spacing=%224%22>KARMIC · NODE</text></svg>'],
-    description: 'Carregamento bidirecional ultra-rápido Power Delivery 3.1, ecrã digital Smart. Alimenta um portátil.',
-    nameEn: '24,000mAh 140W Power Bank',
-    descriptionEn: 'Ultra-fast bidirectional Power Delivery 3.1 charging, Smart digital display. Powers a laptop.',
-    categoryEn: 'Power',
-    subcategoryEn: 'Power & Connectivity',
-    specsEn: [{ label: 'Capacity', value: '24,000mAh' }, { label: 'Power', value: '140W in/out' }, { label: 'Ports', value: '2× USB-C + 1× USB-A' }, { label: 'Display', value: 'Digital LCD' }],
-    specs: [{ label: 'Capacidade', value: '24.000mAh' }, { label: 'Potência', value: '140W in/out' }, { label: 'Portas', value: '2× USB-C + 1× USB-A' }, { label: 'Ecrã', value: 'Digital LCD' }],
-  },
-  {
-    id: 27, sku: 'KN-027', name: 'Carregador GaN 65W 3 Portas',
-    category: 'Energia', subcategory: 'Energia e Conectividade', vertical: 'it',
-    tags: ['energia', 'conectividade'],
-    price: 49.99, originalPrice: null,
-    badge: 'Bestseller', badgeColor: 'bordo',
-    rating: 4.8, reviews: 430, stock: 45,
-    customizable: false,
-    image: 'data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 800 600%22 preserveAspectRatio=%22xMidYMid slice%22><defs><radialGradient id=%22g%22 cx=%2250%%22 cy=%2240%%22 r=%2270%%22><stop offset=%220%%22 stop-color=%22%238B1E2D%22 stop-opacity=%22.35%22/><stop offset=%22100%%22 stop-color=%22%230B0B0C%22 stop-opacity=%221%22/></radialGradient><pattern id=%22p%22 width=%2240%22 height=%2240%22 patternUnits=%22userSpaceOnUse%22><path d=%22M0 20 L40 20 M20 0 L20 40%22 stroke=%22%238B1E2D%22 stroke-width=%22.5%22 opacity=%22.08%22/></pattern></defs><rect width=%22800%22 height=%22600%22 fill=%22url(%23g)%22/><rect width=%22800%22 height=%22600%22 fill=%22url(%23p)%22/><g transform=%22translate(400 260)%22 fill=%22none%22 stroke=%22%238B1E2D%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 opacity=%22.85%22><rect x=%22-30%22 y=%22-30%22 width=%2260%22 height=%2255%22 rx=%226%22/><path d=%22M-10 25 L-10 40 M10 25 L10 40%22/><path d=%22M-15 -15 L-15 -5 L-5 -5 L-15 15 L-15 5 L-25 5 Z%22 fill=%22currentColor%22/></g><text x=%22400%22 y=%22450%22 font-family=%22Georgia, serif%22 font-size=%2230%22 fill=%22%238B1E2D%22 opacity=%22.95%22 text-anchor=%22middle%22 font-style=%22italic%22>Energia e Conectividade</text><text x=%22400%22 y=%22490%22 font-family=%22Inter, sans-serif%22 font-size=%2211%22 fill=%22%23F5F2ED%22 opacity=%22.5%22 text-anchor=%22middle%22 letter-spacing=%224%22>KARMIC · NODE</text></svg>',
-    images: ['data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 800 600%22 preserveAspectRatio=%22xMidYMid slice%22><defs><radialGradient id=%22g%22 cx=%2250%%22 cy=%2240%%22 r=%2270%%22><stop offset=%220%%22 stop-color=%22%238B1E2D%22 stop-opacity=%22.35%22/><stop offset=%22100%%22 stop-color=%22%230B0B0C%22 stop-opacity=%221%22/></radialGradient><pattern id=%22p%22 width=%2240%22 height=%2240%22 patternUnits=%22userSpaceOnUse%22><path d=%22M0 20 L40 20 M20 0 L20 40%22 stroke=%22%238B1E2D%22 stroke-width=%22.5%22 opacity=%22.08%22/></pattern></defs><rect width=%22800%22 height=%22600%22 fill=%22url(%23g)%22/><rect width=%22800%22 height=%22600%22 fill=%22url(%23p)%22/><g transform=%22translate(400 260)%22 fill=%22none%22 stroke=%22%238B1E2D%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 opacity=%22.85%22><rect x=%22-30%22 y=%22-30%22 width=%2260%22 height=%2255%22 rx=%226%22/><path d=%22M-10 25 L-10 40 M10 25 L10 40%22/><path d=%22M-15 -15 L-15 -5 L-5 -5 L-15 15 L-15 5 L-25 5 Z%22 fill=%22currentColor%22/></g><text x=%22400%22 y=%22450%22 font-family=%22Georgia, serif%22 font-size=%2230%22 fill=%22%238B1E2D%22 opacity=%22.95%22 text-anchor=%22middle%22 font-style=%22italic%22>Energia e Conectividade</text><text x=%22400%22 y=%22490%22 font-family=%22Inter, sans-serif%22 font-size=%2211%22 fill=%22%23F5F2ED%22 opacity=%22.5%22 text-anchor=%22middle%22 letter-spacing=%224%22>KARMIC · NODE</text></svg>'],
-    description: 'Tecnologia GaN compacta para carregar portátil, tablet e smartphone em simultâneo.',
-    nameEn: '65W GaN 3-Port Charger',
-    descriptionEn: 'Compact GaN tech to charge laptop, tablet and smartphone simultaneously.',
-    categoryEn: 'Power',
-    subcategoryEn: 'Power & Connectivity',
-    specsEn: [{ label: 'Total power', value: '65W' }, { label: 'Ports', value: '2× USB-C + 1× USB-A' }, { label: 'Technology', value: 'GaNPrime' }, { label: 'Compatibility', value: 'PD 3.0 / QC 4+' }],
-    specs: [{ label: 'Potência total', value: '65W' }, { label: 'Portas', value: '2× USB-C + 1× USB-A' }, { label: 'Tecnologia', value: 'GaNPrime' }, { label: 'Compatibilidade', value: 'PD 3.0 / QC 4+' }],
-  },
-  {
-    id: 28, sku: 'KN-028', name: 'Capa Transparente MagSafe iPhone',
-    category: 'Capas', subcategory: 'Energia e Conectividade', vertical: 'it',
-    tags: ['energia', 'conectividade'],
-    price: 26.99, originalPrice: null,
-    badge: 'Bestseller', badgeColor: 'bordo',
-    rating: 4.8, reviews: 680, stock: 60,
-    customizable: true,
-    image: 'data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 800 600%22 preserveAspectRatio=%22xMidYMid slice%22><defs><radialGradient id=%22g%22 cx=%2250%%22 cy=%2240%%22 r=%2270%%22><stop offset=%220%%22 stop-color=%22%238B1E2D%22 stop-opacity=%22.35%22/><stop offset=%22100%%22 stop-color=%22%230B0B0C%22 stop-opacity=%221%22/></radialGradient><pattern id=%22p%22 width=%2240%22 height=%2240%22 patternUnits=%22userSpaceOnUse%22><path d=%22M0 20 L40 20 M20 0 L20 40%22 stroke=%22%238B1E2D%22 stroke-width=%22.5%22 opacity=%22.08%22/></pattern></defs><rect width=%22800%22 height=%22600%22 fill=%22url(%23g)%22/><rect width=%22800%22 height=%22600%22 fill=%22url(%23p)%22/><g transform=%22translate(400 260)%22 fill=%22none%22 stroke=%22%238B1E2D%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 opacity=%22.85%22><rect x=%22-30%22 y=%22-50%22 width=%2260%22 height=%22100%22 rx=%2210%22/><rect x=%22-15%22 y=%22-38%22 width=%2230%22 height=%226%22 rx=%222%22 opacity=%22.5%22/><rect x=%2210%22 y=%22-30%22 width=%2215%22 height=%2215%22 rx=%222%22 opacity=%22.6%22/></g><text x=%22400%22 y=%22450%22 font-family=%22Georgia, serif%22 font-size=%2230%22 fill=%22%238B1E2D%22 opacity=%22.95%22 text-anchor=%22middle%22 font-style=%22italic%22>Energia e Conectividade</text><text x=%22400%22 y=%22490%22 font-family=%22Inter, sans-serif%22 font-size=%2211%22 fill=%22%23F5F2ED%22 opacity=%22.5%22 text-anchor=%22middle%22 letter-spacing=%224%22>KARMIC · NODE</text></svg>',
-    images: ['data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 800 600%22 preserveAspectRatio=%22xMidYMid slice%22><defs><radialGradient id=%22g%22 cx=%2250%%22 cy=%2240%%22 r=%2270%%22><stop offset=%220%%22 stop-color=%22%238B1E2D%22 stop-opacity=%22.35%22/><stop offset=%22100%%22 stop-color=%22%230B0B0C%22 stop-opacity=%221%22/></radialGradient><pattern id=%22p%22 width=%2240%22 height=%2240%22 patternUnits=%22userSpaceOnUse%22><path d=%22M0 20 L40 20 M20 0 L20 40%22 stroke=%22%238B1E2D%22 stroke-width=%22.5%22 opacity=%22.08%22/></pattern></defs><rect width=%22800%22 height=%22600%22 fill=%22url(%23g)%22/><rect width=%22800%22 height=%22600%22 fill=%22url(%23p)%22/><g transform=%22translate(400 260)%22 fill=%22none%22 stroke=%22%238B1E2D%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 opacity=%22.85%22><rect x=%22-30%22 y=%22-50%22 width=%2260%22 height=%22100%22 rx=%2210%22/><rect x=%22-15%22 y=%22-38%22 width=%2230%22 height=%226%22 rx=%222%22 opacity=%22.5%22/><rect x=%2210%22 y=%22-30%22 width=%2215%22 height=%2215%22 rx=%222%22 opacity=%22.6%22/></g><text x=%22400%22 y=%22450%22 font-family=%22Georgia, serif%22 font-size=%2230%22 fill=%22%238B1E2D%22 opacity=%22.95%22 text-anchor=%22middle%22 font-style=%22italic%22>Energia e Conectividade</text><text x=%22400%22 y=%22490%22 font-family=%22Inter, sans-serif%22 font-size=%2211%22 fill=%22%23F5F2ED%22 opacity=%22.5%22 text-anchor=%22middle%22 letter-spacing=%224%22>KARMIC · NODE</text></svg>'],
-    description: 'Traseira transparente rígida com para-choques em TPU e ímanes MagSafe fortes. Personalizável com o teu design.',
-    nameEn: 'Clear iPhone MagSafe Case',
-    descriptionEn: 'Rigid clear back with TPU bumpers and strong MagSafe magnets. Customizable with your design.',
-    categoryEn: 'Cases',
-    subcategoryEn: 'Power & Connectivity',
-    specsEn: [{ label: 'Compatibility', value: 'iPhone 13/14/15/16 (all)' }, { label: 'MagSafe', value: '100% Compatible' }, { label: 'Material', value: 'PC + TPU' }, { label: 'Customizable', value: 'Printed design' }],
-    specs: [{ label: 'Compatibilidade', value: 'iPhone 13/14/15/16 (todos)' }, { label: 'MagSafe', value: 'Compatível 100%' }, { label: 'Material', value: 'PC + TPU' }, { label: 'Personalizável', value: 'Design impresso' }],
-  },
-  {
-    id: 29, sku: 'KN-029', name: 'Suporte Auto MagSafe Rotativo',
-    category: 'Acessórios IT', subcategory: 'Energia e Conectividade', vertical: 'it',
-    tags: ['energia', 'conectividade'],
-    price: 19.99, originalPrice: null,
-    badge: 'Popular', badgeColor: 'bordo',
-    rating: 4.7, reviews: 520, stock: 50,
-    customizable: false,
-    image: 'data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 800 600%22 preserveAspectRatio=%22xMidYMid slice%22><defs><radialGradient id=%22g%22 cx=%2250%%22 cy=%2240%%22 r=%2270%%22><stop offset=%220%%22 stop-color=%22%238B1E2D%22 stop-opacity=%22.35%22/><stop offset=%22100%%22 stop-color=%22%230B0B0C%22 stop-opacity=%221%22/></radialGradient><pattern id=%22p%22 width=%2240%22 height=%2240%22 patternUnits=%22userSpaceOnUse%22><path d=%22M0 20 L40 20 M20 0 L20 40%22 stroke=%22%238B1E2D%22 stroke-width=%22.5%22 opacity=%22.08%22/></pattern></defs><rect width=%22800%22 height=%22600%22 fill=%22url(%23g)%22/><rect width=%22800%22 height=%22600%22 fill=%22url(%23p)%22/><g transform=%22translate(400 260)%22 fill=%22none%22 stroke=%22%238B1E2D%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 opacity=%22.85%22><rect x=%22-35%22 y=%22-30%22 width=%2270%22 height=%2255%22 rx=%228%22/><path d=%22M0 25 L0 45 L-15 55 M0 45 L15 55%22/><circle cx=%220%22 cy=%220%22 r=%228%22 opacity=%22.6%22/></g><text x=%22400%22 y=%22450%22 font-family=%22Georgia, serif%22 font-size=%2230%22 fill=%22%238B1E2D%22 opacity=%22.95%22 text-anchor=%22middle%22 font-style=%22italic%22>Energia e Conectividade</text><text x=%22400%22 y=%22490%22 font-family=%22Inter, sans-serif%22 font-size=%2211%22 fill=%22%23F5F2ED%22 opacity=%22.5%22 text-anchor=%22middle%22 letter-spacing=%224%22>KARMIC · NODE</text></svg>',
-    images: ['data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 800 600%22 preserveAspectRatio=%22xMidYMid slice%22><defs><radialGradient id=%22g%22 cx=%2250%%22 cy=%2240%%22 r=%2270%%22><stop offset=%220%%22 stop-color=%22%238B1E2D%22 stop-opacity=%22.35%22/><stop offset=%22100%%22 stop-color=%22%230B0B0C%22 stop-opacity=%221%22/></radialGradient><pattern id=%22p%22 width=%2240%22 height=%2240%22 patternUnits=%22userSpaceOnUse%22><path d=%22M0 20 L40 20 M20 0 L20 40%22 stroke=%22%238B1E2D%22 stroke-width=%22.5%22 opacity=%22.08%22/></pattern></defs><rect width=%22800%22 height=%22600%22 fill=%22url(%23g)%22/><rect width=%22800%22 height=%22600%22 fill=%22url(%23p)%22/><g transform=%22translate(400 260)%22 fill=%22none%22 stroke=%22%238B1E2D%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 opacity=%22.85%22><rect x=%22-35%22 y=%22-30%22 width=%2270%22 height=%2255%22 rx=%228%22/><path d=%22M0 25 L0 45 L-15 55 M0 45 L15 55%22/><circle cx=%220%22 cy=%220%22 r=%228%22 opacity=%22.6%22/></g><text x=%22400%22 y=%22450%22 font-family=%22Georgia, serif%22 font-size=%2230%22 fill=%22%238B1E2D%22 opacity=%22.95%22 text-anchor=%22middle%22 font-style=%22italic%22>Energia e Conectividade</text><text x=%22400%22 y=%22490%22 font-family=%22Inter, sans-serif%22 font-size=%2211%22 fill=%22%23F5F2ED%22 opacity=%22.5%22 text-anchor=%22middle%22 letter-spacing=%224%22>KARMIC · NODE</text></svg>'],
-    description: 'Fixação magnética ultra-forte para grelha de ventilação com rotação 360°. Instalação em segundos.',
-    nameEn: 'Rotating MagSafe Car Mount',
-    descriptionEn: 'Ultra-strong magnetic mount for air vent with 360° rotation. Installs in seconds.',
-    categoryEn: 'IT Accessories',
-    subcategoryEn: 'Power & Connectivity',
-    specsEn: [{ label: 'Mount', value: 'Air vent' }, { label: 'Rotation', value: '360° free' }, { label: 'MagSafe', value: 'Compatible' }, { label: 'Max weight', value: '500g' }],
-    specs: [{ label: 'Fixação', value: 'Grelha de ventilação' }, { label: 'Rotação', value: '360° livre' }, { label: 'MagSafe', value: 'Compatível' }, { label: 'Peso máximo', value: '500g' }],
+    image: 'data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 800 600%22 preserveAspectRatio=%22xMidYMid slice%22><defs><radialGradient id=%22g%22 cx=%2250%%22 cy=%2240%%22 r=%2270%%22><stop offset=%220%%22 stop-color=%22%23B08D57%22 stop-opacity=%22.35%22/><stop offset=%22100%%22 stop-color=%22%230B0B0C%22 stop-opacity=%221%22/></radialGradient><pattern id=%22p%22 width=%2240%22 height=%2240%22 patternUnits=%22userSpaceOnUse%22><path d=%22M0 20 L40 20 M20 0 L20 40%22 stroke=%22%23B08D57%22 stroke-width=%22.5%22 opacity=%22.08%22/></pattern></defs><rect width=%22800%22 height=%22600%22 fill=%22url(%23g)%22/><rect width=%22800%22 height=%22600%22 fill=%22url(%23p)%22/><g transform=%22translate(400 260)%22 fill=%22none%22 stroke=%22%23B08D57%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 opacity=%22.85%22><rect x=%22-40%22 y=%22-55%22 width=%2280%22 height=%22110%22 rx=%222%22/><path d=%22M-25 -30 L25 -30 M-25 -15 L15 -15 M-25 0 L25 0%22 opacity=%22.5%22/></g><text x=%22400%22 y=%22450%22 font-family=%22Georgia, serif%22 font-size=%2230%22 fill=%22%23B08D57%22 opacity=%22.95%22 text-anchor=%22middle%22 font-style=%22italic%22>Decoração</text><text x=%22400%22 y=%22490%22 font-family=%22Inter, sans-serif%22 font-size=%2211%22 fill=%22%23F5F2ED%22 opacity=%22.5%22 text-anchor=%22middle%22 letter-spacing=%224%22>KARMIC · NODE</text></svg>',
+    images: ['data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 800 600%22 preserveAspectRatio=%22xMidYMid slice%22><defs><radialGradient id=%22g%22 cx=%2250%%22 cy=%2240%%22 r=%2270%%22><stop offset=%220%%22 stop-color=%22%23B08D57%22 stop-opacity=%22.35%22/><stop offset=%22100%%22 stop-color=%22%230B0B0C%22 stop-opacity=%221%22/></radialGradient><pattern id=%22p%22 width=%2240%22 height=%2240%22 patternUnits=%22userSpaceOnUse%22><path d=%22M0 20 L40 20 M20 0 L20 40%22 stroke=%22%23B08D57%22 stroke-width=%22.5%22 opacity=%22.08%22/></pattern></defs><rect width=%22800%22 height=%22600%22 fill=%22url(%23g)%22/><rect width=%22800%22 height=%22600%22 fill=%22url(%23p)%22/><g transform=%22translate(400 260)%22 fill=%22none%22 stroke=%22%23B08D57%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 opacity=%22.85%22><rect x=%22-40%22 y=%22-55%22 width=%2280%22 height=%22110%22 rx=%222%22/><path d=%22M-25 -30 L25 -30 M-25 -15 L15 -15 M-25 0 L25 0%22 opacity=%22.5%22/></g><text x=%22400%22 y=%22450%22 font-family=%22Georgia, serif%22 font-size=%2230%22 fill=%22%23B08D57%22 opacity=%22.95%22 text-anchor=%22middle%22 font-style=%22italic%22>Decoração</text><text x=%22400%22 y=%22490%22 font-family=%22Inter, sans-serif%22 font-size=%2211%22 fill=%22%23F5F2ED%22 opacity=%22.5%22 text-anchor=%22middle%22 letter-spacing=%224%22>KARMIC · NODE</text></svg>'],
+    description: 'Poster em papel Hahnemühle 308gsm, impressão giclée museológica. Design Karmic ou o teu próprio.',
+    nameEn: 'Karmic Poster — Museum Print',
+    descriptionEn: 'Poster on Hahnemühle 308gsm paper, museum-grade giclée print. Karmic design or your own.',
+    categoryEn: 'Art',
+    subcategoryEn: 'Decor',
+    specs: [{ label: 'Papel', value: 'Hahnemühle 308gsm' }, { label: 'Impressão', value: 'Giclée museológica' }, { label: 'Tamanhos', value: 'A3 · A2 · A1' }, { label: 'Personalizável', value: 'Sim, design próprio' }],
+    specsEn: [{ label: 'Paper', value: 'Hahnemühle 308gsm' }, { label: 'Print', value: 'Museum giclée' }, { label: 'Sizes', value: 'A3 · A2 · A1' }, { label: 'Customizable', value: 'Yes, own design' }],
   }
 ]
 
@@ -1312,11 +1313,11 @@ function ProductCard({ p, onAdd, onOpen, wishlist, toggleWish }: {
       {/* Image */}
       <div style={{ position: 'relative', aspectRatio: '4/3', overflow: 'hidden', background: 'var(--bg-2)' }} onClick={() => onOpen(p)}>
         {/* 360° card preview */}
-        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: `radial-gradient(360px 260px at 50% 45%, ${p.vertical === 'it' ? '#8B1E2D' : '#B08D57'}18, transparent 65%), var(--bg-2)` }}>
+        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: `radial-gradient(360px 260px at 50% 45%, ${p.vertical === 'atelier' ? '#8B1E2D' : '#B08D57'}18, transparent 65%), var(--bg-2)` }}>
           <Product360Viewer
             iconPath={PROD_ICONS[p.sku || '' || 'KN-001'] || PROD_ICONS['KN-001']}
-            color={p.vertical === 'it' ? '#8B1E2D' : '#B08D57'}
-            accent={p.vertical === 'it' ? '#8B1E2D' : '#B08D57'}
+            color={p.vertical === 'atelier' ? '#8B1E2D' : '#B08D57'}
+            accent={p.vertical === 'atelier' ? '#8B1E2D' : '#B08D57'}
             size="card"
             showPresets={false}
             showHint={false}
@@ -1664,7 +1665,7 @@ function CartDrawer({ open, onClose, items, updateQty, remove }: {
               <div style={{ height: 1, background: 'var(--border)', margin: '4px 0' }} />
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ fontSize: 11, letterSpacing: '.18em', textTransform: 'uppercase', color: 'var(--fg-mute)' }}>{t('cart_total')}</span>
-                <span style={{ fontFamily: 'var(--f-display)', fontSize: 26, fontWeight: 600 }}>{fmt(total)}</span>
+                <span style={{ fontFamily: 'var(--f-display)', fontSize: 26, fontWeight: 600 }}>{fmt(total - (promoApplied?.discount_cents ? promoApplied.discount_cents / 100 : 0))}</span>
               </div>
             </div>
 
@@ -1717,7 +1718,8 @@ function HeaderNavLink({ label, active, onClick }: { label: string; active: bool
 
 // Sub-categorias por vertical, extraídas dos produtos reais
 const VESTUARIO_SUBS = ['Tops e Camisaria', 'Malhas e Sweats', 'Outerwear', 'Bottoms', 'Vestidos e Saias', 'Athleisure', 'Calçado', 'Acessórios']
-const IT_SUBS = ['Computadores', 'Periféricos', 'Áudio e Imagem', 'Energia e Conectividade']
+const ATELIER_SUBS = ['Edições Limitadas', 'Alfaiataria', 'Colaborações', 'Bordado à mão']
+const CASA_SUBS = ['Têxtil Lar', 'Ambiente', 'Decoração', 'Banho']
 
 function NavDropdown({ label, active, subs, navigate, page, accent }: {
   label: string; active: boolean; subs: string[]; navigate: (p: Page, filter?: string) => void; page: Page; accent?: string
@@ -1868,7 +1870,8 @@ function Header({ activePage, navigate, cartCount, openCart, lang, setLang }: {
         <nav className="kn-header-nav">
           <HeaderNavLink label={t('nav_home')} active={activePage === 'home'} onClick={() => navigate('home')} />
           <NavDropdown label={t('vert_vestuario')} active={activePage === 'vestuario'} subs={VESTUARIO_SUBS} navigate={navigate} page="vestuario" accent="var(--gold)" />
-          <NavDropdown label={t('vert_it')} active={activePage === 'it'} subs={IT_SUBS} navigate={navigate} page="it" accent="var(--bordo-3)" />
+          <NavDropdown label={t('vert_atelier')} active={activePage === 'atelier'} subs={ATELIER_SUBS} navigate={navigate} page="atelier" accent="var(--bordo-3)" />
+          <NavDropdown label={t('vert_casa')} active={activePage === 'casa'} subs={CASA_SUBS} navigate={navigate} page="casa" accent="var(--gold)" />
           {/* Personalizar destacado */}
           <a href="#" onClick={e => { e.preventDefault(); navigate('custom') }}
             style={{ fontFamily: 'var(--f-sans)', fontSize: 11, letterSpacing: '.18em', textTransform: 'uppercase', fontWeight: 600, padding: '5px 14px', border: `1px solid ${activePage === 'custom' ? 'var(--gold)' : 'var(--gold-3)'}`, color: activePage === 'custom' ? 'var(--bg)' : 'var(--gold)', background: activePage === 'custom' ? 'var(--gold)' : 'transparent', display: 'inline-flex', alignItems: 'center', gap: 6, transition: 'all .2s ease' }}>
@@ -1931,9 +1934,13 @@ function Header({ activePage, navigate, cartCount, openCart, lang, setLang }: {
           style={{ fontFamily: 'var(--f-display)', fontSize: 28, fontWeight: 500, color: 'var(--fg)', letterSpacing: '.04em' }}>
           {t('vert_vestuario')}
         </a>
-        <a href="#" onClick={e => { e.preventDefault(); navigate('it'); setNavOpen(false) }}
+        <a href="#" onClick={e => { e.preventDefault(); navigate('atelier'); setNavOpen(false) }}
           style={{ fontFamily: 'var(--f-display)', fontSize: 28, fontWeight: 500, color: 'var(--fg)', letterSpacing: '.04em' }}>
-          {t('vert_it')}
+          {t('vert_atelier')}
+        </a>
+        <a href="#" onClick={e => { e.preventDefault(); navigate('casa'); setNavOpen(false) }}
+          style={{ fontFamily: 'var(--f-display)', fontSize: 28, fontWeight: 500, color: 'var(--fg)', letterSpacing: '.04em' }}>
+          {t('vert_casa')}
         </a>
         <a href="#" onClick={e => { e.preventDefault(); navigate('custom'); setNavOpen(false) }}
           style={{ fontFamily: 'var(--f-display)', fontSize: 28, fontWeight: 500, color: 'var(--gold)', letterSpacing: '.04em', fontStyle: 'italic' }}>
@@ -2228,7 +2235,7 @@ function ShopPage({ onAdd, onOpen, wishlist, toggleWish, initialCategory, produc
   onAdd: (p: Product) => void; onOpen: (p: Product) => void
   wishlist: Set<number>; toggleWish: (id: number) => void
   initialCategory?: string; products: Product[]
-  vertical?: 'vestuario' | 'it' | 'all'
+  vertical?: 'vestuario' | 'atelier' | 'casa' | 'all'
 }) {
   const { t } = useLang()
   const [search, setSearch] = useState('')
@@ -2246,7 +2253,8 @@ function ShopPage({ onAdd, onOpen, wishlist, toggleWish, initialCategory, produc
 
   // Sub-categorias disponíveis nesta vertical
   const availableSubs = vertical === 'vestuario' ? VESTUARIO_SUBS
-    : vertical === 'it' ? IT_SUBS
+    : vertical === 'atelier' ? ATELIER_SUBS
+    : vertical === 'casa' ? CASA_SUBS
     : []
 
   const filtered = verticalProducts
@@ -2270,21 +2278,21 @@ function ShopPage({ onAdd, onOpen, wishlist, toggleWish, initialCategory, produc
   return (
     <div style={{ minHeight: '80vh' }}>
       {/* Page hero */}
-      <div style={{ background: vertical === 'it' ? `radial-gradient(700px 400px at 80% 20%, rgba(139,30,45,.18), transparent 60%), var(--bg-1)` : `radial-gradient(700px 400px at 80% 20%, rgba(176,141,87,.14), transparent 60%), var(--bg-1)`, borderBottom: '1px solid var(--border)', padding: '52px var(--pad-x) 36px' }}>
+      <div style={{ background: (vertical === 'atelier' || vertical === 'casa') ? `radial-gradient(700px 400px at 80% 20%, rgba(139,30,45,.18), transparent 60%), var(--bg-1)` : `radial-gradient(700px 400px at 80% 20%, rgba(176,141,87,.14), transparent 60%), var(--bg-1)`, borderBottom: '1px solid var(--border)', padding: '52px var(--pad-x) 36px' }}>
         <div style={{ maxWidth: 'var(--maxw)', margin: '0 auto' }}>
           <div style={{ fontSize: 11, letterSpacing: '.22em', textTransform: 'uppercase', color: 'var(--fg-mute)', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
             Karmic Node
             <span style={{ color: 'var(--border-2)' }}>·</span>
-            <span style={{ color: vertical === 'it' ? 'var(--bordo-3)' : 'var(--gold)' }}>
-              {vertical === 'vestuario' ? t('vert_vestuario') : vertical === 'it' ? t('vert_it') : t('nav_shop')}
+            <span style={{ color: vertical === 'atelier' ? 'var(--bordo-3)' : 'var(--gold)' }}>
+              {vertical === 'vestuario' ? t('vert_vestuario') : vertical === 'atelier' ? t('vert_atelier') : vertical === 'casa' ? t('vert_casa') : t('nav_shop')}
             </span>
           </div>
           <h1 style={{ fontFamily: 'var(--f-display)', fontSize: 'clamp(40px,5vw,72px)', fontWeight: 500, margin: '0 0 20px', lineHeight: 1.05 }}
-            dangerouslySetInnerHTML={{ __html: (vertical === 'vestuario' ? t('vert_vestuario_title') : vertical === 'it' ? t('vert_it_title') : t('shop_all_title'))
-              .replace('<em>', `<em style="color:${vertical === 'it' ? 'var(--bordo-3)' : 'var(--gold)'};font-style:italic">`) }} />
+            dangerouslySetInnerHTML={{ __html: (vertical === 'vestuario' ? t('vert_vestuario_title') : vertical === 'atelier' ? t('vert_atelier_title') : vertical === 'casa' ? t('vert_casa_title') : t('shop_all_title'))
+              .replace('<em>', `<em style="color:${vertical === 'atelier' ? 'var(--bordo-3)' : 'var(--gold)'};font-style:italic">`) }} />
           {vertical && vertical !== 'all' && (
             <p style={{ color: 'var(--fg-dim)', fontSize: 16, maxWidth: '48ch', lineHeight: 1.6, marginBottom: 24 }}>
-              {vertical === 'vestuario' ? t('vert_vestuario_lead') : t('vert_it_lead')}
+              {vertical === 'vestuario' ? t('vert_vestuario_lead') : vertical === 'atelier' ? t('vert_atelier_lead') : t('vert_casa_lead')}
             </p>
           )}
 
@@ -2306,14 +2314,14 @@ function ShopPage({ onAdd, onOpen, wishlist, toggleWish, initialCategory, produc
           {/* Sidebar filters */}
           <aside className="kn-shop-sidebar" style={{ position: 'sticky', top: 100 }}>
             <div style={{ borderBottom: '1px solid var(--border)', paddingBottom: 24, marginBottom: 28 }}>
-              <div style={{ fontSize: 11, letterSpacing: '.24em', textTransform: 'uppercase', color: vertical === 'it' ? 'var(--bordo-3)' : 'var(--gold)', fontWeight: 500, marginBottom: 16 }}>
+              <div style={{ fontSize: 11, letterSpacing: '.24em', textTransform: 'uppercase', color: vertical === 'atelier' ? 'var(--bordo-3)' : 'var(--gold)', fontWeight: 500, marginBottom: 16 }}>
                 {vertical && vertical !== 'all' ? t('shop_subcategories') : t('shop_categories')}
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {/* Botão "Todos" */}
                 <button onClick={() => { setActiveCategory('Todos'); setShowPromoOnly(false) }}
-                  style={{ background: 'none', border: 'none', textAlign: 'left', color: activeCategory === 'Todos' && !showPromoOnly ? (vertical === 'it' ? 'var(--bordo-3)' : 'var(--gold)') : 'var(--fg-dim)', fontSize: 14, padding: '5px 0', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, fontWeight: activeCategory === 'Todos' && !showPromoOnly ? 500 : 300, transition: 'color .2s ease' }}>
-                  {activeCategory === 'Todos' && !showPromoOnly && <span style={{ width: 16, height: 1, background: vertical === 'it' ? 'var(--bordo-3)' : 'var(--gold)', flexShrink: 0 }} />}
+                  style={{ background: 'none', border: 'none', textAlign: 'left', color: activeCategory === 'Todos' && !showPromoOnly ? (vertical === 'atelier' ? 'var(--bordo-3)' : 'var(--gold)') : 'var(--fg-dim)', fontSize: 14, padding: '5px 0', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, fontWeight: activeCategory === 'Todos' && !showPromoOnly ? 500 : 300, transition: 'color .2s ease' }}>
+                  {activeCategory === 'Todos' && !showPromoOnly && <span style={{ width: 16, height: 1, background: vertical === 'atelier' ? 'var(--bordo-3)' : 'var(--gold)', flexShrink: 0 }} />}
                   {t('shop_all')}
                   <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--fg-mute)' }}>({verticalProducts.length})</span>
                 </button>
@@ -2323,7 +2331,7 @@ function ShopPage({ onAdd, onOpen, wishlist, toggleWish, initialCategory, produc
                     ? verticalProducts.filter(p => p.subcategory === cat).length
                     : verticalProducts.filter(p => p.category === cat).length
                   const isActive = activeCategory === cat && !showPromoOnly
-                  const accentCol = vertical === 'it' ? 'var(--bordo-3)' : 'var(--gold)'
+                  const accentCol = vertical === 'atelier' ? 'var(--bordo-3)' : 'var(--gold)'
                   return (
                     <button key={cat} onClick={() => { setActiveCategory(cat); setShowPromoOnly(false) }}
                       style={{ background: 'none', border: 'none', textAlign: 'left', color: isActive ? accentCol : 'var(--fg-dim)', fontSize: 14, padding: '5px 0', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, fontWeight: isActive ? 500 : 300, transition: 'color .2s ease' }}>
@@ -2436,8 +2444,8 @@ function ProductPage({ product, onAdd, onBack, wishlist, toggleWish, allProducts
             <div style={{ position: 'relative' }}>
               <Product360Viewer
                 iconPath={PROD_ICONS[product.sku || '' || 'KN-001'] || PROD_ICONS['KN-001']}
-                color={product.vertical === 'it' ? '#8B1E2D' : '#B08D57'}
-                accent={product.vertical === 'it' ? '#8B1E2D' : '#B08D57'}
+                color={product.vertical === 'atelier' ? '#8B1E2D' : '#B08D57'}
+                accent={product.vertical === 'atelier' ? '#8B1E2D' : '#B08D57'}
                 size="large"
                 showPresets={true}
                 showHint={true}
@@ -2984,7 +2992,7 @@ function BlogPage() {
 // Configurador split-screen com live preview + kit builder + sparkles
 
 // ─── Product catalog for customizer (independent of shop) ──────────────────
-type CustGroup = 'vestuario' | 'it'
+type CustGroup = 'vestuario' | 'casa'
 
 interface CustProduct {
   id: string
@@ -2997,8 +3005,8 @@ interface CustProduct {
   hasTechnique?: boolean
   hasPosition?: boolean
   hasModel?: boolean
-  hasMaterial?: boolean  // IT: capa material
-  hasFinish?: boolean    // IT: mate/brilhante
+  hasMaterial?: boolean  // Casa: material do tecido
+  hasFinish?: boolean    // Casa: mate/brilhante
 }
 
 const CUST_PRODUCTS: CustProduct[] = [
@@ -3027,25 +3035,25 @@ const CUST_PRODUCTS: CustProduct[] = [
   { id: 'mousepad', group: 'vestuario', label: 'Tapete Rato XL', basePrice: 8,
     icon: 'M-85 -35 L85 -35 L85 35 L-85 35 Z M-70 -20 L70 -20 M-70 0 L70 0 M-70 20 L70 20',
     hasTechnique: true },
-  // IT
-  { id: 'phonecase', group: 'it', label: 'Capa Telemóvel', basePrice: 15,
-    icon: 'M-35 -60 L35 -60 L35 60 L-35 60 Z M-15 -48 L15 -48 M18 -38 L28 -38 L28 -28 L18 -28 Z',
-    hasModel: true, hasMaterial: true, hasFinish: true },
-  { id: 'popsocket', group: 'it', label: 'PopSocket / Grip', basePrice: 8,
-    icon: 'M0 0 m-40 0 a40 40 0 1 0 80 0 a40 40 0 1 0 -80 0 M0 0 m-15 0 a15 15 0 1 0 30 0 a15 15 0 1 0 -30 0',
-    hasFinish: true },
-  { id: 'airpods', group: 'it', label: 'Case AirPods', basePrice: 12,
-    icon: 'M-40 -25 C-40 -55 40 -55 40 -25 L40 30 C40 55 -40 55 -40 30 Z M-40 -10 L40 -10',
-    hasModel: true, hasFinish: true },
-  { id: 'laptop-skin', group: 'it', label: 'Skin Portátil', basePrice: 18,
-    icon: 'M-70 -40 L70 -40 L70 40 L-70 40 Z M-70 -25 L70 -25 M-45 5 L45 5',
-    hasModel: true, hasFinish: true },
-  { id: 'phonemount', group: 'it', label: 'Suporte Auto', basePrice: 10,
-    icon: 'M-35 -30 L35 -30 L35 25 L-35 25 Z M0 25 L0 42 L-12 52 M0 42 L12 52 M-15 -5 L15 -5 M-15 5 L15 5',
-    hasFinish: true },
-  { id: 'cable', group: 'it', label: 'Cabo Personalizado', basePrice: 6,
-    icon: 'M-70 -8 L-70 8 L-55 8 L-55 -8 Z M-55 0 C-30 -30 30 30 55 0 M55 -8 L55 8 L70 8 L70 -8 Z',
-    hasFinish: true },
+  // Casa
+  { id: 'cushion', group: 'casa', label: 'Almofada', basePrice: 20,
+    icon: 'M-50 -40 L50 -40 L60 -30 L60 30 L50 40 L-50 40 L-60 30 L-60 -30 Z',
+    hasTechnique: true, hasPosition: true, hasMaterial: true },
+  { id: 'throw', group: 'casa', label: 'Manta', basePrice: 45,
+    icon: 'M-70 -50 L70 -50 L70 50 L-70 50 Z M-70 -30 L70 -30 M-70 -10 L70 -10 M-70 10 L70 10 M-70 30 L70 30',
+    hasTechnique: true, hasMaterial: true },
+  { id: 'towel', group: 'casa', label: 'Toalha', basePrice: 18,
+    icon: 'M-40 -60 L40 -60 L40 60 L-40 60 Z M-40 -45 L40 -45 M-40 45 L40 45',
+    hasTechnique: true, hasPosition: true },
+  { id: 'robe', group: 'casa', label: 'Roupão', basePrice: 55,
+    icon: 'M-45 -50 L-25 -55 L25 -55 L45 -50 L50 60 L-50 60 Z M0 -50 L0 60 M-30 -20 L-30 10 M30 -20 L30 10',
+    hasTechnique: true, hasPosition: true, hasSize: true },
+  { id: 'apron', group: 'casa', label: 'Avental', basePrice: 22,
+    icon: 'M-30 -50 L30 -50 L45 -30 L45 55 L-45 55 L-45 -30 Z M-25 -55 L25 -55 M0 -50 L0 -35',
+    hasTechnique: true, hasPosition: true },
+  { id: 'placemat', group: 'casa', label: 'Individual de Mesa', basePrice: 12,
+    icon: 'M-70 -35 L70 -35 L70 35 L-70 35 Z M-55 -20 L55 -20 M-55 20 L55 20',
+    hasTechnique: true, hasPosition: true },
 ]
 
 // Cores base disponíveis
@@ -3082,20 +3090,16 @@ const CUST_POSITIONS = [
   { id: 'center', label: 'Centro', x: 0, y: 5 },
 ]
 const IT_MATERIALS = [
-  { id: 'silicone', label: 'Silicone', mult: 1, note: 'Flexível · Anti-choque' },
-  { id: 'hard', label: 'Rígida (PC)', mult: 1.1, note: 'Resistente · Fina' },
-  { id: 'clear', label: 'Transparente', mult: 1.05, note: 'Mostra o design do telemóvel' },
-  { id: 'leather', label: 'Couro Sintético', mult: 1.6, note: 'Premium · Elegante' },
+  { id: 'linen', label: 'Linho Natural', mult: 1, note: 'Respirável · Textura orgânica' },
+  { id: 'cotton_home', label: 'Algodão Egípcio', mult: 1.2, note: 'Suave · Durável' },
+  { id: 'velvet', label: 'Veludo', mult: 1.5, note: 'Luxo · Toque aveludado' },
+  { id: 'wool_home', label: 'Lã Merino', mult: 1.7, note: 'Quente · Premium' },
 ]
 const IT_FINISHES = [
   { id: 'matte', label: 'Mate', mult: 1 },
   { id: 'glossy', label: 'Brilhante', mult: 1.05 },
 ]
-const IT_MODELS = [
-  'iPhone 15 Pro', 'iPhone 15', 'iPhone 14 Pro', 'iPhone 14', 'iPhone 13',
-  'Samsung S24 Ultra', 'Samsung S24', 'Samsung S23', 'Samsung A54',
-  'Xiaomi 13 Pro', 'Google Pixel 8', 'Outro (indicar nas notas)',
-]
+const IT_MODELS: string[] = [] // legado: nenhum CUST_PRODUCT usa hasModel após pivot Atelier/Casa
 
 // ─── Sparkles component ───────────────────────────────────────────────────
 function Sparkles({ trigger }: { trigger: number }) {
@@ -3141,7 +3145,7 @@ function LivePreview({ product, baseColor, uploadUrl, textOverlay, position, gro
   product: CustProduct | null; baseColor: string; uploadUrl: string; textOverlay: string;
   position: string; group: CustGroup; t: (k: TKey) => string
 }) {
-  const accent = group === 'it' ? '#8B1E2D' : '#B08D57'
+  const accent = group === 'casa' ? '#8B1E2D' : '#B08D57'
   const pos = CUST_POSITIONS.find(p => p.id === position) || CUST_POSITIONS[0]
 
   return (
@@ -3287,7 +3291,7 @@ function CustomizerV2({ setPage, onAddToCart }: { setPage: (p: Page) => void; on
   const [loading, setLoading] = useState(false)
   const [err, setErr] = useState('')
 
-  const accent = group === 'it' ? '#8B1E2D' : '#B08D57'
+  const accent = group === 'casa' ? '#8B1E2D' : '#B08D57'
 
   // Estimativa
   const estimate = (() => {
@@ -3446,7 +3450,7 @@ function CustomizerV2({ setPage, onAddToCart }: { setPage: (p: Page) => void; on
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 24, animation: 'kn-fadeUp .5s var(--ease) both' }}>
               {([
                 { g: 'vestuario' as CustGroup, label: t('vert_vestuario'), desc: t('cust_step0_vestuario_desc'), acc: '#B08D57', icon: 'M-60 -25 L-90 0 L-70 30 L-50 20 L-50 65 L50 65 L50 20 L70 30 L90 0 L60 -25 L40 -25 C40 -5 20 5 0 5 C-20 5 -40 -5 -40 -25 Z' },
-                { g: 'it' as CustGroup, label: t('vert_it'), desc: t('cust_step0_it_desc'), acc: '#8B1E2D', icon: 'M-70 -40 L70 -40 L70 30 L-70 30 Z M-90 30 L90 30 L82 42 L-82 42 Z' },
+                { g: 'casa' as CustGroup, label: t('vert_casa'), desc: t('cust_step0_casa_desc'), acc: '#8B1E2D', icon: 'M-70 -40 L70 -40 L70 30 L-70 30 Z M-90 30 L90 30 L82 42 L-82 42 Z' },
               ]).map(opt => (
                 <button key={opt.g} onClick={() => { setGroup(opt.g); setStep(1); fireSparkle() }} style={{
                   padding: '48px 32px', background: 'var(--overlay-medium)', border: `1px solid ${opt.acc}55`, cursor: 'pointer', textAlign: 'left',
@@ -3487,7 +3491,7 @@ function CustomizerV2({ setPage, onAddToCart }: { setPage: (p: Page) => void; on
                 </button>
                 <span style={{ color: 'var(--border-2)' }}>·</span>
                 <span style={{ fontSize: 11, letterSpacing: '.22em', textTransform: 'uppercase', color: accent }}>
-                  {group === 'vestuario' ? t('vert_vestuario') : t('vert_it')}
+                  {group === 'vestuario' ? t('vert_vestuario') : t('vert_casa')}
                 </span>
               </div>
               <h2 style={{ fontFamily: 'var(--f-display)', fontSize: 32, fontWeight: 500, margin: '0 0 8px' }}>{t('cust_step1_title')}</h2>
@@ -4095,7 +4099,8 @@ function SuccessPage({ sessionId, setPage }: { sessionId: string | null; setPage
 const PAGE_TO_PATH: Record<Page, string> = {
   home: '/',
   vestuario: '/vestuario',
-  it: '/it',
+  atelier: '/atelier',
+  casa: '/casa',
   shop: '/loja',
   custom: '/personalizar',
   blog: '/blog',
@@ -4107,7 +4112,8 @@ const PAGE_TO_PATH: Record<Page, string> = {
 const PATH_TO_PAGE: Record<string, Page> = {
   '/': 'home',
   '/vestuario': 'vestuario',
-  '/it': 'it',
+  '/atelier': 'atelier',
+  '/casa': 'casa',
   '/loja': 'shop',
   '/personalizar': 'custom',
   '/blog': 'blog',
@@ -4210,7 +4216,7 @@ export default function App() {
   const navigate = useCallback((p: Page, filter?: string) => {
     setActivePage(p)
     setActiveProduct(null)
-    if (p === 'shop' || p === 'vestuario' || p === 'it') setShopFilter(filter ?? 'Todos')
+    if (p === 'shop' || p === 'vestuario' || p === 'atelier' || p === 'casa') setShopFilter(filter ?? 'Todos')
     // Atualizar URL
     const newPath = PAGE_TO_PATH[p] || '/'
     if (window.location.pathname !== newPath) {
@@ -4270,9 +4276,10 @@ export default function App() {
       {activePage === 'home' && <HomePage {...sharedProps} setPage={setPage} />}
       {activePage === 'shop' && <ShopPage key={shopFilter} {...sharedProps} initialCategory={shopFilter} vertical="all" />}
       {activePage === 'vestuario' && <ShopPage key={'v-' + shopFilter} {...sharedProps} initialCategory={shopFilter} vertical="vestuario" />}
-      {activePage === 'it' && <ShopPage key={'it-' + shopFilter} {...sharedProps} initialCategory={shopFilter} vertical="it" />}
+      {activePage === 'atelier' && <ShopPage key={'atl-' + shopFilter} {...sharedProps} initialCategory={shopFilter} vertical="atelier" />}
+      {activePage === 'casa' && <ShopPage key={'casa-' + shopFilter} {...sharedProps} initialCategory={shopFilter} vertical="casa" />}
       {activePage === 'product' && activeProduct && (
-        <ProductPage product={activeProduct} {...sharedProps} onBack={() => setPage(activeProduct.vertical === 'it' ? 'it' : 'vestuario')} allProducts={liveProducts} />
+        <ProductPage product={activeProduct} {...sharedProps} onBack={() => setPage(activeProduct.vertical === 'atelier' ? 'atelier' : activeProduct.vertical === 'casa' ? 'casa' : 'vestuario')} allProducts={liveProducts} />
       )}
       {activePage === 'contact' && <ContactPage />}
       {activePage === 'about' && <AboutPage setPage={setPage} />}
