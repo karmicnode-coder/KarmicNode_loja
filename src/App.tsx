@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback, createContext, useContext, type ReactNode } from 'react'
 import logoImg from '@/imports/Logo_KarmicNode_sem_fundo.png'
 import { type Lang, type TKey, createT, getArr } from '@/i18n'
+import { useAuth } from '@/hooks/useAuth'
+import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 
 const LangContext = createContext<{ lang: Lang; t: (k: TKey) => string; arr: (k: TKey) => string[] }>({
   lang: 'pt', t: k => k, arr: () => [],
@@ -455,7 +457,7 @@ function Product360Viewer({
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
-type Page = 'home' | 'shop' | 'product' | 'contact' | 'about' | 'blog' | 'custom' | 'vestuario' | 'atelier' | 'casa' | 'success'
+type Page = 'home' | 'shop' | 'product' | 'contact' | 'about' | 'blog' | 'custom' | 'vestuario' | 'atelier' | 'casa' | 'success' | 'login' | 'account'
 
 interface Product {
   id: number
@@ -1814,8 +1816,8 @@ function ThemeToggle() {
   )
 }
 
-function Header({ activePage, navigate, cartCount, openCart, lang, setLang }: {
-  activePage: Page; navigate: (page: Page, filter?: string) => void; cartCount: number; openCart: () => void; lang: Lang; setLang: (l: Lang) => void
+function Header({ activePage, navigate, cartCount, openCart, lang, setLang, auth }: {
+  activePage: Page; navigate: (page: Page, filter?: string) => void; cartCount: number; openCart: () => void; lang: Lang; setLang: (l: Lang) => void; auth: ReturnType<typeof useAuth>
 }) {
   const { t } = useLang()
   const [scrolled, setScrolled] = useState(false)
@@ -1901,6 +1903,15 @@ function Header({ activePage, navigate, cartCount, openCart, lang, setLang }: {
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
             </IconBtn>
           </div>
+          <div className="kn-header-desktop-only" style={{ display: 'flex' }}>
+            <IconBtn onClick={() => navigate(auth.user ? 'account' : 'login')}>
+              {auth.user ? (
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" strokeWidth="1.8"><circle cx="12" cy="8" r="4" /><path d="M4 20c0-4 3.6-6 8-6s8 2 8 6" /></svg>
+              ) : (
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="8" r="4" /><path d="M4 20c0-4 3.6-6 8-6s8 2 8 6" /></svg>
+              )}
+            </IconBtn>
+          </div>
 
           <button onClick={openCart}
             className="kn-cart-btn"
@@ -1955,6 +1966,7 @@ function Header({ activePage, navigate, cartCount, openCart, lang, setLang }: {
           {t('nav_contact')}
         </a>
         <div style={{ marginTop: 16, paddingTop: 24, borderTop: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: 12, width: '100%' }}>
+          <a href="#" onClick={e => { e.preventDefault(); navigate(auth.user ? 'account' : 'login'); setNavOpen(false) }} style={{ fontSize: 14, color: 'var(--fg-mute)', letterSpacing: '.14em', textTransform: 'uppercase' }}>{auth.user ? t('nav_account') : t('login_eyebrow')}</a>
           <a href="#" onClick={e => { e.preventDefault(); navigate('about'); setNavOpen(false) }} style={{ fontSize: 14, color: 'var(--fg-mute)', letterSpacing: '.14em', textTransform: 'uppercase' }}>{t('nav_about')}</a>
           <div style={{ marginTop: 12, display: 'flex', gap: 8, alignItems: 'center' }}>
             <div style={{ display: 'flex', border: '1px solid var(--border)', overflow: 'hidden' }}>
@@ -4093,6 +4105,332 @@ function SuccessPage({ sessionId, setPage }: { sessionId: string | null; setPage
   )
 }
 
+// ─── LoginPage ──────────────────────────────────────────────────────────────
+// Autenticação via Magic Link (Supabase) + Google OAuth.
+
+function LoginPage({ setPage, auth }: { setPage: (p: Page) => void; auth: ReturnType<typeof useAuth> }) {
+  const { t } = useLang()
+  const [email, setEmail] = useState('')
+  const [sending, setSending] = useState(false)
+  const [sent, setSent] = useState(false)
+  const [error, setError] = useState('')
+
+  // Se já está autenticado, vai direto para a conta
+  useEffect(() => {
+    if (auth.user) setPage('account')
+  }, [auth.user, setPage])
+
+  const handleMagicLink = async () => {
+    if (!email.trim()) { setError(t('login_error_generic')); return }
+    if (!auth.isConfigured) { setError(t('login_not_configured')); return }
+    setSending(true); setError('')
+    const { error: err } = await auth.signInWithMagicLink(email.trim())
+    setSending(false)
+    if (err) setError(err)
+    else setSent(true)
+  }
+
+  const handleGoogle = async () => {
+    if (!auth.isConfigured) { setError(t('login_not_configured')); return }
+    const { error: err } = await auth.signInWithGoogle()
+    if (err) setError(err)
+  }
+
+  return (
+    <div style={{ minHeight: '80vh' }}>
+      <div style={{ background: 'radial-gradient(700px 400px at 85% 20%, rgba(139,30,45,.18), transparent 60%), var(--bg-1)', borderBottom: '1px solid var(--border)', padding: '80px var(--pad-x) 60px' }}>
+        <div style={{ maxWidth: 'var(--maxw)', margin: '0 auto' }}>
+          <Eyebrow text={t('login_eyebrow')} />
+          <h1 style={{ fontFamily: 'var(--f-display)', fontSize: 'clamp(44px,6vw,72px)', fontWeight: 500, margin: '20px 0 24px', lineHeight: 1.05 }}
+            dangerouslySetInnerHTML={{ __html: t('login_title').replace('<em>', '<em style="color:var(--gold);font-style:italic">') }} />
+          <p style={{ color: 'var(--fg-dim)', fontSize: 17, maxWidth: '56ch', lineHeight: 1.65 }}>{t('login_desc')}</p>
+        </div>
+      </div>
+
+      <div className="wrap" style={{ padding: '60px var(--pad-x) 100px', display: 'flex', justifyContent: 'center' }}>
+        <div style={{ background: 'var(--bg-1)', border: '1px solid var(--border)', padding: '40px 36px', maxWidth: 440, width: '100%' }}>
+          {sent ? (
+            <div style={{ textAlign: 'center', padding: '20px 0' }}>
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" strokeWidth="1.5" style={{ margin: '0 auto 20px' }}><path d="M4 4h16v16H4z" /><path d="M22 6l-10 7L2 6" /></svg>
+              <h3 style={{ fontFamily: 'var(--f-display)', fontSize: 26, marginBottom: 12 }}>{t('login_magic_sent_title')}</h3>
+              <p style={{ color: 'var(--fg-mute)', fontSize: 14, lineHeight: 1.6, marginBottom: 24 }}>
+                {t('login_magic_sent_sub').replace('{email}', email)}
+              </p>
+              <button onClick={() => { setSent(false); setEmail('') }}
+                style={{ background: 'transparent', border: 'none', color: 'var(--gold)', fontSize: 12, letterSpacing: '.14em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                {t('login_magic_sent_back')}
+              </button>
+            </div>
+          ) : (
+            <>
+              <div style={{ marginBottom: 20 }}>
+                <label style={{ display: 'block', fontSize: 10, letterSpacing: '.22em', textTransform: 'uppercase', color: 'var(--gold)', marginBottom: 8, fontWeight: 500 }}>{t('login_email_label')}</label>
+                <input type="email" value={email} placeholder={t('login_email_ph')}
+                  onChange={e => setEmail(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') handleMagicLink() }}
+                  style={{ width: '100%', background: 'transparent', border: 'none', borderBottom: '1px solid var(--border)', padding: '10px 0', color: 'var(--fg)', fontSize: 15, outline: 'none', transition: 'border-color .2s' }}
+                  onFocus={e => (e.currentTarget.style.borderBottomColor = 'var(--gold)')}
+                  onBlur={e => (e.currentTarget.style.borderBottomColor = 'var(--border)')} />
+              </div>
+
+              {error && <p style={{ marginBottom: 16, fontSize: 13, color: 'var(--bordo)', lineHeight: 1.5 }}>⚠ {error}</p>}
+
+              <PrimaryBtn full onClick={handleMagicLink} disabled={sending}>
+                {sending ? t('login_magic_sending') : t('login_magic_btn')}
+              </PrimaryBtn>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '24px 0' }}>
+                <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+                <span style={{ fontSize: 11, letterSpacing: '.14em', textTransform: 'uppercase', color: 'var(--fg-mute)' }}>{t('login_or')}</span>
+                <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+              </div>
+
+              <GhostBtn onClick={handleGoogle}>{t('login_google_btn')}</GhostBtn>
+
+              <p style={{ marginTop: 24, fontSize: 12, color: 'var(--fg-mute)', textAlign: 'center', lineHeight: 1.6 }}>{t('login_terms_note')}</p>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── AccountPage ────────────────────────────────────────────────────────────
+// Tabs: Encomendas, Wishlist, Moradas, Perfil, Karma Points
+
+type AccountTab = 'orders' | 'wishlist' | 'addresses' | 'profile' | 'karma'
+
+interface AccountOrder {
+  id: string; order_number: string | null; status: string; total_cents: number;
+  currency: string; created_at: string; items: any[]
+}
+interface KarmaSummary {
+  total_points: number; lifetime_points: number; current_level: string;
+  points_to_next_level: number; next_level: string
+}
+
+const KARMA_LEVEL_META: Record<string, { icon: string; labelPt: string; labelEn: string }> = {
+  iniciante: { icon: '🌱', labelPt: 'Iniciante', labelEn: 'Novice' },
+  discipulo: { icon: '⭐', labelPt: 'Discípulo', labelEn: 'Disciple' },
+  mestre: { icon: '💎', labelPt: 'Mestre', labelEn: 'Master' },
+  guru: { icon: '👑', labelPt: 'Guru', labelEn: 'Guru' },
+  karmic: { icon: '✦', labelPt: 'Karmic', labelEn: 'Karmic' },
+}
+
+function AccountPage({ auth, setPage, allProducts, onOpen }: {
+  auth: ReturnType<typeof useAuth>; setPage: (p: Page) => void
+  allProducts: Product[]; onOpen: (p: Product) => void
+}) {
+  const { t, lang } = useLang()
+  const [tab, setTab] = useState<AccountTab>('orders')
+  const [orders, setOrders] = useState<AccountOrder[] | null>(null)
+  const [wishlistSkus, setWishlistSkus] = useState<string[] | null>(null)
+  const [addresses, setAddresses] = useState<any[] | null>(null)
+  const [karma, setKarma] = useState<KarmaSummary | null>(null)
+  const [profileForm, setProfileForm] = useState({ full_name: '', phone: '' })
+  const [savedMsg, setSavedMsg] = useState(false)
+
+  // Se não está autenticado, redireciona para login
+  useEffect(() => {
+    if (!auth.loading && !auth.user) setPage('login')
+  }, [auth.loading, auth.user, setPage])
+
+  useEffect(() => {
+    if (auth.profile) {
+      setProfileForm({ full_name: auth.profile.full_name || '', phone: auth.profile.phone || '' })
+    }
+  }, [auth.profile])
+
+  useEffect(() => {
+    if (!auth.user || !isSupabaseConfigured) return
+    supabase.from('orders').select('id, order_number, status, total_cents, currency, created_at, items')
+      .eq('user_id', auth.user.id).order('created_at', { ascending: false })
+      .then(({ data }) => setOrders((data as any) || []), () => setOrders([]))
+  }, [auth.user])
+
+  useEffect(() => {
+    if (!auth.user || !isSupabaseConfigured) return
+    supabase.from('wishlist').select('product_sku').eq('user_id', auth.user.id)
+      .then(({ data }) => setWishlistSkus((data || []).map((r: any) => r.product_sku)), () => setWishlistSkus([]))
+  }, [auth.user])
+
+  useEffect(() => {
+    if (!auth.user || !isSupabaseConfigured) return
+    supabase.from('addresses').select('*').eq('user_id', auth.user.id).order('is_default', { ascending: false })
+      .then(({ data }) => setAddresses(data || []), () => setAddresses([]))
+  }, [auth.user])
+
+  useEffect(() => {
+    if (!auth.user || !isSupabaseConfigured) return
+    supabase.from('user_karma_summary').select('*').eq('user_id', auth.user.id).single()
+      .then(({ data }) => setKarma(data as any), () => setKarma(null))
+  }, [auth.user])
+
+  if (auth.loading || !auth.user) {
+    return <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--fg-mute)' }}>{t('account_loading')}</div>
+  }
+
+  const tabs: { id: AccountTab; label: string }[] = [
+    { id: 'orders', label: t('account_tab_orders') },
+    { id: 'wishlist', label: t('account_tab_wishlist') },
+    { id: 'addresses', label: t('account_tab_addresses') },
+    { id: 'karma', label: t('account_tab_karma') },
+    { id: 'profile', label: t('account_tab_profile') },
+  ]
+
+  const wishedProducts = allProducts.filter(p => wishlistSkus?.includes(p.sku || String(p.id)))
+
+  return (
+    <div style={{ minHeight: '80vh' }}>
+      <div style={{ background: 'radial-gradient(700px 400px at 85% 20%, rgba(139,30,45,.18), transparent 60%), var(--bg-1)', borderBottom: '1px solid var(--border)', padding: '64px var(--pad-x) 40px' }}>
+        <div style={{ maxWidth: 'var(--maxw)', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 16 }}>
+          <div>
+            <Eyebrow text={t('account_eyebrow')} />
+            <h1 style={{ fontFamily: 'var(--f-display)', fontSize: 'clamp(36px,5vw,60px)', fontWeight: 500, margin: '16px 0 4px', lineHeight: 1.05 }}
+              dangerouslySetInnerHTML={{ __html: t('account_title').replace('<em>', '<em style="color:var(--gold);font-style:italic">') }} />
+            <p style={{ color: 'var(--fg-mute)', fontSize: 14 }}>{auth.user.email}</p>
+          </div>
+          <button onClick={async () => { await auth.signOut(); setPage('home') }}
+            style={{ background: 'transparent', border: '1px solid var(--border)', color: 'var(--fg-mute)', padding: '10px 18px', fontSize: 11, letterSpacing: '.16em', textTransform: 'uppercase', cursor: 'pointer' }}>
+            {t('account_signout')}
+          </button>
+        </div>
+      </div>
+
+      <div className="wrap" style={{ padding: '40px var(--pad-x) 100px' }}>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', borderBottom: '1px solid var(--border)', marginBottom: 36 }}>
+          {tabs.map(tb => (
+            <button key={tb.id} onClick={() => setTab(tb.id)}
+              style={{ background: 'transparent', border: 'none', borderBottom: `2px solid ${tab === tb.id ? 'var(--gold)' : 'transparent'}`, color: tab === tb.id ? 'var(--fg)' : 'var(--fg-mute)', padding: '12px 4px', marginRight: 24, fontSize: 12, letterSpacing: '.14em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: tab === tb.id ? 600 : 400 }}>
+              {tb.label}
+            </button>
+          ))}
+        </div>
+
+        {tab === 'orders' && (
+          orders === null ? <p style={{ color: 'var(--fg-mute)' }}>{t('account_loading')}</p> :
+          orders.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '60px 0' }}>
+              <p style={{ color: 'var(--fg-mute)', marginBottom: 20 }}>{t('account_orders_empty')}</p>
+              <PrimaryBtn onClick={() => setPage('shop')}>{t('account_orders_empty_cta')}</PrimaryBtn>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              {orders.map(o => (
+                <div key={o.id} style={{ border: '1px solid var(--border)', background: 'var(--bg-1)', padding: '20px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
+                  <div>
+                    <div style={{ fontSize: 11, letterSpacing: '.14em', textTransform: 'uppercase', color: 'var(--gold)', marginBottom: 6 }}>
+                      {t('account_order_number')} {o.order_number || o.id.slice(0, 8).toUpperCase()}
+                    </div>
+                    <div style={{ fontSize: 13, color: 'var(--fg-mute)' }}>{new Date(o.created_at).toLocaleDateString(lang === 'en' ? 'en-GB' : 'pt-PT')}</div>
+                  </div>
+                  <div style={{ fontFamily: 'var(--f-display)', fontSize: 20, fontWeight: 600 }}>{fmt(o.total_cents / 100)}</div>
+                  <div style={{ fontSize: 11, letterSpacing: '.1em', textTransform: 'uppercase', padding: '4px 10px', border: '1px solid var(--border)', color: 'var(--fg-mute)' }}>
+                    {t(`account_order_status_${o.status}` as TKey)}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )
+        )}
+
+        {tab === 'wishlist' && (
+          wishlistSkus === null ? <p style={{ color: 'var(--fg-mute)' }}>{t('account_loading')}</p> :
+          wishedProducts.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '60px 0' }}>
+              <p style={{ color: 'var(--fg-mute)', marginBottom: 20 }}>{t('account_wishlist_empty')}</p>
+              <PrimaryBtn onClick={() => setPage('shop')}>{t('account_wishlist_empty_cta')}</PrimaryBtn>
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 20 }}>
+              {wishedProducts.map(p => (
+                <div key={p.id} onClick={() => onOpen(p)} style={{ cursor: 'pointer', border: '1px solid var(--border)', background: 'var(--bg-1)' }}>
+                  <img src={p.image} alt={p.name} style={{ width: '100%', aspectRatio: '3/4', objectFit: 'cover' }} />
+                  <div style={{ padding: 14 }}>
+                    <div style={{ fontSize: 14, marginBottom: 4 }}>{p.name}</div>
+                    <div style={{ fontFamily: 'var(--f-display)', fontSize: 16, color: 'var(--gold)' }}>{fmt(p.price)}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )
+        )}
+
+        {tab === 'addresses' && (
+          addresses === null ? <p style={{ color: 'var(--fg-mute)' }}>{t('account_loading')}</p> :
+          addresses.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '60px 0' }}>
+              <p style={{ color: 'var(--fg-mute)' }}>{t('account_addresses_empty')}</p>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              {addresses.map(a => (
+                <div key={a.id} style={{ border: '1px solid var(--border)', background: 'var(--bg-1)', padding: '20px 24px' }}>
+                  <div style={{ fontSize: 11, letterSpacing: '.14em', textTransform: 'uppercase', color: 'var(--gold)', marginBottom: 8 }}>{a.label}{a.is_default ? ' ★' : ''}</div>
+                  <div style={{ fontSize: 14, color: 'var(--fg-dim)', lineHeight: 1.6 }}>
+                    {a.full_name}<br />{a.line1}{a.line2 ? `, ${a.line2}` : ''}<br />{a.postal_code} {a.city}<br />{a.country}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )
+        )}
+
+        {tab === 'karma' && (
+          <div style={{ maxWidth: 480 }}>
+            {karma ? (
+              <div style={{ border: '1px solid var(--border)', background: 'var(--bg-1)', padding: '32px 28px', textAlign: 'center' }}>
+                <div style={{ fontSize: 44, marginBottom: 8 }}>{KARMA_LEVEL_META[karma.current_level]?.icon || '🌱'}</div>
+                <div style={{ fontSize: 11, letterSpacing: '.18em', textTransform: 'uppercase', color: 'var(--gold)', marginBottom: 6 }}>{t('account_karma_level')}</div>
+                <h3 style={{ fontFamily: 'var(--f-display)', fontSize: 28, marginBottom: 20 }}>
+                  {lang === 'en' ? KARMA_LEVEL_META[karma.current_level]?.labelEn : KARMA_LEVEL_META[karma.current_level]?.labelPt}
+                </h3>
+                <div style={{ fontFamily: 'var(--f-display)', fontSize: 40, fontWeight: 600, color: 'var(--gold)' }}>{karma.total_points}</div>
+                <div style={{ fontSize: 12, color: 'var(--fg-mute)', marginBottom: 20 }}>{t('account_karma_points')}</div>
+                {karma.points_to_next_level > 0 && (
+                  <div style={{ fontSize: 13, color: 'var(--fg-dim)' }}>
+                    {karma.points_to_next_level} {t('account_karma_next')} ({KARMA_LEVEL_META[karma.next_level]?.icon} {lang === 'en' ? KARMA_LEVEL_META[karma.next_level]?.labelEn : KARMA_LEVEL_META[karma.next_level]?.labelPt})
+                  </div>
+                )}
+              </div>
+            ) : (
+              <p style={{ color: 'var(--fg-mute)' }}>{t('account_loading')}</p>
+            )}
+          </div>
+        )}
+
+        {tab === 'profile' && (
+          <div style={{ maxWidth: 440 }}>
+            <div style={{ marginBottom: 20 }}>
+              <label style={{ display: 'block', fontSize: 10, letterSpacing: '.22em', textTransform: 'uppercase', color: 'var(--gold)', marginBottom: 8, fontWeight: 500 }}>{t('account_profile_email')}</label>
+              <div style={{ padding: '10px 0', borderBottom: '1px solid var(--border)', color: 'var(--fg-mute)', fontSize: 15 }}>{auth.user.email}</div>
+            </div>
+            <div style={{ marginBottom: 20 }}>
+              <label style={{ display: 'block', fontSize: 10, letterSpacing: '.22em', textTransform: 'uppercase', color: 'var(--gold)', marginBottom: 8, fontWeight: 500 }}>{t('account_profile_name')}</label>
+              <input value={profileForm.full_name} onChange={e => setProfileForm(p => ({ ...p, full_name: e.target.value }))}
+                style={{ width: '100%', background: 'transparent', border: 'none', borderBottom: '1px solid var(--border)', padding: '10px 0', color: 'var(--fg)', fontSize: 15, outline: 'none' }} />
+            </div>
+            <div style={{ marginBottom: 28 }}>
+              <label style={{ display: 'block', fontSize: 10, letterSpacing: '.22em', textTransform: 'uppercase', color: 'var(--gold)', marginBottom: 8, fontWeight: 500 }}>{t('account_profile_phone')}</label>
+              <input value={profileForm.phone} onChange={e => setProfileForm(p => ({ ...p, phone: e.target.value }))}
+                style={{ width: '100%', background: 'transparent', border: 'none', borderBottom: '1px solid var(--border)', padding: '10px 0', color: 'var(--fg)', fontSize: 15, outline: 'none' }} />
+            </div>
+            {savedMsg && <p style={{ marginBottom: 16, fontSize: 13, color: 'var(--gold)' }}>✓ {t('account_profile_saved')}</p>}
+            <PrimaryBtn onClick={async () => {
+              if (!isSupabaseConfigured || !auth.user) return
+              await supabase.from('profiles').update({ full_name: profileForm.full_name, phone: profileForm.phone }).eq('id', auth.user.id)
+              await auth.refreshProfile()
+              setSavedMsg(true)
+              window.setTimeout(() => setSavedMsg(false), 2400)
+            }}>{t('account_profile_save')}</PrimaryBtn>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 // ─── App ─────────────────────────────────────────────────────────────────────
 
 // ─── URL Routing ────────────────────────────────────────────────────────
@@ -4108,6 +4446,8 @@ const PAGE_TO_PATH: Record<Page, string> = {
   about: '/sobre',
   product: '/produto',
   success: '/sucesso',
+  login: '/entrar',
+  account: '/conta',
 }
 const PATH_TO_PAGE: Record<string, Page> = {
   '/': 'home',
@@ -4120,6 +4460,8 @@ const PATH_TO_PAGE: Record<string, Page> = {
   '/contacto': 'contact',
   '/sobre': 'about',
   '/sucesso': 'success',
+  '/entrar': 'login',
+  '/conta': 'account',
 }
 
 export default function App() {
@@ -4137,6 +4479,7 @@ export default function App() {
   const [liveProducts, setLiveProducts] = useState<Product[]>([...ALL_PRODUCTS])
   const [successSessionId, setSuccessSessionId] = useState<string | null>(null)
   const toastTimer = useRef<number | null>(null)
+  const auth = useAuth()
 
   useEffect(() => {
     fetch('/api/products')
@@ -4271,7 +4614,7 @@ export default function App() {
   return (
     <LangContext.Provider value={{ lang, t, arr }}>
     <div style={{ background: 'var(--bg)', color: 'var(--fg)', minHeight: '100vh' }}>
-      <Header activePage={activePage} navigate={navigate} cartCount={cartCount} openCart={() => setCartOpen(true)} lang={lang} setLang={setLang} />
+      <Header activePage={activePage} navigate={navigate} cartCount={cartCount} openCart={() => setCartOpen(true)} lang={lang} setLang={setLang} auth={auth} />
 
       {activePage === 'home' && <HomePage {...sharedProps} setPage={setPage} />}
       {activePage === 'shop' && <ShopPage key={shopFilter} {...sharedProps} initialCategory={shopFilter} vertical="all" />}
@@ -4286,6 +4629,8 @@ export default function App() {
       {activePage === 'blog' && <BlogPage />}
       {activePage === 'custom' && <CustomizerV2 setPage={setPage} onAddToCart={(item) => { setCartItems(prev => [...prev, item]); setToast(item.name); if (toastTimer.current) clearTimeout(toastTimer.current); toastTimer.current = window.setTimeout(() => setToast(null), 2400); }} />}
       {activePage === 'success' && <SuccessPage sessionId={successSessionId} setPage={setPage} />}
+      {activePage === 'login' && <LoginPage setPage={setPage} auth={auth} />}
+      {activePage === 'account' && <AccountPage auth={auth} setPage={setPage} allProducts={liveProducts} onOpen={openProduct} />}
 
       <Footer setPage={setPage} />
 
