@@ -457,6 +457,64 @@ function Product360Viewer({
 }
 
 
+// ─── Product3DViewer — wrapper honesto sobre o visualizador 3D ───────────────
+// Usa <model-viewer> (@google/model-viewer, motor Three.js real + AR nativo
+// via Android Scene Viewer / iOS Quick Look) APENAS quando o produto tem um
+// model3dUrl real (.glb/.gltf). Nenhum produto do catálogo estático atual
+// (ALL_PRODUCTS) tem esse ficheiro — só existem imagens SVG placeholder — por
+// isso, na prática, hoje este componente cai sempre para o Product360Viewer
+// (o "fake 3D" CSS existente). Isto evita mostrar uma badge de "AR disponível"
+// para produtos sem modelo 3D real. O import do @google/model-viewer é feito
+// dinamicamente (side-effect: regista o custom element <model-viewer>) só
+// quando um model3dUrl é fornecido, para não engordar o bundle inicial com
+// código que, para o catálogo atual, nunca é usado.
+let modelViewerRegistered = false
+function ensureModelViewerRegistered() {
+  if (modelViewerRegistered) return
+  modelViewerRegistered = true
+  import('@google/model-viewer').catch(() => { modelViewerRegistered = false })
+}
+
+function Product3DViewer(props: Parameters<typeof Product360Viewer>[0] & {
+  model3dUrl?: string
+  model3dIosUrl?: string
+}) {
+  const { model3dUrl, model3dIosUrl, ...viewerProps } = props
+  const { lang } = useLang()
+  const isEN = lang === 'en'
+
+  useEffect(() => {
+    if (model3dUrl) ensureModelViewerRegistered()
+  }, [model3dUrl])
+
+  if (!model3dUrl) {
+    // Sem modelo 3D real disponível — usa o visualizador CSS fake existente.
+    return <Product360Viewer {...viewerProps} />
+  }
+
+  return (
+    <div style={{ position: 'relative', width: '100%', minHeight: viewerProps.size === 'large' ? 480 : viewerProps.size === 'medium' ? 380 : 180, background: 'var(--bg-2)', border: viewerProps.size === 'card' ? 'none' : '1px solid var(--border)' }}>
+      <model-viewer
+        src={model3dUrl}
+        ios-src={model3dIosUrl}
+        alt={viewerProps.productLabel || 'Produto Karmic Node em 3D'}
+        ar
+        ar-modes="webxr scene-viewer quick-look"
+        camera-controls
+        auto-rotate={viewerProps.autoRotate}
+        shadow-intensity="1"
+        exposure="1"
+        loading="lazy"
+        reveal="auto"
+        style={{ width: '100%', height: '100%', minHeight: viewerProps.size === 'large' ? 480 : viewerProps.size === 'medium' ? 380 : 180, display: 'block' }}
+      />
+      <div style={{ position: 'absolute', top: 12, left: 12, padding: '4px 10px', background: 'var(--gold)', color: 'var(--bg)', fontSize: 10, letterSpacing: '.16em', textTransform: 'uppercase', fontWeight: 700, zIndex: 5 }}>
+        {isEN ? 'Real 3D · AR' : '3D real · AR'}
+      </div>
+    </div>
+  )
+}
+
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 type Page = 'home' | 'shop' | 'product' | 'contact' | 'about' | 'blog' | 'custom' | 'vestuario' | 'atelier' | 'casa' | 'success' | 'login' | 'account'
@@ -465,6 +523,14 @@ type Page = 'home' | 'shop' | 'product' | 'contact' | 'about' | 'blog' | 'custom
 interface Product {
   id: number
   sku?: string
+  // Visualizador 3D real (Three.js via <model-viewer>) + AR nativo. Opcional —
+  // nenhum produto do catálogo estático atual tem um .glb real, por isso este
+  // campo fica undefined em toda a ALL_PRODUCTS. Quando um modelo real for
+  // fornecido (URL para .glb/.gltf), o Product3DViewer troca automaticamente
+  // do visualizador CSS-3D fake (Product360Viewer) para o <model-viewer> real
+  // com AR (Android Scene Viewer / iOS Quick Look).
+  model3dUrl?: string
+  model3dIosUrl?: string
   nameEn?: string
   descriptionEn?: string
   categoryEn?: string
@@ -1364,7 +1430,9 @@ function ProductCard({ p, onAdd, onOpen, wishlist, toggleWish }: {
       <div style={{ position: 'relative', aspectRatio: '4/3', overflow: 'hidden', background: 'var(--bg-2)' }} onClick={() => onOpen(p)}>
         {/* 360° card preview */}
         <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: `radial-gradient(360px 260px at 50% 45%, ${p.vertical === 'atelier' ? '#8B1E2D' : '#B08D57'}18, transparent 65%), var(--bg-2)` }}>
-          <Product360Viewer
+          <Product3DViewer
+            model3dUrl={p.model3dUrl}
+            model3dIosUrl={p.model3dIosUrl}
             iconPath={PROD_ICONS[p.sku || '' || 'KN-001'] || PROD_ICONS['KN-001']}
             color={p.vertical === 'atelier' ? '#8B1E2D' : '#B08D57'}
             accent={p.vertical === 'atelier' ? '#8B1E2D' : '#B08D57'}
@@ -2902,7 +2970,9 @@ function ProductPage({ product, onAdd, onBack, wishlist, toggleWish, allProducts
           {/* Gallery — 360°/3D Viewer */}
           <div>
             <div style={{ position: 'relative' }}>
-              <Product360Viewer
+              <Product3DViewer
+                model3dUrl={product.model3dUrl}
+                model3dIosUrl={product.model3dIosUrl}
                 iconPath={PROD_ICONS[product.sku || '' || 'KN-001'] || PROD_ICONS['KN-001']}
                 color={product.vertical === 'atelier' ? '#8B1E2D' : '#B08D57'}
                 accent={product.vertical === 'atelier' ? '#8B1E2D' : '#B08D57'}
