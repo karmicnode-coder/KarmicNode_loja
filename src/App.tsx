@@ -3,7 +3,7 @@ import logoImg from '@/imports/Logo_KarmicNode_sem_fundo.png'
 import { type Lang, type TKey, createT, getArr } from '@/i18n'
 import { useAuth } from '@/hooks/useAuth'
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
-import { awardKarma } from '@/lib/karma'
+import { awardKarma, fetchKarmaSummary, type KarmaProfileLite } from '@/lib/karma'
 
 const LangContext = createContext<{ lang: Lang; t: (k: TKey) => string; arr: (k: TKey) => string[] }>({
   lang: 'pt', t: k => k, arr: () => [],
@@ -1905,6 +1905,11 @@ function Header({ activePage, navigate, cartCount, openCart, lang, setLang, auth
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
             </IconBtn>
           </div>
+          {auth.user && (
+            <div className="kn-header-desktop-only" style={{ display: 'flex' }}>
+              <KarmaHeaderBadge userId={auth.user.id} onClick={() => navigate('account')} />
+            </div>
+          )}
           <div className="kn-header-desktop-only" style={{ display: 'flex' }}>
             <IconBtn onClick={() => navigate(auth.user ? 'account' : 'login')}>
               {auth.user ? (
@@ -1984,6 +1989,31 @@ function Header({ activePage, navigate, cartCount, openCart, lang, setLang, auth
         </div>
       </nav>
     </>
+  )
+}
+
+// ─── KarmaHeaderBadge — pill com nível/pontos de karma no header ──────────
+function KarmaHeaderBadge({ userId, onClick }: { userId: string; onClick: () => void }) {
+  const { lang } = useLang()
+  const [karma, setKarma] = useState<KarmaProfileLite | null>(null)
+  const [hov, setHov] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    fetchKarmaSummary(userId).then(k => { if (!cancelled) setKarma(k) })
+    return () => { cancelled = true }
+  }, [userId])
+
+  if (!karma) return null
+  const meta = KARMA_LEVEL_META[karma.current_level] || { icon: '🌱', labelPt: '', labelEn: '' }
+
+  return (
+    <button onClick={onClick} onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
+      title={lang === 'en' ? meta.labelEn : meta.labelPt}
+      style={{ display: 'flex', alignItems: 'center', gap: 6, height: 38, padding: '0 12px', border: `1px solid ${hov ? 'var(--gold)' : 'var(--border)'}`, background: 'transparent', color: hov ? 'var(--gold)' : 'var(--fg-mute)', fontFamily: 'inherit', fontSize: 12, fontWeight: 700, cursor: 'pointer', transition: 'all .2s ease' }}>
+      <span style={{ fontSize: 13 }}>{meta.icon}</span>
+      <span>{karma.total_points}</span>
+    </button>
   )
 }
 
@@ -2421,12 +2451,178 @@ function ShopPage({ onAdd, onOpen, wishlist, toggleWish, initialCategory, produc
   )
 }
 
+// ─── ReviewsSection — avaliações reais (Supabase) ──────────────────────────
+// Lê avaliações aprovadas de `reviews` (filtro product_sku + status='approved')
+// e permite submeter uma nova (fica 'pending' até moderação no Admin Panel).
+// O karma da review (25pt) é atribuído automaticamente por trigger SQL
+// (award_karma_for_review) quando a linha tem user_id — não precisa de
+// chamada extra aqui.
+interface ReviewRow {
+  id: string; rating: number; title: string | null; body: string | null
+  user_name: string | null; verified_purchase: boolean; created_at: string
+}
+
+function ReviewsSection({ product, auth }: { product: Product; auth: ReturnType<typeof useAuth> }) {
+  const { t, lang } = useLang()
+  const isEN = lang === 'en'
+  const [reviews, setReviews] = useState<ReviewRow[] | null>(null)
+  const [showForm, setShowForm] = useState(false)
+  const [rating, setRating] = useState(5)
+  const [title, setTitle] = useState('')
+  const [body, setBody] = useState('')
+  const [guestName, setGuestName] = useState('')
+  const [guestEmail, setGuestEmail] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [submitted, setSubmitted] = useState(false)
+  const [formError, setFormError] = useState('')
+
+  const sku = product.sku || String(product.id)
+
+  const load = useCallback(() => {
+    if (!isSupabaseConfigured) { setReviews([]); return }
+    supabase.from('reviews').select('id, rating, title, body, user_name, verified_purchase, created_at')
+      .eq('product_sku', sku).eq('status', 'approved').order('created_at', { ascending: false })
+      .then(({ data }) => setReviews((data as any) || []), () => setReviews([]))
+  }, [sku])
+
+  useEffect(() => { load() }, [load])
+
+  const avg = reviews && reviews.length ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length : product.rating
+  const total = reviews && reviews.length ? reviews.length : product.reviews
+  const dist = [5, 4, 3, 2, 1].map(s => {
+    if (!reviews || !reviews.length) return { s, pct: s === 5 ? 72 : s === 4 ? 20 : s === 3 ? 6 : s === 2 ? 1 : 1 }
+    const count = reviews.filter(r => r.rating === s).length
+    return { s, pct: Math.round((count / reviews.length) * 100) }
+  })
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setFormError('')
+    if (!body.trim()) { setFormError(isEN ? 'Please write a comment.' : 'Escreve um comentário.'); return }
+    if (!auth.user && !guestEmail.trim()) { setFormError(isEN ? 'Email required.' : 'Email obrigatório.'); return }
+    setSubmitting(true)
+    try {
+      const { error } = await supabase.from('reviews').insert({
+        product_sku: sku,
+        user_id: auth.user?.id || null,
+        user_name: auth.user ? (auth.profile?.full_name || auth.user.email?.split('@')[0] || null) : (guestName || null),
+        user_email: auth.user?.email || guestEmail || null,
+        rating, title: title || null, body,
+        status: 'pending',
+      })
+      if (error) throw error
+      setSubmitted(true)
+      setShowForm(false)
+      setTitle(''); setBody(''); setGuestName(''); setGuestEmail(''); setRating(5)
+    } catch {
+      setFormError(isEN ? 'Something went wrong. Please try again.' : 'Algo correu mal. Tenta novamente.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <div style={{ maxWidth: 680 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 24, marginBottom: 28, padding: '28px', background: 'var(--bg-1)', border: '1px solid var(--border)', flexWrap: 'wrap' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontFamily: 'var(--f-display)', fontSize: 56, fontWeight: 500, lineHeight: 1, color: 'var(--fg)' }}>{avg.toFixed(1)}</div>
+          <Stars rating={avg} size={14} />
+          <div style={{ fontSize: 12, color: 'var(--fg-mute)', marginTop: 6 }}>{total} {t('product_reviews')}</div>
+        </div>
+        <div style={{ flex: 1, minWidth: 180 }}>
+          {dist.map(({ s, pct }) => (
+            <div key={s} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+              <span style={{ fontSize: 12, color: 'var(--fg-mute)', width: 12 }}>{s}</span>
+              <div style={{ flex: 1, height: 6, background: 'var(--bg-3)', overflow: 'hidden' }}>
+                <div style={{ width: `${pct}%`, height: '100%', background: 'var(--gold)' }} />
+              </div>
+              <span style={{ fontSize: 11, color: 'var(--fg-mute)', width: 28 }}>{pct}%</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {!showForm && !submitted && (
+        <button onClick={() => setShowForm(true)} style={{ marginBottom: 28, padding: '11px 22px', background: 'transparent', color: 'var(--gold)', border: '1px solid var(--gold-3)', fontSize: 11, letterSpacing: '.2em', textTransform: 'uppercase', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+          {isEN ? '✎ Write a review' : '✎ Escrever avaliação'}
+        </button>
+      )}
+
+      {submitted && (
+        <div style={{ marginBottom: 28, padding: '16px 20px', border: '1px solid var(--gold-3)', background: 'rgba(176,141,87,.08)', color: 'var(--gold)', fontSize: 13 }}>
+          ✦ {isEN ? 'Thank you! Your review will appear after moderation.' : 'Obrigado! A tua avaliação aparece depois de moderada.'}
+        </div>
+      )}
+
+      {showForm && (
+        <form onSubmit={handleSubmit} style={{ marginBottom: 36, padding: 24, background: 'var(--bg-1)', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div>
+            <div style={{ fontSize: 11, letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--fg-mute)', marginBottom: 8, fontWeight: 600 }}>{isEN ? 'Your rating' : 'A tua classificação'}</div>
+            <div style={{ display: 'flex', gap: 4 }}>
+              {[1, 2, 3, 4, 5].map(n => (
+                <button key={n} type="button" onClick={() => setRating(n)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, fontSize: 22, color: n <= rating ? 'var(--gold)' : 'var(--border-2)' }}>★</button>
+              ))}
+            </div>
+          </div>
+          <input value={title} onChange={e => setTitle(e.target.value)} placeholder={isEN ? 'Title (optional)' : 'Título (opcional)'}
+            style={{ background: 'var(--bg-2)', border: '1px solid var(--border)', color: 'var(--fg)', padding: '11px 14px', fontSize: 13, outline: 'none', fontFamily: 'inherit' }} />
+          <textarea required value={body} onChange={e => setBody(e.target.value)} rows={4} placeholder={isEN ? 'Share your experience with this product...' : 'Partilha a tua experiência com este produto...'}
+            style={{ background: 'var(--bg-2)', border: '1px solid var(--border)', color: 'var(--fg)', padding: '11px 14px', fontSize: 13, outline: 'none', resize: 'vertical', fontFamily: 'inherit' }} />
+          {!auth.user && (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <input value={guestName} onChange={e => setGuestName(e.target.value)} placeholder={isEN ? 'Your name' : 'O teu nome'}
+                style={{ background: 'var(--bg-2)', border: '1px solid var(--border)', color: 'var(--fg)', padding: '11px 14px', fontSize: 13, outline: 'none', fontFamily: 'inherit' }} />
+              <input required type="email" value={guestEmail} onChange={e => setGuestEmail(e.target.value)} placeholder={isEN ? 'Your email' : 'O teu email'}
+                style={{ background: 'var(--bg-2)', border: '1px solid var(--border)', color: 'var(--fg)', padding: '11px 14px', fontSize: 13, outline: 'none', fontFamily: 'inherit' }} />
+            </div>
+          )}
+          {formError && <p style={{ margin: 0, fontSize: 12, color: 'var(--bordo)' }}>⚠ {formError}</p>}
+          <div style={{ display: 'flex', gap: 10 }}>
+            <button type="submit" disabled={submitting} style={{ padding: '11px 22px', background: 'var(--bordo)', color: '#fff', border: 'none', fontSize: 11, letterSpacing: '.2em', textTransform: 'uppercase', fontWeight: 700, cursor: submitting ? 'wait' : 'pointer', fontFamily: 'inherit' }}>
+              {submitting ? (isEN ? 'Sending...' : 'A enviar...') : (isEN ? 'Submit review' : 'Enviar avaliação')}
+            </button>
+            <button type="button" onClick={() => setShowForm(false)} style={{ padding: '11px 22px', background: 'transparent', color: 'var(--fg-mute)', border: '1px solid var(--border)', fontSize: 11, letterSpacing: '.2em', textTransform: 'uppercase', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+              {isEN ? 'Cancel' : 'Cancelar'}
+            </button>
+          </div>
+        </form>
+      )}
+
+      {reviews === null ? (
+        <p style={{ color: 'var(--fg-mute)', fontSize: 13 }}>{isEN ? 'Loading reviews...' : 'A carregar avaliações...'}</p>
+      ) : reviews.length === 0 ? (
+        <p style={{ color: 'var(--fg-mute)', fontSize: 14, textAlign: 'center', padding: '20px 0' }}>
+          {isEN ? 'No reviews yet. Be the first to share your experience.' : 'Ainda sem avaliações. Sê o primeiro a partilhar a tua experiência.'}
+        </p>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          {reviews.map(r => (
+            <div key={r.id} style={{ paddingBottom: 20, borderBottom: '1px solid var(--border)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6, flexWrap: 'wrap' }}>
+                <Stars rating={r.rating} size={12} />
+                {r.verified_purchase && (
+                  <span style={{ fontSize: 10, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--gold)', fontWeight: 700 }}>✓ {isEN ? 'Verified purchase' : 'Compra verificada'}</span>
+                )}
+                <span style={{ fontSize: 12, color: 'var(--fg-mute)', marginLeft: 'auto' }}>{new Date(r.created_at).toLocaleDateString(isEN ? 'en-GB' : 'pt-PT')}</span>
+              </div>
+              {r.title && <div style={{ fontFamily: 'var(--f-display)', fontSize: 15, fontWeight: 600, marginBottom: 4 }}>{r.title}</div>}
+              {r.body && <p style={{ fontSize: 13, color: 'var(--fg-dim)', lineHeight: 1.6, margin: '0 0 6px' }}>{r.body}</p>}
+              <div style={{ fontSize: 12, color: 'var(--fg-mute)' }}>{r.user_name || (isEN ? 'Anonymous' : 'Anónimo')}</div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ─── ProductPage ──────────────────────────────────────────────────────────────
 
-function ProductPage({ product, onAdd, onBack, wishlist, toggleWish, allProducts, onOpen }: {
+function ProductPage({ product, onAdd, onBack, wishlist, toggleWish, allProducts, onOpen, auth }: {
   product: Product; onAdd: (p: Product) => void; onBack: () => void
   wishlist: Set<number>; toggleWish: (id: number) => void
   allProducts: Product[]; onOpen: (p: Product) => void
+  auth: ReturnType<typeof useAuth>
 }) {
   const { t } = useLang()
   const pi = useProductI18n()
@@ -2562,32 +2758,7 @@ function ProductPage({ product, onAdd, onBack, wishlist, toggleWish, allProducts
                 ))}
               </div>
             )}
-            {tab === 'reviews' && (
-              <div style={{ maxWidth: 680 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 24, marginBottom: 36, padding: '28px', background: 'var(--bg-1)', border: '1px solid var(--border)' }}>
-                  <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontFamily: 'var(--f-display)', fontSize: 56, fontWeight: 500, lineHeight: 1, color: 'var(--fg)' }}>{product.rating}</div>
-                    <Stars rating={product.rating} size={14} />
-                    <div style={{ fontSize: 12, color: 'var(--fg-mute)', marginTop: 6 }}>{product.reviews} {t('product_reviews')}</div>
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    {[5, 4, 3, 2, 1].map(s => {
-                      const pct = s === 5 ? 72 : s === 4 ? 20 : s === 3 ? 6 : s === 2 ? 1 : 1
-                      return (
-                        <div key={s} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-                          <span style={{ fontSize: 12, color: 'var(--fg-mute)', width: 12 }}>{s}</span>
-                          <div style={{ flex: 1, height: 6, background: 'var(--bg-3)', overflow: 'hidden' }}>
-                            <div style={{ width: `${pct}%`, height: '100%', background: 'var(--gold)' }} />
-                          </div>
-                          <span style={{ fontSize: 11, color: 'var(--fg-mute)', width: 28 }}>{pct}%</span>
-                        </div>
-                      )
-                    })}
-                  </div>
-                </div>
-                <p style={{ color: 'var(--fg-mute)', fontSize: 14, textAlign: 'center' }}>As avaliações verificadas serão exibidas aqui em breve.</p>
-              </div>
-            )}
+            {tab === 'reviews' && <ReviewsSection product={product} auth={auth} />}
           </div>
         </div>
 
@@ -5342,7 +5513,7 @@ export default function App() {
       {activePage === 'atelier' && <ShopPage key={'atl-' + shopFilter} {...sharedProps} initialCategory={shopFilter} vertical="atelier" />}
       {activePage === 'casa' && <ShopPage key={'casa-' + shopFilter} {...sharedProps} initialCategory={shopFilter} vertical="casa" />}
       {activePage === 'product' && activeProduct && (
-        <ProductPage product={activeProduct} {...sharedProps} onBack={() => setPage(activeProduct.vertical === 'atelier' ? 'atelier' : activeProduct.vertical === 'casa' ? 'casa' : 'vestuario')} allProducts={liveProducts} />
+        <ProductPage product={activeProduct} {...sharedProps} onBack={() => setPage(activeProduct.vertical === 'atelier' ? 'atelier' : activeProduct.vertical === 'casa' ? 'casa' : 'vestuario')} allProducts={liveProducts} auth={auth} />
       )}
       {activePage === 'contact' && <ContactPage />}
       {activePage === 'about' && <AboutPage setPage={setPage} />}
