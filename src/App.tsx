@@ -458,6 +458,7 @@ function Product360Viewer({
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 type Page = 'home' | 'shop' | 'product' | 'contact' | 'about' | 'blog' | 'custom' | 'vestuario' | 'atelier' | 'casa' | 'success' | 'login' | 'account'
+  | 'giftcards' | 'privacidade' | 'termos' | 'cookies' | 'faq' | 'envio' | 'devolucoes' | 'garantia' | 'parcerias'
 
 interface Product {
   id: number
@@ -3891,8 +3892,8 @@ function Footer({ setPage }: { setPage: (p: Page) => void }) {
 
           {[
             { title: t('footer_shop'), links: arr('footer_shop_links').map((l) => ({ l, p: 'shop' as Page })) },
-            { title: t('footer_company'), links: arr('footer_company_links').map((l, i) => ({ l, p: (['about', 'custom', 'blog', 'about', 'contact', 'contact'] as Page[])[i] })) },
-            { title: t('footer_support'), links: arr('footer_support_links').map((l) => ({ l, p: 'home' as Page })) },
+            { title: t('footer_company'), links: arr('footer_company_links').map((l, i) => ({ l, p: (['about', 'custom', 'blog', 'about', 'parcerias', 'contact'] as Page[])[i] })) },
+            { title: t('footer_support'), links: arr('footer_support_links').map((l, i) => ({ l, p: (['faq', 'envio', 'devolucoes', 'garantia', 'privacidade', 'termos'] as Page[])[i] })) },
           ].map(col => (
             <div key={col.title}>
               <h5 style={{ fontFamily: 'var(--f-sans)', fontSize: 11, letterSpacing: '.24em', textTransform: 'uppercase', color: 'var(--gold)', fontWeight: 500, margin: '0 0 18px' }}>{col.title}</h5>
@@ -4431,6 +4432,640 @@ function AccountPage({ auth, setPage, allProducts, onOpen }: {
   )
 }
 
+// ─── GiftCardsPage ──────────────────────────────────────────────────────────
+function GiftCardsPage() {
+  const { lang } = useLang()
+  const isEN = lang === 'en'
+  const [amount, setAmount] = useState(50)
+  const [recipient, setRecipient] = useState('')
+  const [email, setEmail] = useState('')
+  const [message, setMessage] = useState('')
+  const [sender, setSender] = useState('')
+  const [design, setDesign] = useState('classic')
+  const [submitting, setSubmitting] = useState(false)
+  const [done, setDone] = useState(false)
+  const [error, setError] = useState('')
+
+  const AMOUNTS = [25, 50, 100, 150, 250]
+  const DESIGNS = [
+    { id: 'classic', label: isEN ? 'Classic' : 'Clássico', emoji: '✦' },
+    { id: 'birthday', label: isEN ? 'Birthday' : 'Aniversário', emoji: '🎂' },
+    { id: 'christmas', label: isEN ? 'Christmas' : 'Natal', emoji: '🎄' },
+    { id: 'love', label: isEN ? 'Love' : 'Amor', emoji: '❤' },
+  ]
+
+  const handleBuy = async () => {
+    if (!email.trim()) { setError(isEN ? 'Recipient email required' : 'Email do destinatário obrigatório'); return }
+    setSubmitting(true); setError('')
+    try {
+      if (isSupabaseConfigured) {
+        const code = 'KN-' + Math.random().toString(36).slice(2, 6).toUpperCase() + '-' + Math.random().toString(36).slice(2, 6).toUpperCase()
+        const { error: err } = await supabase.from('gift_cards').insert({
+          code, initial_value_cents: amount * 100, remaining_value_cents: amount * 100,
+          design, recipient_name: recipient || null, recipient_email: email,
+          sender_name: sender || null, personal_message: message || null, status: 'pending',
+        })
+        if (err) throw err
+      }
+      setDone(true)
+    } catch {
+      setError(isEN ? 'Something went wrong. Please contact us directly.' : 'Algo correu mal. Por favor contacta-nos diretamente.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  if (done) {
+    return (
+      <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 40, textAlign: 'center' }}>
+        <div>
+          <div style={{ fontSize: 48, marginBottom: 16, color: 'var(--gold)' }}>✦</div>
+          <h2 style={{ fontFamily: 'var(--f-display)', fontSize: 32, marginBottom: 12 }}>{isEN ? 'Gift card requested!' : 'Cartão-presente pedido!'}</h2>
+          <p style={{ color: 'var(--fg-mute)', maxWidth: 420, margin: '0 auto 24px', lineHeight: 1.6 }}>
+            {isEN ? "We'll process the payment and send it to your recipient's email shortly." : 'Vamos processar o pagamento e enviar para o email do destinatário em breve.'}
+          </p>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div style={{ padding: 'clamp(24px, 4vw, 60px)', maxWidth: 1100, margin: '0 auto' }}>
+      <div style={{ marginBottom: 30 }}>
+        <div style={{ fontSize: 10, letterSpacing: '.28em', textTransform: 'uppercase', color: 'var(--gold)', fontWeight: 700, marginBottom: 8 }}>
+          {isEN ? 'Gift Cards' : 'Cartões-presente'}
+        </div>
+        <h1 style={{ fontFamily: 'var(--f-display)', fontSize: 'clamp(32px, 5vw, 54px)', margin: '0 0 14px', fontWeight: 500 }}>
+          {isEN ? 'Give the gift of ' : 'Ofereça o presente '}<em style={{ color: 'var(--gold)' }}>Karmic</em>.
+        </h1>
+        <p style={{ color: 'var(--fg-mute)', maxWidth: 500, lineHeight: 1.6 }}>
+          {isEN ? 'Perfect for those who love good taste. Delivered digitally, valid for 2 years.' : 'Perfeito para quem gosta de bom gosto. Entregue digitalmente, válido por 2 anos.'}
+        </p>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 30 }}>
+        <div>
+          <div style={{ aspectRatio: '1.6', background: 'linear-gradient(135deg, #0B0B0C, #1a0d0f)', border: '2px solid var(--gold)', padding: 30, position: 'relative', overflow: 'hidden' }}>
+            <div style={{ fontSize: 40, marginBottom: 20 }}>{DESIGNS.find(d => d.id === design)?.emoji}</div>
+            <div style={{ fontSize: 10, letterSpacing: '.3em', color: 'var(--gold)', textTransform: 'uppercase', marginBottom: 8 }}>Karmic Node</div>
+            <div style={{ fontFamily: 'var(--f-display)', fontSize: 44, fontWeight: 500, color: 'var(--gold)' }}>€{amount}</div>
+            {recipient && <div style={{ fontSize: 12, color: '#F5F2ED', marginTop: 16, fontFamily: 'var(--f-display)' }}>{isEN ? 'For' : 'Para'} {recipient}</div>}
+            {message && <div style={{ fontSize: 11, color: '#F5F2ED99', marginTop: 8, fontStyle: 'italic', lineHeight: 1.5 }}>"{message}"</div>}
+          </div>
+        </div>
+
+        <div>
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ fontSize: 10, letterSpacing: '.22em', textTransform: 'uppercase', color: 'var(--fg-mute)', fontWeight: 600, marginBottom: 10 }}>{isEN ? 'Amount' : 'Valor'}</div>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              {AMOUNTS.map(a => (
+                <button key={a} onClick={() => setAmount(a)} style={{ padding: '10px 18px', background: amount === a ? 'var(--gold)' : 'var(--bg-2)', color: amount === a ? 'var(--bg)' : 'var(--fg)', border: '1px solid var(--border)', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>€{a}</button>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ marginBottom: 16 }}>
+            <div style={{ fontSize: 10, letterSpacing: '.22em', textTransform: 'uppercase', color: 'var(--fg-mute)', fontWeight: 600, marginBottom: 6 }}>{isEN ? 'Design' : 'Design'}</div>
+            <div style={{ display: 'flex', gap: 6 }}>
+              {DESIGNS.map(d => (
+                <button key={d.id} onClick={() => setDesign(d.id)} style={{ flex: 1, padding: '10px 6px', background: design === d.id ? 'var(--gold)' : 'var(--bg-2)', color: design === d.id ? 'var(--bg)' : 'var(--fg)', border: '1px solid var(--border)', fontSize: 10, letterSpacing: '.14em', textTransform: 'uppercase', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>{d.emoji} {d.label}</button>
+              ))}
+            </div>
+          </div>
+
+          <input type="text" value={recipient} onChange={e => setRecipient(e.target.value)} placeholder={isEN ? "Recipient's name" : 'Nome do destinatário'}
+            style={{ width: '100%', background: 'var(--bg-2)', border: '1px solid var(--border)', color: 'var(--fg)', padding: '11px 14px', fontSize: 13, marginBottom: 10, outline: 'none', fontFamily: 'inherit' }} />
+          <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder={isEN ? "Recipient's email" : 'Email do destinatário'}
+            style={{ width: '100%', background: 'var(--bg-2)', border: '1px solid var(--border)', color: 'var(--fg)', padding: '11px 14px', fontSize: 13, marginBottom: 10, outline: 'none', fontFamily: 'inherit' }} />
+          <input type="text" value={sender} onChange={e => setSender(e.target.value)} placeholder={isEN ? 'Your name' : 'O teu nome'}
+            style={{ width: '100%', background: 'var(--bg-2)', border: '1px solid var(--border)', color: 'var(--fg)', padding: '11px 14px', fontSize: 13, marginBottom: 10, outline: 'none', fontFamily: 'inherit' }} />
+          <textarea value={message} onChange={e => setMessage(e.target.value)} placeholder={isEN ? 'Message (optional)' : 'Mensagem (opcional)'} rows={3}
+            style={{ width: '100%', background: 'var(--bg-2)', border: '1px solid var(--border)', color: 'var(--fg)', padding: '11px 14px', fontSize: 13, marginBottom: 16, outline: 'none', resize: 'vertical', fontFamily: 'inherit' }} />
+
+          {error && <p style={{ marginBottom: 12, fontSize: 13, color: 'var(--bordo)' }}>⚠ {error}</p>}
+
+          <button onClick={handleBuy} disabled={submitting} style={{ width: '100%', padding: '14px', background: submitting ? 'var(--border)' : 'var(--bordo)', color: '#fff', border: 'none', fontSize: 11, letterSpacing: '.22em', textTransform: 'uppercase', fontWeight: 700, cursor: submitting ? 'wait' : 'pointer', fontFamily: 'inherit' }}>
+            {submitting ? (isEN ? 'Processing...' : 'A processar...') : (isEN ? `Buy €${amount} gift card →` : `Comprar cartão €${amount} →`)}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── HelpPage (FAQ / Envio / Devoluções / Garantia) ────────────────────────
+function HelpPage({ topic, setPage }: { topic: 'faq' | 'envio' | 'devolucoes' | 'garantia'; setPage: (p: Page) => void }) {
+  const { lang } = useLang()
+  const isEN = lang === 'en'
+  const [openFaq, setOpenFaq] = useState<number | null>(0)
+
+  const CONTENT: Record<string, { title: string; subtitle: string; sections: { q: string; a: string }[] }> = {
+    faq: {
+      title: isEN ? 'Frequently Asked Questions' : 'Perguntas Frequentes',
+      subtitle: isEN ? 'Everything you need to know about Karmic Node.' : 'Tudo o que precisas de saber sobre a Karmic Node.',
+      sections: isEN ? [
+        { q: 'How does customization work?', a: 'Choose a base product (t-shirt, hoodie, cushion...), pick color and size, and use our Pro Editor to add text, images, clipart, and effects. You can save your design and finalize it later.' },
+        { q: 'What payment methods do you accept?', a: 'Credit/debit cards (Visa, Mastercard, Amex), MBWay, Multibanco reference, PayPal, and Apple/Google Pay.' },
+        { q: 'What are the shipping times?', a: 'Standard products: 24-48h dispatch. Customized: 3-5 business days. International shipping: 5-10 business days.' },
+        { q: 'Do you ship internationally?', a: 'Yes, we ship worldwide. Free shipping over €150 to mainland Portugal. Other destinations calculated at checkout.' },
+        { q: 'What is the Karma Points system?', a: 'Every purchase, review, and interaction earns Karma Points. Reach 5 levels (Iniciante → Karmic) and redeem for discounts, free shipping, and exclusive products.' },
+        { q: 'Can I return a custom product?', a: 'Custom products are non-returnable unless there is a manufacturing defect. Standard products have 14 days for return.' },
+        { q: 'How can I contact you?', a: 'Email karmicnode@gmail.com or fill out the contact form. We respond within 24h.' },
+        { q: 'Do you have physical store?', a: 'We are an online-only atelier based in Cartaxo, Portugal. All production happens at our studio and partner Portuguese artisans.' },
+      ] : [
+        { q: 'Como funciona a personalização?', a: 'Escolhe um produto base (t-shirt, hoodie, almofada...), seleciona cor e tamanho, e usa o nosso Editor Pro para adicionar texto, imagens, clipart e efeitos. Podes guardar o teu design e finalizar mais tarde.' },
+        { q: 'Que métodos de pagamento aceitam?', a: 'Cartões crédito/débito (Visa, Mastercard, Amex), MBWay, referência Multibanco, PayPal, e Apple/Google Pay.' },
+        { q: 'Quais são os prazos de envio?', a: 'Produtos standard: envio em 24-48h. Personalizados: 3-5 dias úteis. Internacional: 5-10 dias úteis.' },
+        { q: 'Enviam para o estrangeiro?', a: 'Sim, enviamos para todo o mundo. Envio grátis acima de 150€ em Portugal Continental. Outros destinos calculados no checkout.' },
+        { q: 'O que é o sistema Karma Points?', a: 'Cada compra, review e interação dá Karma Points. Sobe 5 níveis (Iniciante → Karmic) e troca por descontos, portes grátis e produtos exclusivos.' },
+        { q: 'Posso devolver um produto personalizado?', a: 'Produtos personalizados não são devolvíveis, exceto em caso de defeito de fabrico. Produtos standard têm 14 dias para devolução.' },
+        { q: 'Como posso contactar-vos?', a: 'Email karmicnode@gmail.com ou formulário de contacto. Respondemos em 24h.' },
+        { q: 'Têm loja física?', a: 'Somos um atelier online sediado em Cartaxo, Portugal. Toda a produção é feita no nosso estúdio e por artesãos portugueses parceiros.' },
+      ],
+    },
+    envio: {
+      title: isEN ? 'Shipping Policy' : 'Política de Envio',
+      subtitle: isEN ? 'How, when and where we deliver.' : 'Como, quando e para onde entregamos.',
+      sections: isEN ? [
+        { q: 'Shipping to Mainland Portugal', a: 'Free for orders over €150. Below: €4.99 (24-48h). Same-day delivery available in Lisbon and Porto for orders before 12h.' },
+        { q: 'Shipping to Islands (Azores/Madeira)', a: '€6.99 fixed. Delivery in 3-5 business days.' },
+        { q: 'Spain', a: '€9.99. Delivery in 5-7 business days.' },
+        { q: 'Rest of the EU', a: '€14.99. Delivery in 5-10 business days.' },
+        { q: 'Order tracking', a: 'You will receive tracking number via email as soon as the order is dispatched. Also visible in "My Account" → "Orders".' },
+        { q: 'Absences and reschedule', a: 'Carriers make up to 2 delivery attempts. After that, the package returns to us. Contact us to reschedule.' },
+      ] : [
+        { q: 'Envio para Portugal Continental', a: 'Grátis para encomendas acima de 150€. Abaixo: 4,99€ (24-48h). Entrega no próprio dia disponível em Lisboa e Porto para encomendas antes das 12h.' },
+        { q: 'Envio para Ilhas (Açores/Madeira)', a: '6,99€ fixo. Entrega em 3-5 dias úteis.' },
+        { q: 'Espanha', a: '9,99€. Entrega em 5-7 dias úteis.' },
+        { q: 'Resto da UE', a: '14,99€. Entrega em 5-10 dias úteis.' },
+        { q: 'Rastreamento da encomenda', a: 'Receberás o número de tracking por email assim que a encomenda for despachada. Também visível em "A Minha Conta" → "Encomendas".' },
+        { q: 'Ausências e reagendamento', a: 'As transportadoras fazem até 2 tentativas de entrega. Após isso, o pacote regressa a nós. Contacta-nos para reagendar.' },
+      ],
+    },
+    devolucoes: {
+      title: isEN ? 'Returns & Exchanges' : 'Devoluções e Trocas',
+      subtitle: isEN ? '14 days to change your mind. Simple and hassle-free.' : '14 dias para mudares de ideias. Simples e sem complicações.',
+      sections: isEN ? [
+        { q: 'Return period', a: 'You have 14 calendar days from delivery to request a return. Products must be unused, unwashed, with tags and original packaging.' },
+        { q: 'How to return', a: '1. Access "My Account" → "Orders" → "Request Return". 2. Print the pre-paid label (free for Portugal). 3. Drop off at any CTT or DPD point.' },
+        { q: 'Refund', a: 'Processed within 5-10 business days after we receive the product. Same payment method used in purchase.' },
+        { q: 'Exchanges', a: 'Free exchanges for different size/color of the same product. Follow return process and place new order — we credit the original.' },
+        { q: 'Non-returnable items', a: 'Custom products (with your design or text), used underwear, and marked "Final Sale" items.' },
+        { q: 'Defective products', a: 'Contact us immediately at karmicnode@gmail.com with photos. We replace or refund 100% including shipping.' },
+      ] : [
+        { q: 'Prazo de devolução', a: 'Tens 14 dias corridos após entrega para pedir devolução. Produtos devem estar por usar, por lavar, com etiquetas e embalagem original.' },
+        { q: 'Como devolver', a: '1. Acede "A Minha Conta" → "Encomendas" → "Pedir Devolução". 2. Imprime a etiqueta pré-paga (grátis para Portugal). 3. Entrega em qualquer ponto CTT ou DPD.' },
+        { q: 'Reembolso', a: 'Processado em 5-10 dias úteis após recebermos o produto. Mesmo método de pagamento usado na compra.' },
+        { q: 'Trocas', a: 'Trocas gratuitas por tamanho/cor diferente do mesmo produto. Segue o processo de devolução e faz nova encomenda — creditamos a original.' },
+        { q: 'Produtos não devolvíveis', a: 'Produtos personalizados (com o teu design ou texto), roupa interior usada, e artigos marcados "Venda Final".' },
+        { q: 'Produtos defeituosos', a: 'Contacta-nos imediatamente em karmicnode@gmail.com com fotografias. Substituímos ou reembolsamos 100% incluindo portes.' },
+      ],
+    },
+    garantia: {
+      title: isEN ? 'Warranty & Quality' : 'Garantia e Qualidade',
+      subtitle: isEN ? 'We stand behind everything we make.' : 'Garantimos tudo o que fazemos.',
+      sections: isEN ? [
+        { q: 'General warranty', a: 'All Karmic Node products have 2-year warranty against manufacturing defects, as required by EU law.' },
+        { q: 'Fabric and stitching', a: 'Guaranteed against seam failure, fabric tearing under normal use, and color fading in first wash following our care instructions.' },
+        { q: 'Prints and embroidery', a: 'DTG/DTF prints and embroidery guaranteed for 50+ washes when instructions are followed (inside out, cold water, no bleach).' },
+        { q: 'How to claim', a: 'Send email to karmicnode@gmail.com with order number, defect photos, and clear description. We respond in 48h.' },
+        { q: 'Resolution', a: 'Depending on defect: free repair, replacement, or full refund (buyer choice for defects in first 6 months).' },
+        { q: 'Not covered', a: 'Normal wear, damage from misuse, incorrect washing, alterations by third parties.' },
+      ] : [
+        { q: 'Garantia geral', a: 'Todos os produtos Karmic Node têm garantia de 2 anos contra defeitos de fabrico, conforme exigido pela lei EU.' },
+        { q: 'Tecido e costuras', a: 'Garantido contra falha de costuras, rasgo de tecido em uso normal, e desvanecimento de cor na primeira lavagem seguindo as instruções.' },
+        { q: 'Estampas e bordados', a: 'Estampas DTG/DTF e bordados garantidos por 50+ lavagens quando instruções são seguidas (do avesso, água fria, sem lixívia).' },
+        { q: 'Como reclamar', a: 'Envia email para karmicnode@gmail.com com número de encomenda, fotografias do defeito, e descrição clara. Respondemos em 48h.' },
+        { q: 'Resolução', a: 'Consoante defeito: reparação grátis, substituição, ou reembolso total (escolha do comprador em defeitos nos primeiros 6 meses).' },
+        { q: 'Não coberto', a: 'Desgaste normal, danos por uso indevido, lavagem incorreta, alterações por terceiros.' },
+      ],
+    },
+  }
+
+  const c = CONTENT[topic]
+
+  return (
+    <div style={{ padding: 'clamp(30px, 5vw, 80px) clamp(20px, 5vw, 60px)', maxWidth: 800, margin: '0 auto' }}>
+      <div style={{ fontSize: 10, letterSpacing: '.28em', textTransform: 'uppercase', color: 'var(--gold)', fontWeight: 700, marginBottom: 10 }}>{isEN ? 'Support' : 'Apoio'}</div>
+      <h1 style={{ fontFamily: 'var(--f-display)', fontSize: 'clamp(30px, 4.5vw, 48px)', margin: '0 0 12px', fontWeight: 500 }}>{c.title}</h1>
+      <p style={{ color: 'var(--fg-mute)', fontSize: 15, marginBottom: 30, lineHeight: 1.6 }}>{c.subtitle}</p>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        {c.sections.map((section, i) => (
+          <div key={i} style={{ border: '1px solid var(--border)', background: openFaq === i ? 'var(--bg-2)' : 'transparent' }}>
+            <button onClick={() => setOpenFaq(openFaq === i ? null : i)} style={{ width: '100%', background: 'transparent', border: 'none', padding: '16px 20px', textAlign: 'left', color: 'var(--fg)', fontFamily: 'inherit', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+              <span style={{ fontSize: 15, fontFamily: 'var(--f-display)', fontWeight: 500 }}>{section.q}</span>
+              <span style={{ color: 'var(--gold)', fontSize: 18, transform: openFaq === i ? 'rotate(45deg)' : 'none', transition: 'transform .3s' }}>+</span>
+            </button>
+            {openFaq === i && <div style={{ padding: '0 20px 20px', color: 'var(--fg-dim)', fontSize: 14, lineHeight: 1.7 }}>{section.a}</div>}
+          </div>
+        ))}
+      </div>
+
+      <div style={{ marginTop: 40, padding: 20, background: 'rgba(176,141,87,.08)', border: '1px solid var(--gold-3)' }}>
+        <div style={{ fontSize: 11, letterSpacing: '.2em', textTransform: 'uppercase', color: 'var(--gold)', fontWeight: 700, marginBottom: 8 }}>{isEN ? 'Still have questions?' : 'Ainda tens dúvidas?'}</div>
+        <p style={{ fontSize: 13, color: 'var(--fg-dim)', margin: '0 0 14px', lineHeight: 1.6 }}>{isEN ? 'Contact us directly, we respond within 24h.' : 'Contacta-nos diretamente, respondemos em 24h.'}</p>
+        <button onClick={() => setPage('contact')} style={{ padding: '10px 20px', background: 'var(--bordo)', color: '#fff', border: 'none', fontSize: 11, letterSpacing: '.22em', textTransform: 'uppercase', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>{isEN ? 'Contact us →' : 'Contactar →'}</button>
+      </div>
+    </div>
+  )
+}
+
+// ─── PartnershipsPage ───────────────────────────────────────────────────────
+function PartnershipsPage({ setPage }: { setPage: (p: Page) => void }) {
+  const { lang } = useLang()
+  const isEN = lang === 'en'
+  const [selectedProgram, setSelectedProgram] = useState<string | null>(null)
+  const [submitting, setSubmitting] = useState(false)
+  const [submitted, setSubmitted] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const formRef = useRef<HTMLDivElement>(null)
+
+  const PROGRAMS = isEN ? [
+    { id: 'artist', icon: '🎨', title: 'Artist Collaborations', desc: 'Partner with us to launch limited-edition capsule collections. We handle production, marketing, and fulfillment. You bring the art.', cta: 'Apply as Artist', highlight: '20% royalties on sales' },
+    { id: 'corporate', icon: '🏢', title: 'Corporate & Events', desc: 'Custom apparel and merchandising for your company, event, or team. Volume discounts, dedicated account manager, and rush delivery available.', cta: 'Request Quote', highlight: 'From 20 units' },
+    { id: 'affiliate', icon: '🤝', title: 'Affiliate Program', desc: 'Earn 10% commission on every sale from your referral link. Ideal for creators, influencers, and content producers.', cta: 'Join Affiliate', highlight: '10% commission' },
+    { id: 'wholesale', icon: '🏭', title: 'Wholesale', desc: 'Buy in bulk (50+ units) at wholesale pricing. Perfect for retailers, gift shops, and hospitality.', cta: 'Wholesale Info', highlight: 'Up to 40% off retail' },
+  ] : [
+    { id: 'artist', icon: '🎨', title: 'Colaborações com Artistas', desc: 'Cria connosco coleções cápsula de edição limitada. Nós tratamos da produção, marketing e envio. Tu trazes a arte.', cta: 'Candidatar como Artista', highlight: '20% royalties nas vendas' },
+    { id: 'corporate', icon: '🏢', title: 'Empresas & Eventos', desc: 'Vestuário personalizado e merchandising para a tua empresa, evento ou equipa. Descontos por volume, gestor dedicado, e entrega urgente.', cta: 'Pedir Orçamento', highlight: 'A partir de 20 unidades' },
+    { id: 'affiliate', icon: '🤝', title: 'Programa Afiliados', desc: 'Ganha 10% de comissão em cada venda pelo teu link de referência. Ideal para criadores, influenciadores e produtores de conteúdo.', cta: 'Aderir Afiliados', highlight: '10% de comissão' },
+    { id: 'wholesale', icon: '🏭', title: 'Grossista', desc: 'Compra em volume (50+ unidades) a preço de grossista. Perfeito para lojas de retalho, gift shops e hospitalidade.', cta: 'Info Grossista', highlight: 'Até 40% desconto retalho' },
+  ]
+
+  const selectProgram = (id: string) => {
+    setSelectedProgram(id)
+    setSubmitted(false)
+    setError(null)
+    setTimeout(() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100)
+  }
+
+  const submitForm = async (formData: Record<string, string>, programName: string) => {
+    setSubmitting(true)
+    setError(null)
+    try {
+      const fd = new FormData()
+      fd.append('_subject', `[Parceria - ${programName}] ${formData.name || formData.company || 'Nova candidatura'}`)
+      fd.append('_replyto', formData.email || '')
+      fd.append('program', programName)
+      fd.append('program_id', selectedProgram || '')
+      fd.append('language', isEN ? 'EN' : 'PT')
+      fd.append('submitted_at', new Date().toLocaleString('pt-PT'))
+      Object.entries(formData).forEach(([k, v]) => { if (v) fd.append(k, v) })
+
+      const r = await fetch('https://formspree.io/f/xeeyzlvb', { method: 'POST', headers: { Accept: 'application/json' }, body: fd })
+      if (!r.ok) throw new Error('Erro no envio')
+
+      if (isSupabaseConfigured) {
+        try {
+          await supabase.from('partnership_applications').insert({
+            program: selectedProgram, program_name: programName, data: formData,
+            language: isEN ? 'en' : 'pt', status: 'new',
+          })
+        } catch { /* silencioso */ }
+      }
+
+      setSubmitted(true)
+    } catch {
+      setError(isEN ? 'Error submitting. Please try again or email us directly.' : 'Erro no envio. Tenta novamente ou envia email diretamente.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <div style={{ padding: 'clamp(30px, 5vw, 80px) clamp(20px, 5vw, 60px)', maxWidth: 1100, margin: '0 auto' }}>
+      <div style={{ fontSize: 10, letterSpacing: '.28em', textTransform: 'uppercase', color: 'var(--gold)', fontWeight: 700, marginBottom: 10 }}>{isEN ? 'Grow with us' : 'Cresce connosco'}</div>
+      <h1 style={{ fontFamily: 'var(--f-display)', fontSize: 'clamp(32px, 5vw, 54px)', margin: '0 0 12px', fontWeight: 500 }}>
+        {isEN ? 'Partnerships & ' : 'Parcerias & '}<em style={{ color: 'var(--gold)' }}>{isEN ? 'Collaborations' : 'Colaborações'}</em>.
+      </h1>
+      <p style={{ color: 'var(--fg-mute)', fontSize: 15, marginBottom: 40, maxWidth: 620, lineHeight: 1.6 }}>
+        {isEN ? 'Karmic Node partners with artists, brands, and communities that share our vision: quality, sustainability, and Portuguese craftsmanship.' : 'A Karmic Node faz parceria com artistas, marcas e comunidades que partilham a nossa visão: qualidade, sustentabilidade e artesanato português.'}
+      </p>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20, marginBottom: 40 }}>
+        {PROGRAMS.map(p => (
+          <div key={p.id} style={{ padding: 26, background: selectedProgram === p.id ? 'rgba(176,141,87,.08)' : 'var(--bg-1)', border: '1px solid ' + (selectedProgram === p.id ? 'var(--gold)' : 'var(--border)'), display: 'flex', flexDirection: 'column', gap: 12, transition: 'all .3s' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+              <div style={{ fontSize: 32 }}>{p.icon}</div>
+              <div style={{ padding: '4px 10px', background: 'rgba(139,30,45,.15)', color: 'var(--bordo)', fontSize: 9, letterSpacing: '.14em', textTransform: 'uppercase', fontWeight: 700, border: '1px solid rgba(139,30,45,.3)' }}>{p.highlight}</div>
+            </div>
+            <h3 style={{ fontFamily: 'var(--f-display)', fontSize: 20, fontWeight: 500, margin: 0 }}>{p.title}</h3>
+            <p style={{ color: 'var(--fg-mute)', fontSize: 13, lineHeight: 1.6, flex: 1, margin: 0 }}>{p.desc}</p>
+            <button onClick={() => selectProgram(p.id)} style={{ padding: '10px 16px', background: selectedProgram === p.id ? 'var(--gold)' : 'transparent', color: selectedProgram === p.id ? 'var(--bg)' : 'var(--gold)', border: '1px solid var(--gold-3)', fontSize: 10, letterSpacing: '.22em', textTransform: 'uppercase', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', alignSelf: 'flex-start', transition: 'all .2s' }}>{p.cta} →</button>
+          </div>
+        ))}
+      </div>
+
+      <div ref={formRef}>
+        {selectedProgram && !submitted && (
+          <PartnershipForm program={selectedProgram} programName={PROGRAMS.find(p => p.id === selectedProgram)?.title || ''} isEN={isEN} submitting={submitting} error={error} onSubmit={submitForm} />
+        )}
+
+        {submitted && (
+          <div style={{ padding: 40, background: 'linear-gradient(135deg, rgba(139,30,45,.08), rgba(176,141,87,.15))', border: '2px solid var(--gold)', textAlign: 'center' }}>
+            <div style={{ fontSize: 48, marginBottom: 12 }}>✦</div>
+            <h3 style={{ fontFamily: 'var(--f-display)', fontSize: 28, fontWeight: 500, margin: '0 0 12px', color: 'var(--gold)' }}>{isEN ? 'Application received!' : 'Candidatura recebida!'}</h3>
+            <p style={{ color: 'var(--fg-dim)', fontSize: 14, marginBottom: 24, maxWidth: 500, margin: '0 auto 24px', lineHeight: 1.6 }}>
+              {isEN ? 'Thank you for your interest. Our team will review your application and respond within 3-5 business days.' : 'Obrigado pelo teu interesse. A nossa equipa vai analisar a candidatura e responder em 3-5 dias úteis.'}
+            </p>
+            <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+              <button onClick={() => { setSubmitted(false); setSelectedProgram(null) }} style={{ padding: '12px 24px', background: 'transparent', color: 'var(--gold)', border: '1px solid var(--gold)', fontSize: 10, letterSpacing: '.22em', textTransform: 'uppercase', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>{isEN ? '← Back to programs' : '← Voltar aos programas'}</button>
+              <button onClick={() => setPage('home')} style={{ padding: '12px 24px', background: 'var(--gold)', color: 'var(--bg)', border: 'none', fontSize: 10, letterSpacing: '.22em', textTransform: 'uppercase', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>{isEN ? 'Continue browsing →' : 'Continuar a explorar →'}</button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div style={{ marginTop: 50, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 20 }}>
+        {[
+          { icon: '⏱', title: isEN ? '3-5 days response' : 'Resposta em 3-5 dias', desc: isEN ? 'Every application reviewed personally by our team.' : 'Cada candidatura analisada pessoalmente pela nossa equipa.' },
+          { icon: '🇵🇹', title: isEN ? 'Made in Portugal' : 'Feito em Portugal', desc: isEN ? 'Local production in Cartaxo, Ribatejo.' : 'Produção local no Cartaxo, Ribatejo.' },
+          { icon: '🌱', title: isEN ? 'Sustainable focus' : 'Foco sustentável', desc: isEN ? 'Made-to-order, zero excess stock.' : 'Feito por encomenda, zero excesso de stock.' },
+          { icon: '💎', title: isEN ? 'Quality first' : 'Qualidade primeiro', desc: isEN ? 'Premium materials & rigorous QA.' : 'Materiais premium e controlo rigoroso.' },
+        ].map((f, i) => (
+          <div key={i} style={{ padding: 20, background: 'var(--bg-1)', border: '1px solid var(--border)' }}>
+            <div style={{ fontSize: 24, marginBottom: 10 }}>{f.icon}</div>
+            <h4 style={{ fontFamily: 'var(--f-display)', fontSize: 15, margin: '0 0 6px', fontWeight: 600 }}>{f.title}</h4>
+            <p style={{ color: 'var(--fg-mute)', fontSize: 12, margin: 0, lineHeight: 1.5 }}>{f.desc}</p>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ marginTop: 40, padding: 30, background: 'linear-gradient(135deg, rgba(139,30,45,.08), rgba(176,141,87,.08))', border: '1px solid var(--gold-3)', textAlign: 'center' }}>
+        <div style={{ fontSize: 32, marginBottom: 12 }}>✦</div>
+        <h3 style={{ fontFamily: 'var(--f-display)', fontSize: 22, fontWeight: 500, margin: '0 0 10px' }}>{isEN ? 'Have something else in mind?' : 'Tens outra ideia em mente?'}</h3>
+        <p style={{ color: 'var(--fg-mute)', fontSize: 14, marginBottom: 20, maxWidth: 500, margin: '0 auto 20px', lineHeight: 1.6 }}>{isEN ? 'Every great partnership starts with a conversation.' : 'Toda a grande parceria começa com uma conversa.'}</p>
+        <a href="mailto:karmicnode@gmail.com" style={{ display: 'inline-block', padding: '12px 26px', background: 'var(--bordo)', color: '#fff', textDecoration: 'none', fontSize: 11, letterSpacing: '.22em', textTransform: 'uppercase', fontWeight: 700, fontFamily: 'inherit' }}>karmicnode@gmail.com</a>
+      </div>
+    </div>
+  )
+}
+
+// ─── PartnershipForm (dinâmico por programa) ───────────────────────────────
+function PartnershipForm({ program, programName, isEN, submitting, error, onSubmit }: {
+  program: string; programName: string; isEN: boolean; submitting: boolean; error: string | null
+  onSubmit: (data: Record<string, string>, programName: string) => Promise<void>
+}) {
+  const [form, setForm] = useState<Record<string, string>>({})
+  const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }))
+
+  const inputStyle: React.CSSProperties = { width: '100%', background: 'var(--bg-2)', border: '1px solid var(--border)', color: 'var(--fg)', padding: '12px 14px', fontSize: 13, marginBottom: 12, outline: 'none', fontFamily: 'inherit' }
+  const labelStyle: React.CSSProperties = { display: 'block', fontSize: 10, letterSpacing: '.22em', textTransform: 'uppercase', color: 'var(--fg-mute)', fontWeight: 600, marginBottom: 6, marginTop: 4 }
+
+  const handleSubmit = (e: React.FormEvent) => { e.preventDefault(); onSubmit(form, programName) }
+
+  return (
+    <form onSubmit={handleSubmit} style={{ padding: 30, background: 'var(--bg-1)', border: '1px solid var(--gold-3)' }}>
+      <div style={{ fontSize: 10, letterSpacing: '.28em', textTransform: 'uppercase', color: 'var(--gold)', fontWeight: 700, marginBottom: 8 }}>{isEN ? 'Application' : 'Candidatura'}</div>
+      <h2 style={{ fontFamily: 'var(--f-display)', fontSize: 26, fontWeight: 500, margin: '0 0 24px' }}>{programName}</h2>
+
+      {program === 'artist' && (
+        <>
+          <label style={labelStyle}>{isEN ? 'Artist name / Alias' : 'Nome de artista'} *</label>
+          <input required style={inputStyle} type="text" value={form.name || ''} onChange={e => set('name', e.target.value)} placeholder={isEN ? 'e.g., Ana Costa' : 'ex: Ana Costa'} />
+          <label style={labelStyle}>Email *</label>
+          <input required style={inputStyle} type="email" value={form.email || ''} onChange={e => set('email', e.target.value)} placeholder="tu@exemplo.com" />
+          <label style={labelStyle}>Instagram / Portfolio URL *</label>
+          <input required style={inputStyle} type="url" value={form.portfolio || ''} onChange={e => set('portfolio', e.target.value)} placeholder="https://instagram.com/... ou https://..." />
+          <label style={labelStyle}>{isEN ? 'Art style / Medium' : 'Estilo / Meio artístico'} *</label>
+          <select required style={{ ...inputStyle, cursor: 'pointer' }} value={form.style || ''} onChange={e => set('style', e.target.value)}>
+            <option value="">{isEN ? 'Select...' : 'Seleciona...'}</option>
+            <option value="illustration">{isEN ? 'Illustration' : 'Ilustração'}</option>
+            <option value="photography">{isEN ? 'Photography' : 'Fotografia'}</option>
+            <option value="graphic-design">{isEN ? 'Graphic Design' : 'Design Gráfico'}</option>
+            <option value="painting">{isEN ? 'Painting' : 'Pintura'}</option>
+            <option value="typography">{isEN ? 'Typography' : 'Tipografia'}</option>
+            <option value="3d-digital">3D / Digital</option>
+            <option value="mixed">{isEN ? 'Mixed media' : 'Técnica mista'}</option>
+            <option value="other">{isEN ? 'Other' : 'Outro'}</option>
+          </select>
+          <label style={labelStyle}>{isEN ? 'Tell us about your art' : 'Fala-nos da tua arte'} *</label>
+          <textarea required rows={4} style={{ ...inputStyle, resize: 'vertical' }} value={form.message || ''} onChange={e => set('message', e.target.value)} placeholder={isEN ? "Style, inspiration, what you'd like to create with us..." : 'Estilo, inspiração, o que gostavas de criar connosco...'} />
+        </>
+      )}
+
+      {program === 'corporate' && (
+        <>
+          <label style={labelStyle}>{isEN ? 'Company name' : 'Nome da empresa'} *</label>
+          <input required style={inputStyle} type="text" value={form.company || ''} onChange={e => set('company', e.target.value)} placeholder="Karmic Corp, Lda" />
+          <label style={labelStyle}>{isEN ? 'Contact person' : 'Pessoa de contacto'} *</label>
+          <input required style={inputStyle} type="text" value={form.name || ''} onChange={e => set('name', e.target.value)} />
+          <label style={labelStyle}>Email *</label>
+          <input required style={inputStyle} type="email" value={form.email || ''} onChange={e => set('email', e.target.value)} />
+          <label style={labelStyle}>{isEN ? 'Phone' : 'Telefone'}</label>
+          <input style={inputStyle} type="tel" value={form.phone || ''} onChange={e => set('phone', e.target.value)} placeholder="+351 ..." />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div>
+              <label style={labelStyle}>{isEN ? 'Products' : 'Produtos'} *</label>
+              <select required style={{ ...inputStyle, cursor: 'pointer' }} value={form.product_type || ''} onChange={e => set('product_type', e.target.value)}>
+                <option value="">{isEN ? 'Select...' : 'Seleciona...'}</option>
+                <option value="tshirts">T-shirts</option>
+                <option value="hoodies">Hoodies</option>
+                <option value="polos">Polos</option>
+                <option value="caps">{isEN ? 'Caps' : 'Bonés'}</option>
+                <option value="totes">Tote bags</option>
+                <option value="mixed">{isEN ? 'Mix / Uniform' : 'Misto / Uniforme'}</option>
+              </select>
+            </div>
+            <div>
+              <label style={labelStyle}>{isEN ? 'Quantity' : 'Quantidade'} *</label>
+              <select required style={{ ...inputStyle, cursor: 'pointer' }} value={form.quantity || ''} onChange={e => set('quantity', e.target.value)}>
+                <option value="">{isEN ? 'Select...' : 'Seleciona...'}</option>
+                <option value="20-50">20-50</option>
+                <option value="50-100">50-100</option>
+                <option value="100-500">100-500</option>
+                <option value="500-1000">500-1000</option>
+                <option value="1000+">1000+</option>
+              </select>
+            </div>
+          </div>
+          <label style={labelStyle}>{isEN ? 'Deadline' : 'Prazo necessário'}</label>
+          <select style={{ ...inputStyle, cursor: 'pointer' }} value={form.deadline || ''} onChange={e => set('deadline', e.target.value)}>
+            <option value="">{isEN ? 'Flexible' : 'Flexível'}</option>
+            <option value="1-week">{isEN ? '1 week (rush)' : '1 semana (urgente)'}</option>
+            <option value="2-weeks">{isEN ? '2 weeks' : '2 semanas'}</option>
+            <option value="1-month">{isEN ? '1 month' : '1 mês'}</option>
+            <option value="2-months">{isEN ? '2+ months' : '2+ meses'}</option>
+          </select>
+          <label style={labelStyle}>{isEN ? 'Project details' : 'Detalhes do projeto'} *</label>
+          <textarea required rows={4} style={{ ...inputStyle, resize: 'vertical' }} value={form.message || ''} onChange={e => set('message', e.target.value)} placeholder={isEN ? 'Event, logo, colors, sizes needed...' : 'Evento, logo, cores, tamanhos necessários...'} />
+        </>
+      )}
+
+      {program === 'affiliate' && (
+        <>
+          <label style={labelStyle}>{isEN ? 'Your name' : 'O teu nome'} *</label>
+          <input required style={inputStyle} type="text" value={form.name || ''} onChange={e => set('name', e.target.value)} />
+          <label style={labelStyle}>Email *</label>
+          <input required style={inputStyle} type="email" value={form.email || ''} onChange={e => set('email', e.target.value)} />
+          <label style={labelStyle}>{isEN ? 'Main platform' : 'Plataforma principal'} *</label>
+          <select required style={{ ...inputStyle, cursor: 'pointer' }} value={form.platform || ''} onChange={e => set('platform', e.target.value)}>
+            <option value="">{isEN ? 'Select...' : 'Seleciona...'}</option>
+            <option value="instagram">Instagram</option>
+            <option value="tiktok">TikTok</option>
+            <option value="youtube">YouTube</option>
+            <option value="twitter">Twitter / X</option>
+            <option value="blog">Blog / Website</option>
+            <option value="podcast">Podcast</option>
+            <option value="other">{isEN ? 'Other' : 'Outra'}</option>
+          </select>
+          <label style={labelStyle}>{isEN ? 'Profile URL' : 'URL do perfil'} *</label>
+          <input required style={inputStyle} type="url" value={form.profile_url || ''} onChange={e => set('profile_url', e.target.value)} placeholder="https://instagram.com/..." />
+          <label style={labelStyle}>{isEN ? 'Follower count' : 'Número de seguidores'} *</label>
+          <select required style={{ ...inputStyle, cursor: 'pointer' }} value={form.audience || ''} onChange={e => set('audience', e.target.value)}>
+            <option value="">{isEN ? 'Select...' : 'Seleciona...'}</option>
+            <option value="under-1k">&lt; 1.000</option>
+            <option value="1k-10k">1.000 - 10.000</option>
+            <option value="10k-50k">10.000 - 50.000</option>
+            <option value="50k-100k">50.000 - 100.000</option>
+            <option value="100k+">100.000+</option>
+          </select>
+          <label style={labelStyle}>{isEN ? 'Preferred referral code' : 'Código de referência preferido'}</label>
+          <input style={inputStyle} type="text" value={form.desired_code || ''} onChange={e => set('desired_code', e.target.value.toUpperCase().slice(0, 15))} placeholder={isEN ? 'e.g., ANA10' : 'ex: ANA10'} maxLength={15} />
+          <label style={labelStyle}>{isEN ? 'Audience niche / About you' : 'Nicho de audiência / Sobre ti'} *</label>
+          <textarea required rows={3} style={{ ...inputStyle, resize: 'vertical' }} value={form.message || ''} onChange={e => set('message', e.target.value)} placeholder={isEN ? 'Fashion, sustainable lifestyle, art...' : 'Moda, lifestyle sustentável, arte...'} />
+        </>
+      )}
+
+      {program === 'wholesale' && (
+        <>
+          <label style={labelStyle}>{isEN ? 'Business name' : 'Nome do negócio'} *</label>
+          <input required style={inputStyle} type="text" value={form.company || ''} onChange={e => set('company', e.target.value)} />
+          <label style={labelStyle}>{isEN ? 'Business type' : 'Tipo de negócio'} *</label>
+          <select required style={{ ...inputStyle, cursor: 'pointer' }} value={form.business_type || ''} onChange={e => set('business_type', e.target.value)}>
+            <option value="">{isEN ? 'Select...' : 'Seleciona...'}</option>
+            <option value="retail">{isEN ? 'Retail store' : 'Loja retalho'}</option>
+            <option value="online">{isEN ? 'Online shop' : 'Loja online'}</option>
+            <option value="gift">{isEN ? 'Gift shop / Concept store' : 'Gift shop / Concept store'}</option>
+            <option value="hotel">{isEN ? 'Hotel / Hospitality' : 'Hotel / Hospitalidade'}</option>
+            <option value="museum">{isEN ? 'Museum / Cultural' : 'Museu / Cultural'}</option>
+            <option value="other">{isEN ? 'Other' : 'Outro'}</option>
+          </select>
+          <label style={labelStyle}>{isEN ? 'Contact person' : 'Pessoa de contacto'} *</label>
+          <input required style={inputStyle} type="text" value={form.name || ''} onChange={e => set('name', e.target.value)} />
+          <label style={labelStyle}>Email *</label>
+          <input required style={inputStyle} type="email" value={form.email || ''} onChange={e => set('email', e.target.value)} />
+          <label style={labelStyle}>NIF / VAT</label>
+          <input style={inputStyle} type="text" value={form.tax_id || ''} onChange={e => set('tax_id', e.target.value)} placeholder="500 000 000" />
+          <label style={labelStyle}>{isEN ? 'Country' : 'País'} *</label>
+          <select required style={{ ...inputStyle, cursor: 'pointer' }} value={form.country || ''} onChange={e => set('country', e.target.value)}>
+            <option value="">{isEN ? 'Select...' : 'Seleciona...'}</option>
+            <option value="PT">Portugal</option>
+            <option value="ES">Espanha</option>
+            <option value="FR">França</option>
+            <option value="DE">Alemanha</option>
+            <option value="UK">United Kingdom</option>
+            <option value="OTHER-EU">{isEN ? 'Other EU' : 'Outro UE'}</option>
+            <option value="OTHER">{isEN ? 'Other' : 'Outro'}</option>
+          </select>
+          <label style={labelStyle}>{isEN ? 'Estimated monthly volume' : 'Volume mensal estimado'} *</label>
+          <select required style={{ ...inputStyle, cursor: 'pointer' }} value={form.volume || ''} onChange={e => set('volume', e.target.value)}>
+            <option value="">{isEN ? 'Select...' : 'Seleciona...'}</option>
+            <option value="50-100">50-100 unidades</option>
+            <option value="100-500">100-500 unidades</option>
+            <option value="500-1000">500-1000 unidades</option>
+            <option value="1000+">1000+ unidades</option>
+          </select>
+          <label style={labelStyle}>{isEN ? 'Additional info' : 'Informação adicional'}</label>
+          <textarea rows={3} style={{ ...inputStyle, resize: 'vertical' }} value={form.message || ''} onChange={e => set('message', e.target.value)} placeholder={isEN ? 'Product interests, deadlines, delivery preferences...' : 'Produtos de interesse, prazos, preferências de entrega...'} />
+        </>
+      )}
+
+      <div style={{ margin: '20px 0 24px', padding: 14, background: 'var(--bg-2)', border: '1px solid var(--border)', fontSize: 12, color: 'var(--fg-mute)', lineHeight: 1.5 }}>
+        <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer' }}>
+          <input required type="checkbox" checked={form.gdpr === 'yes'} onChange={e => set('gdpr', e.target.checked ? 'yes' : '')} style={{ marginTop: 2 }} />
+          <span>
+            {isEN ? 'I agree that my data will be processed by Karmic Node to evaluate this partnership application. Data will not be shared with third parties. See our ' : 'Concordo que os meus dados sejam processados pela Karmic Node para avaliar esta candidatura. Os dados não serão partilhados com terceiros. Ver '}
+            <a href="/privacidade" style={{ color: 'var(--gold)' }}>{isEN ? 'Privacy Policy' : 'Política de Privacidade'}</a>.
+          </span>
+        </label>
+      </div>
+
+      {error && <div style={{ marginBottom: 16, padding: 12, background: 'rgba(139,30,45,.1)', border: '1px solid var(--bordo-3)', color: 'var(--bordo)', fontSize: 13 }}>⚠ {error}</div>}
+
+      <button type="submit" disabled={submitting} style={{ width: '100%', padding: '14px', background: submitting ? 'var(--border)' : 'var(--bordo)', color: '#fff', border: 'none', fontSize: 11, letterSpacing: '.22em', textTransform: 'uppercase', fontWeight: 700, cursor: submitting ? 'wait' : 'pointer', fontFamily: 'inherit' }}>
+        {submitting ? (isEN ? 'Sending...' : 'A enviar...') : (isEN ? 'Submit application →' : 'Enviar candidatura →')}
+      </button>
+      <p style={{ marginTop: 14, textAlign: 'center', fontSize: 11, color: 'var(--fg-mute)' }}>{isEN ? "You'll receive a confirmation email within minutes." : 'Vais receber um email de confirmação em minutos.'}</p>
+    </form>
+  )
+}
+
+// ─── LegalPage (Privacidade / Termos / Cookies) ────────────────────────────
+function LegalPage({ type }: { type: 'privacy' | 'terms' | 'cookies' }) {
+  const { lang } = useLang()
+  const isEN = lang === 'en'
+  const titles: Record<string, { pt: string; en: string }> = {
+    privacy: { pt: 'Política de Privacidade', en: 'Privacy Policy' },
+    terms: { pt: 'Termos e Condições', en: 'Terms & Conditions' },
+    cookies: { pt: 'Política de Cookies', en: 'Cookies Policy' },
+  }
+  const tt = titles[type]
+  return (
+    <div style={{ padding: 'clamp(30px, 5vw, 80px) clamp(20px, 5vw, 60px)', maxWidth: 800, margin: '0 auto', minHeight: '60vh' }}>
+      <div style={{ fontSize: 10, letterSpacing: '.28em', textTransform: 'uppercase', color: 'var(--gold)', fontWeight: 700, marginBottom: 10 }}>Legal</div>
+      <h1 style={{ fontFamily: 'var(--f-display)', fontSize: 'clamp(28px, 4vw, 44px)', margin: '0 0 20px' }}>{isEN ? tt.en : tt.pt}</h1>
+      <div style={{ padding: '16px 20px', background: 'rgba(176,141,87,.08)', border: '1px solid var(--gold-3)', marginBottom: 30 }}>
+        <p style={{ margin: 0, fontSize: 13, color: 'var(--fg-dim)', lineHeight: 1.6 }}>
+          {isEN
+            ? '📋 This is a draft based on standard GDPR/Portugal templates. Before publishing in production, we recommend using iubenda.com or consulting a lawyer specialized in e-commerce/GDPR.'
+            : '📋 Este é um draft baseado em templates padrão RGPD/Portugal. Antes de publicar em produção, recomendamos usar iubenda.com ou consultar um advogado especializado em e-commerce/RGPD.'}
+        </p>
+      </div>
+      {type === 'privacy' && (
+        <div style={{ color: 'var(--fg-dim)', fontSize: 14, lineHeight: 1.8 }}>
+          <p><b style={{ color: 'var(--fg)' }}>{isEN ? 'Data controller:' : 'Responsável pelo tratamento:'}</b> Karmic Node, Cartaxo, Portugal.</p>
+          <p>{isEN
+            ? 'We collect data you provide directly (name, email, shipping/billing address, phone, payment processed by Stripe — we never store card numbers, custom designs, support messages) and data collected automatically (IP address, browser/device type, pages visited, referral source, cookies).'
+            : 'Recolhemos dados que nos fornece diretamente (nome, email, morada de envio/faturação, telefone, pagamento processado pela Stripe — nunca armazenamos números de cartão, designs personalizados, mensagens de suporte) e dados recolhidos automaticamente (IP, tipo de browser/dispositivo, páginas visitadas, origem do tráfego, cookies).'}</p>
+          <p>{isEN
+            ? 'We use your data to process and deliver orders, manage the Karma Points program, send newsletters (only if subscribed), improve the site, prevent fraud, and comply with legal (tax/accounting) obligations.'
+            : 'Usamos os seus dados para processar e entregar encomendas, gerir o programa Karma Points, enviar newsletter (só se subscrever), melhorar o site, prevenir fraude, e cumprir obrigações legais (fiscais, contabilísticas).'}</p>
+          <p>{isEN
+            ? 'Shared only with essential providers (Supabase, Stripe, Resend, Vercel, carriers). We never sell your data. You have the right to access, rectify, erase, port, object to, and limit processing of your data — write to karmicnode@gmail.com, we respond within 30 days.'
+            : 'Partilhados apenas com prestadores essenciais (Supabase, Stripe, Resend, Vercel, transportadoras). Nunca vendemos os seus dados. Tem direito a aceder, retificar, apagar, portabilidade, opor-se e limitar o tratamento dos seus dados — escreva para karmicnode@gmail.com, respondemos em até 30 dias.'}</p>
+          <p>{isEN
+            ? 'Supervisory authority (Portugal): Comissão Nacional de Proteção de Dados (CNPD) — cnpd.pt.'
+            : 'Autoridade de controlo (Portugal): Comissão Nacional de Proteção de Dados (CNPD) — cnpd.pt.'}</p>
+        </div>
+      )}
+      {type === 'terms' && (
+        <div style={{ color: 'var(--fg-dim)', fontSize: 14, lineHeight: 1.8 }}>
+          <p>{isEN
+            ? 'All prices include VAT (23%). Custom and made-to-order products are produced after payment confirmation. Delivery times are estimated, not guaranteed.'
+            : 'Todos os preços incluem IVA (23%). Peças personalizadas e feitas sob encomenda são produzidas após pagamento confirmado. Prazos de entrega são estimados, não garantidos.'}</p>
+          <p>{isEN
+            ? 'Under Decree-Law 24/2014, you have the right to withdraw within 14 days without justification, except for custom/made-to-measure products and unsealed digital downloads.'
+            : 'Conforme Decreto-Lei n.º 24/2014, tem direito a resolver o contrato em 14 dias sem justificação, exceto produtos personalizados (feitos sob medida) e downloads digitais desprecintados.'}</p>
+          <p>{isEN
+            ? 'Returns must be in original condition (unused, unwashed, with tags). Refunds processed within 14 days of receiving the returned product. Return shipping is the customer\'s responsibility unless the product is defective.'
+            : 'Devoluções devem estar em condições originais (não usado, não lavado, com etiquetas). Reembolso processado em até 14 dias após receção do produto devolvido. Portes de devolução por conta do cliente, exceto se o produto for defeituoso.'}</p>
+          <p>{isEN
+            ? '2-year warranty against manufacturing defects (Law 84/2021). Karma Points have no direct monetary value and expire after 12 months of account inactivity. Gift cards are valid for 2 years and non-refundable.'
+            : 'Garantia de 2 anos contra defeitos de fabrico (Lei n.º 84/2021). Karma Points não têm valor monetário direto e expiram após 12 meses de inatividade da conta. Gift Cards são válidos por 2 anos e não reembolsáveis.'}</p>
+          <p>{isEN
+            ? 'Portuguese law applies. Alternative dispute resolution: consumidor.gov.pt or the European ODR platform (ec.europa.eu/consumers/odr).'
+            : 'Aplica-se a lei portuguesa. Resolução alternativa de litígios: consumidor.gov.pt ou plataforma ODR europeia (ec.europa.eu/consumers/odr).'}</p>
+        </div>
+      )}
+      {type === 'cookies' && (
+        <div style={{ color: 'var(--fg-dim)', fontSize: 14, lineHeight: 1.8 }}>
+          <p>{isEN
+            ? 'Essential cookies (no consent required): Supabase authentication (sb-access-token, sb-refresh-token), shopping cart, language and theme preferences.'
+            : 'Cookies essenciais (não requerem consentimento): autenticação Supabase (sb-access-token, sb-refresh-token), carrinho de compras, preferências de idioma e tema.'}</p>
+          <p>{isEN
+            ? 'We do not use Google Analytics, Facebook Pixel, or third-party marketing/advertising cookies. You can manage cookie preferences in your browser settings at any time.'
+            : 'Não usamos Google Analytics, Facebook Pixel, ou cookies de marketing/publicidade de terceiros. Pode gerir as preferências de cookies nas definições do seu browser em qualquer momento.'}</p>
+        </div>
+      )}
+      <p style={{ color: 'var(--fg-mute)', fontSize: 14, lineHeight: 1.7, marginTop: 20 }}>
+        {isEN ? 'For questions about privacy, terms or cookies, contact us at karmicnode@gmail.com.' : 'Para dúvidas sobre privacidade, termos ou cookies, contacte-nos em karmicnode@gmail.com.'}
+      </p>
+    </div>
+  )
+}
+
 // ─── App ─────────────────────────────────────────────────────────────────────
 
 // ─── URL Routing ────────────────────────────────────────────────────────
@@ -4448,6 +5083,15 @@ const PAGE_TO_PATH: Record<Page, string> = {
   success: '/sucesso',
   login: '/entrar',
   account: '/conta',
+  giftcards: '/gift-cards',
+  privacidade: '/privacidade',
+  termos: '/termos',
+  cookies: '/cookies',
+  faq: '/faq',
+  envio: '/envio',
+  devolucoes: '/devolucoes',
+  garantia: '/garantia',
+  parcerias: '/parcerias',
 }
 const PATH_TO_PAGE: Record<string, Page> = {
   '/': 'home',
@@ -4462,6 +5106,15 @@ const PATH_TO_PAGE: Record<string, Page> = {
   '/sucesso': 'success',
   '/entrar': 'login',
   '/conta': 'account',
+  '/gift-cards': 'giftcards',
+  '/privacidade': 'privacidade',
+  '/termos': 'termos',
+  '/cookies': 'cookies',
+  '/faq': 'faq',
+  '/envio': 'envio',
+  '/devolucoes': 'devolucoes',
+  '/garantia': 'garantia',
+  '/parcerias': 'parcerias',
 }
 
 export default function App() {
@@ -4599,13 +5252,42 @@ export default function App() {
     setCartItems(prev => prev.filter(i => i.id !== id))
   }, [])
 
+  // Sincroniza a wishlist local (Set<number> por id) com a tabela Supabase
+  // `wishlist` (product_sku) quando o utilizador inicia sessão.
+  useEffect(() => {
+    if (!auth.user || !isSupabaseConfigured) return
+    supabase.from('wishlist').select('product_sku, product_id_local').eq('user_id', auth.user.id)
+      .then(({ data }) => {
+        if (!data) return
+        const ids = data
+          .map((r: any) => {
+            if (typeof r.product_id_local === 'number') return r.product_id_local
+            const p = liveProducts.find(x => x.sku === r.product_sku) || ALL_PRODUCTS.find(x => x.sku === r.product_sku)
+            return p?.id
+          })
+          .filter((x: any): x is number => typeof x === 'number')
+        setWishlist(prev => new Set([...prev, ...ids]))
+      }, () => {})
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [auth.user])
+
   const toggleWish = useCallback((id: number) => {
+    const isRemoving = wishlist.has(id)
     setWishlist(prev => {
       const n = new Set(prev)
       n.has(id) ? n.delete(id) : n.add(id)
       return n
     })
-  }, [])
+    if (auth.user && isSupabaseConfigured) {
+      const product = liveProducts.find(p => p.id === id) || ALL_PRODUCTS.find(p => p.id === id)
+      const sku = product?.sku || String(id)
+      if (isRemoving) {
+        supabase.from('wishlist').delete().eq('user_id', auth.user.id).eq('product_sku', sku).then(() => {}, () => {})
+      } else {
+        supabase.from('wishlist').insert({ user_id: auth.user.id, product_sku: sku, product_id_local: id }).then(() => {}, () => {})
+      }
+    }
+  }, [auth.user, liveProducts, wishlist])
 
   const cartCount = cartItems.reduce((s, i) => s + i.qty, 0)
 
@@ -4631,6 +5313,15 @@ export default function App() {
       {activePage === 'success' && <SuccessPage sessionId={successSessionId} setPage={setPage} />}
       {activePage === 'login' && <LoginPage setPage={setPage} auth={auth} />}
       {activePage === 'account' && <AccountPage auth={auth} setPage={setPage} allProducts={liveProducts} onOpen={openProduct} />}
+      {activePage === 'giftcards' && <GiftCardsPage />}
+      {activePage === 'privacidade' && <LegalPage type="privacy" />}
+      {activePage === 'termos' && <LegalPage type="terms" />}
+      {activePage === 'cookies' && <LegalPage type="cookies" />}
+      {activePage === 'faq' && <HelpPage topic="faq" setPage={setPage} />}
+      {activePage === 'envio' && <HelpPage topic="envio" setPage={setPage} />}
+      {activePage === 'devolucoes' && <HelpPage topic="devolucoes" setPage={setPage} />}
+      {activePage === 'garantia' && <HelpPage topic="garantia" setPage={setPage} />}
+      {activePage === 'parcerias' && <PartnershipsPage setPage={setPage} />}
 
       <Footer setPage={setPage} />
 

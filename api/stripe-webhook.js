@@ -16,11 +16,25 @@
 //   STRIPE_SECRET_KEY
 //   STRIPE_WEBHOOK_SECRET
 //   RESEND_API_KEY (opcional — para email de confirmação)
+//   SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY (opcional — para persistir
+//     encomendas nas tabelas orders/order_items e decrementar stock;
+//     usa a service_role key, NUNCA a anon key, porque este handler
+//     corre server-side e precisa de bypassar RLS. Sem estas variáveis
+//     o webhook continua a funcionar normalmente (Stripe + email),
+//     só não fica nada persistido em DB — comportamento inerte, como
+//     o resto da integração Supabase deste projeto.)
 //
 import Stripe from 'stripe'
+import { createClient } from '@supabase/supabase-js'
 
 const stripeKey = process.env.STRIPE_SECRET_KEY
 const stripe = stripeKey ? new Stripe(stripeKey, { apiVersion: '2024-06-20' }) : null
+
+const supabaseUrl = process.env.SUPABASE_URL
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+const supabaseAdmin = (supabaseUrl && supabaseServiceKey)
+  ? createClient(supabaseUrl, supabaseServiceKey, { auth: { persistSession: false } })
+  : null
 
 // IMPORTANTE no Vercel: precisa raw body para verificar assinatura Stripe
 export const config = {
@@ -34,6 +48,95 @@ async function readRawBody(req) {
   const chunks = []
   for await (const chunk of req) chunks.push(chunk)
   return Buffer.concat(chunks)
+}
+
+// ─── Persistência da encomenda em Supabase (orders + order_items) ────────
+// Chamado no checkout.session.completed. Usa a service_role key (bypassa RLS,
+// pois este handler corre server-side sem sessão de utilizador autenticado).
+// Também decrementa o stock em `products` quando o SKU existe nessa tabela
+// (a tabela `products` é opcional/reservada para migração futura do catálogo
+// estático — se o SKU não existir lá, o decrement é simplesmente ignorado).
+async function persistOrder(session) {
+  const items = session.line_items.data.map(li => ({
+    sku: li.price?.product?.metadata?.sku || null,
+    name: li.description || li.price?.product?.name || 'Item',
+    qty: li.quantity,
+    unit_price_cents: li.price?.unit_amount ?? Math.round((li.amount_total || 0) / (li.quantity || 1)),
+    total_cents: li.amount_total,
+    image: li.price?.product?.images?.[0] || null,
+    custom: Object.fromEntries(
+      Object.entries(li.price?.product?.metadata || {}).filter(([k]) => k.startsWith('custom_'))
+    ),
+  }))
+
+  // Tenta associar a um user_id existente via email (não bloqueia se não encontrar)
+  let userId = null
+  if (session.customer_details?.email) {
+    try {
+      const { data: profileRow } = await supabaseAdmin
+        .from('profiles').select('id').eq('email', session.customer_details.email).maybeSingle()
+      userId = profileRow?.id || null
+    } catch { /* ignora — encomenda de convidado */ }
+  }
+
+  const orderPayload = {
+    stripe_session_id: session.id,
+    stripe_payment_intent: typeof session.payment_intent === 'string' ? session.payment_intent : session.payment_intent?.id || null,
+    user_id: userId,
+    customer_email: session.customer_details?.email || 'desconhecido@karmicnode.com',
+    customer_name: session.customer_details?.name || null,
+    customer_phone: session.customer_details?.phone || null,
+    shipping_address: session.shipping_details?.address || null,
+    billing_address: session.customer_details?.address || null,
+    items,
+    subtotal_cents: session.amount_subtotal || 0,
+    discount_cents: session.total_details?.amount_discount || 0,
+    shipping_cents: session.total_details?.amount_shipping || 0,
+    vat_cents: session.total_details?.amount_tax || 0,
+    total_cents: session.amount_total || 0,
+    currency: (session.currency || 'eur').toUpperCase(),
+    status: 'paid',
+    payment_status: 'paid',
+    payment_method: session.payment_method_types?.[0] || null,
+    promo_code: session.metadata?.promo_code || null,
+  }
+
+  const { data: order, error: orderErr } = await supabaseAdmin
+    .from('orders')
+    .upsert(orderPayload, { onConflict: 'stripe_session_id' })
+    .select('id')
+    .single()
+
+  if (orderErr) throw orderErr
+
+  // order_items (linhas individuais)
+  const orderItemsPayload = items.map(i => ({
+    order_id: order.id,
+    product_sku: i.sku,
+    product_name: i.name,
+    product_image: i.image,
+    quantity: i.qty,
+    unit_price_cents: i.unit_price_cents,
+    total_cents: i.total_cents,
+    custom_design: Object.keys(i.custom).length ? i.custom : null,
+    source: Object.keys(i.custom).length ? 'custom' : 'manual',
+  }))
+  if (orderItemsPayload.length) {
+    // Evita duplicar linhas se o webhook for reentregue pelo Stripe
+    await supabaseAdmin.from('order_items').delete().eq('order_id', order.id)
+    await supabaseAdmin.from('order_items').insert(orderItemsPayload)
+  }
+
+  // Decrementa stock em `products` (tabela reservada para catálogo dinâmico —
+  // ignora silenciosamente SKUs que ainda não existem lá, i.e. catálogo estático)
+  for (const i of items) {
+    if (!i.sku) continue
+    try {
+      await supabaseAdmin.rpc('decrement_product_stock', { p_sku: i.sku, p_qty: i.qty })
+    } catch { /* função/produto pode não existir ainda — não bloqueia a encomenda */ }
+  }
+
+  return order.id
 }
 
 export default async function handler(req, res) {
@@ -72,12 +175,18 @@ export default async function handler(req, res) {
           expand: ['line_items.data.price.product', 'customer', 'total_details.breakdown'],
         })
 
-        // 1. Atualizar stock (implementar quando tiveres DB — Supabase/Vercel KV/etc.)
-        for (const li of full.line_items.data) {
-          const sku = li.price?.product?.metadata?.sku
-          if (sku) {
-            console.log(`[stock] Decrement ${sku} by ${li.quantity}`)
-            // TODO: chamar DB
+        // 1. Atualizar stock + 3. Guardar encomenda em DB (Supabase, se configurado)
+        let orderId = null
+        if (supabaseAdmin) {
+          try {
+            orderId = await persistOrder(full)
+          } catch (e) {
+            console.error('[webhook] Falha ao persistir encomenda em Supabase:', e)
+          }
+        } else {
+          for (const li of full.line_items.data) {
+            const sku = li.price?.product?.metadata?.sku
+            if (sku) console.log(`[stock] (Supabase não configurado) Decrement ${sku} by ${li.quantity}`)
           }
         }
 
@@ -90,7 +199,7 @@ export default async function handler(req, res) {
           }
         }
 
-        // 3. Guardar encomenda em DB (opcional — recomendado)
+        if (orderId) console.log(`[webhook] Encomenda persistida: ${orderId}`)
 
         break
       }
@@ -104,6 +213,19 @@ export default async function handler(req, res) {
       case 'charge.refunded': {
         const charge = event.data.object
         console.log('[webhook] Refund emitido:', charge.id)
+        if (supabaseAdmin && charge.payment_intent) {
+          try {
+            await supabaseAdmin.from('orders').update({
+              status: 'refunded',
+              payment_status: 'refunded',
+              refunded_at: new Date().toISOString(),
+              refund_amount_cents: charge.amount_refunded,
+              updated_at: new Date().toISOString(),
+            }).eq('stripe_payment_intent', charge.payment_intent)
+          } catch (e) {
+            console.error('[webhook] Falha ao atualizar refund em Supabase:', e)
+          }
+        }
         break
       }
 
