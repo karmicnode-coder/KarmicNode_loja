@@ -112,6 +112,9 @@ export default async function handler(req, res) {
       }
       if (item.sku) metadata.sku = String(item.sku)
       if (item.category) metadata.category = String(item.category)
+      // Cartão-presente: o webhook usa este campo para ativar a linha em
+      // gift_cards (estado 'pending' → 'active') quando o pagamento é confirmado.
+      if (item.giftCardCode) metadata.gift_card_code = String(item.giftCardCode)
 
       if (item.stripeId && !item._customization) {
         return {
