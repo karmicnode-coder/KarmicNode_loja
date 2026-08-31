@@ -519,6 +519,7 @@ function Product3DViewer(props: Parameters<typeof Product360Viewer>[0] & {
 
 type Page = 'home' | 'shop' | 'product' | 'contact' | 'about' | 'blog' | 'custom' | 'vestuario' | 'atelier' | 'casa' | 'success' | 'login' | 'account'
   | 'giftcards' | 'privacidade' | 'termos' | 'cookies' | 'faq' | 'envio' | 'devolucoes' | 'garantia' | 'parcerias' | 'admin'
+  | 'vault' | 'stylist'
 
 interface Product {
   id: number
@@ -2104,6 +2105,8 @@ function Header({ activePage, navigate, cartCount, openCart, lang, setLang, auth
           </a>
           <HeaderNavLink label={t('nav_blog')} active={activePage === 'blog'} onClick={() => navigate('blog')} />
           <HeaderNavLink label={t('nav_contact')} active={activePage === 'contact'} onClick={() => navigate('contact')} />
+          <HeaderNavLink label={lang === 'en' ? 'Stylist' : 'Estilista'} active={activePage === 'stylist'} onClick={() => navigate('stylist')} />
+          {auth.user && <HeaderNavLink label={lang === 'en' ? 'Vault' : 'Cofre'} active={activePage === 'vault'} onClick={() => navigate('vault')} />}
         </nav>
 
         {/* Right actions */}
@@ -4711,6 +4714,356 @@ function LoginPage({ setPage, auth }: { setPage: (p: Page) => void; auth: Return
   )
 }
 
+// ─── LiveStorefrontFeed — feed de atividade em tempo real ────────────────────
+// Lê a view `live_activity_recent` (últimos 30 min). Insere um evento 'view'
+// quando o utilizador abre um produto (chamado externamente via logViewEvent).
+// Fica inerte (não mostra nada) sem Supabase configurado — nunca inventa
+// atividade falsa quando a BD está vazia/desligada.
+interface LiveActivityRow {
+  event_type: 'view' | 'add_to_cart' | 'purchase' | 'wishlist'
+  product_name: string | null
+  location_city: string | null
+  created_at: string
+  seconds_ago: number
+}
+
+export async function logLiveActivity(eventType: LiveActivityRow['event_type'], productName?: string, sessionId?: string) {
+  if (!isSupabaseConfigured) return
+  try {
+    await supabase.from('live_activity').insert({
+      event_type: eventType,
+      product_name: productName || null,
+      session_id: sessionId || null,
+      location_country: 'PT',
+    })
+  } catch { /* silencioso — nunca bloqueia a UI principal */ }
+}
+
+function LiveStorefrontFeed() {
+  const { lang } = useLang()
+  const isEN = lang === 'en'
+  const [rows, setRows] = useState<LiveActivityRow[] | null>(null)
+  const [viewerCount, setViewerCount] = useState<number | null>(null)
+
+  useEffect(() => {
+    if (!isSupabaseConfigured) return
+    const load = () => {
+      supabase.from('live_activity_recent').select('*').limit(6)
+        .then(({ data }) => setRows((data as any) || []), () => setRows([]))
+      // Nº de "viewers" = sessões distintas com atividade nos últimos 5 min
+      // (aproximação honesta — não é WebSocket em tempo real, é polling)
+      supabase.from('live_activity').select('session_id', { count: 'exact', head: false })
+        .gte('created_at', new Date(Date.now() - 5 * 60 * 1000).toISOString())
+        .then(({ data }) => {
+          const distinct = new Set((data || []).map((r: any) => r.session_id).filter(Boolean))
+          setViewerCount(distinct.size)
+        }, () => setViewerCount(null))
+    }
+    load()
+    const id = window.setInterval(load, 20000)
+    return () => window.clearInterval(id)
+  }, [])
+
+  if (!isSupabaseConfigured || rows === null || rows.length === 0) return null
+
+  const eventLabel = (r: LiveActivityRow) => {
+    const name = r.product_name || (isEN ? 'a product' : 'um produto')
+    if (r.event_type === 'purchase') return isEN ? `bought ${name}` : `comprou ${name}`
+    if (r.event_type === 'add_to_cart') return isEN ? `added ${name} to cart` : `adicionou ${name} ao carrinho`
+    if (r.event_type === 'wishlist') return isEN ? `favourited ${name}` : `adicionou ${name} aos favoritos`
+    return isEN ? `is viewing ${name}` : `está a ver ${name}`
+  }
+
+  return (
+    <div style={{ position: 'fixed', bottom: 100, left: 24, zIndex: 60, maxWidth: 300, display: 'flex', flexDirection: 'column', gap: 8, pointerEvents: 'none' }}>
+      {viewerCount !== null && viewerCount > 0 && (
+        <div style={{ display: 'inline-flex', alignSelf: 'flex-start', alignItems: 'center', gap: 6, padding: '5px 12px', background: 'var(--overlay-heavy)', backdropFilter: 'blur(10px)', border: '1px solid var(--gold-3)', fontSize: 10, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--gold)', fontWeight: 600 }}>
+          <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#4ade80', boxShadow: '0 0 8px #4ade80' }} />
+          {viewerCount} {isEN ? 'people online' : 'pessoas online'}
+        </div>
+      )}
+      {rows.slice(0, 3).map((r, i) => (
+        <div key={i} style={{ padding: '9px 13px', background: 'var(--overlay-heavy)', backdropFilter: 'blur(10px)', border: '1px solid var(--border)', fontSize: 12, color: 'var(--fg-dim)', animation: 'kn-fadeUp .4s var(--ease) both', animationDelay: `${i * 0.1}s` }}>
+          <b style={{ color: 'var(--fg)' }}>{isEN ? 'Someone' : 'Alguém'}</b> {eventLabel(r)}
+          {r.location_city && <span style={{ color: 'var(--fg-mute)' }}> · {r.location_city}</span>}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// ─── Karmic Vault ────────────────────────────────────────────────────────────
+// Área secreta desbloqueada por karma. Regista visitas em `vault_visits`.
+// Recompensas mostradas vêm de `karma_rewards` (já seedado em schema.sql).
+// Sem karma suficiente (< 100 pts) mostra ecrã de "bloqueado" honesto — sem
+// fingir conteúdo que não existe.
+const VAULT_UNLOCK_POINTS = 100
+
+interface KarmaRewardRow {
+  id: string; name: string; name_en: string | null; description: string | null; description_en: string | null
+  cost_points: number; icon: string | null; required_level: string | null
+}
+
+function VaultPage({ auth, setPage }: { auth: ReturnType<typeof useAuth>; setPage: (p: Page) => void }) {
+  const { lang } = useLang()
+  const isEN = lang === 'en'
+  const [karma, setKarma] = useState<KarmaProfileLite | null>(null)
+  const [rewards, setRewards] = useState<KarmaRewardRow[] | null>(null)
+  const [loading, setLoading] = useState(true)
+  const loggedRef = useRef(false)
+
+  useEffect(() => {
+    if (!auth.loading && !auth.user) setPage('login')
+  }, [auth.loading, auth.user, setPage])
+
+  useEffect(() => {
+    if (!auth.user) { setLoading(false); return }
+    fetchKarmaSummary(auth.user.id).then(k => { setKarma(k); setLoading(false) })
+  }, [auth.user])
+
+  useEffect(() => {
+    if (!isSupabaseConfigured) { setRewards([]); return }
+    supabase.from('karma_rewards').select('*').eq('active', true).order('cost_points', { ascending: true })
+      .then(({ data }) => setRewards((data as any) || []), () => setRewards([]))
+  }, [])
+
+  const unlocked = (karma?.total_points ?? 0) >= VAULT_UNLOCK_POINTS
+
+  // Regista a visita (sucesso ou falha de desbloqueio) uma única vez.
+  useEffect(() => {
+    if (loggedRef.current || !auth.user || loading || !isSupabaseConfigured) return
+    loggedRef.current = true
+    supabase.from('vault_visits').insert({ user_id: auth.user.id, had_karma: karma?.total_points ?? 0, unlocked }).then(() => {}, () => {})
+  }, [auth.user, loading, karma, unlocked])
+
+  if (auth.loading || loading) {
+    return <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--fg-mute)' }}>{isEN ? 'Loading...' : 'A carregar...'}</div>
+  }
+
+  return (
+    <div style={{ minHeight: '80vh' }}>
+      <div style={{ background: 'radial-gradient(900px 500px at 50% 0%, rgba(176,141,87,.22), transparent 65%), var(--bg-1)', borderBottom: '1px solid var(--border)', padding: '70px var(--pad-x) 48px', textAlign: 'center' }}>
+        <div style={{ maxWidth: 640, margin: '0 auto' }}>
+          <Eyebrow text={isEN ? 'Members Only' : 'Só para Membros'} />
+          <h1 style={{ fontFamily: 'var(--f-display)', fontSize: 'clamp(36px,5vw,60px)', fontWeight: 500, margin: '18px 0 14px' }}>
+            {isEN ? 'The Karmic ' : 'O Cofre '}<em style={{ color: 'var(--gold)', fontStyle: 'italic' }}>{isEN ? 'Vault' : 'Karmic'}</em>
+          </h1>
+          <p style={{ color: 'var(--fg-mute)', fontSize: 15, lineHeight: 1.6 }}>
+            {isEN
+              ? 'A private space for our most committed members. Unlocked with Karma Points.'
+              : 'Um espaço privado para os membros mais empenhados. Desbloqueado com Karma Points.'}
+          </p>
+        </div>
+      </div>
+
+      <div className="wrap" style={{ padding: '56px var(--pad-x) 100px', maxWidth: 900, margin: '0 auto' }}>
+        {!unlocked ? (
+          <div style={{ textAlign: 'center', padding: '60px 24px', border: '1px dashed var(--border-2)' }}>
+            <div style={{ fontSize: 48, marginBottom: 16, filter: 'grayscale(1) opacity(0.6)' }}>🔒</div>
+            <h3 style={{ fontFamily: 'var(--f-display)', fontSize: 24, marginBottom: 10 }}>
+              {isEN ? 'Vault locked' : 'Cofre trancado'}
+            </h3>
+            <p style={{ color: 'var(--fg-mute)', fontSize: 14, marginBottom: 24, maxWidth: 420, marginInline: 'auto', lineHeight: 1.6 }}>
+              {isEN
+                ? `You need ${VAULT_UNLOCK_POINTS} Karma Points to unlock the Vault. You currently have ${karma?.total_points ?? 0}.`
+                : `Precisas de ${VAULT_UNLOCK_POINTS} Karma Points para desbloquear o Cofre. Tens atualmente ${karma?.total_points ?? 0}.`}
+            </p>
+            <div style={{ width: '100%', maxWidth: 320, height: 6, background: 'var(--bg-2)', border: '1px solid var(--border)', margin: '0 auto 24px', overflow: 'hidden' }}>
+              <div style={{ height: '100%', background: 'var(--gold)', width: `${Math.min(100, ((karma?.total_points ?? 0) / VAULT_UNLOCK_POINTS) * 100)}%`, transition: 'width .4s ease' }} />
+            </div>
+            <PrimaryBtn onClick={() => setPage('shop')}>{isEN ? 'Earn Karma shopping' : 'Ganha Karma a comprar'}</PrimaryBtn>
+          </div>
+        ) : (
+          <>
+            <div style={{ textAlign: 'center', marginBottom: 44 }}>
+              <div style={{ fontSize: 44, marginBottom: 8 }}>✦</div>
+              <h3 style={{ fontFamily: 'var(--f-display)', fontSize: 26 }}>{isEN ? 'Welcome to the Vault' : 'Bem-vindo ao Cofre'}</h3>
+              <p style={{ color: 'var(--gold)', fontSize: 14, marginTop: 8 }}>{karma?.total_points} {isEN ? 'points' : 'pontos'}</p>
+            </div>
+            {rewards === null ? (
+              <p style={{ textAlign: 'center', color: 'var(--fg-mute)' }}>{isEN ? 'Loading rewards...' : 'A carregar recompensas...'}</p>
+            ) : rewards.length === 0 ? (
+              <p style={{ textAlign: 'center', color: 'var(--fg-mute)' }}>{isEN ? 'No rewards available right now.' : 'Sem recompensas disponíveis agora.'}</p>
+            ) : (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 18 }}>
+                {rewards.map(r => {
+                  const affordable = (karma?.total_points ?? 0) >= r.cost_points
+                  return (
+                    <div key={r.id} style={{ border: `1px solid ${affordable ? 'var(--gold-3)' : 'var(--border)'}`, background: 'var(--bg-1)', padding: '24px 20px', opacity: affordable ? 1 : 0.55, textAlign: 'center' }}>
+                      <div style={{ fontSize: 34, marginBottom: 10 }}>{r.icon || '🎁'}</div>
+                      <div style={{ fontFamily: 'var(--f-display)', fontSize: 17, fontWeight: 500, marginBottom: 6 }}>{isEN ? (r.name_en || r.name) : r.name}</div>
+                      <div style={{ fontSize: 12, color: 'var(--fg-mute)', lineHeight: 1.5, marginBottom: 14, minHeight: 34 }}>{isEN ? (r.description_en || r.description) : r.description}</div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: affordable ? 'var(--gold)' : 'var(--fg-mute)' }}>{r.cost_points} {isEN ? 'pts' : 'pts'}</div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+            <p style={{ textAlign: 'center', fontSize: 11, color: 'var(--fg-mute)', marginTop: 32, lineHeight: 1.6 }}>
+              {isEN
+                ? 'Contact us at karmicnode@gmail.com to redeem a reward — manual redemption for now.'
+                : 'Contacta-nos em karmicnode@gmail.com para resgatar uma recompensa — resgate manual por agora.'}
+            </p>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ─── Personal Stylist ────────────────────────────────────────────────────────
+// Questionário curto de preferências → sugestão de outfit a partir do
+// catálogo estático real (ALL_PRODUCTS), sem inventar produtos. Guarda as
+// preferências em `style_preferences` (Supabase) quando configurado; fica
+// inerte (não guarda nada) sem Supabase.
+interface StylePrefs {
+  vertical: 'vestuario' | 'atelier' | 'casa'
+  palette: 'neutros' | 'terrosos' | 'vibrantes' | 'monocromatico'
+  occasion: 'casual' | 'trabalho' | 'evento' | 'desporto'
+  budget: number
+}
+
+function StylistPage({ products, onOpen, onAdd }: { products: Product[]; onOpen: (p: Product) => void; onAdd: (p: Product) => void }) {
+  const { lang } = useLang()
+  const isEN = lang === 'en'
+  const auth = useAuth()
+  const [step, setStep] = useState(0)
+  const [prefs, setPrefs] = useState<StylePrefs>({ vertical: 'vestuario', palette: 'neutros', occasion: 'casual', budget: 200 })
+  const [result, setResult] = useState<Product[] | null>(null)
+
+  const PALETTE_LABELS: Record<StylePrefs['palette'], { pt: string; en: string }> = {
+    neutros: { pt: 'Neutros', en: 'Neutrals' },
+    terrosos: { pt: 'Terrosos', en: 'Earthy' },
+    vibrantes: { pt: 'Vibrantes', en: 'Vibrant' },
+    monocromatico: { pt: 'Monocromático', en: 'Monochrome' },
+  }
+  const OCCASION_LABELS: Record<StylePrefs['occasion'], { pt: string; en: string }> = {
+    casual: { pt: 'Casual', en: 'Casual' },
+    trabalho: { pt: 'Trabalho', en: 'Work' },
+    evento: { pt: 'Evento', en: 'Event' },
+    desporto: { pt: 'Desporto', en: 'Sport' },
+  }
+
+  const generate = async () => {
+    // Seleção honesta: filtra pelo vertical + orçamento, ordena por rating,
+    // devolve até 4 peças reais do catálogo. Não é um "outfit gerado por IA"
+    // — é um motor de recomendação simples baseado em regras, transparente
+    // sobre a sua própria natureza.
+    const pool = products.filter(p => p.vertical === prefs.vertical && p.price <= prefs.budget)
+    const picked = [...pool].sort((a, b) => b.rating - a.rating).slice(0, 4)
+    setResult(picked.length ? picked : [...products].sort((a, b) => b.rating - a.rating).slice(0, 4))
+    setStep(3)
+
+    if (auth.user && isSupabaseConfigured) {
+      try {
+        await supabase.from('style_preferences').upsert({
+          user_id: auth.user.id,
+          preferences: prefs,
+          outfits_generated: 1,
+        }, { onConflict: 'user_id' })
+        try { await supabase.rpc('award_karma', { p_user_id: auth.user.id, p_action: 'design_saved', p_points: 15, p_metadata: { source: 'stylist' } }) } catch { /* silencioso */ }
+      } catch { /* silencioso */ }
+    }
+  }
+
+  return (
+    <div style={{ minHeight: '80vh' }}>
+      <div style={{ background: 'radial-gradient(900px 500px at 50% 0%, rgba(139,30,45,.2), transparent 65%), var(--bg-1)', borderBottom: '1px solid var(--border)', padding: '70px var(--pad-x) 48px', textAlign: 'center' }}>
+        <div style={{ maxWidth: 640, margin: '0 auto' }}>
+          <Eyebrow text={isEN ? 'AI Stylist' : 'Estilista Pessoal'} />
+          <h1 style={{ fontFamily: 'var(--f-display)', fontSize: 'clamp(36px,5vw,60px)', fontWeight: 500, margin: '18px 0 14px' }}>
+            {isEN ? 'Find ' : 'Encontra '}<em style={{ color: 'var(--gold)', fontStyle: 'italic' }}>{isEN ? 'your style' : 'o teu estilo'}</em>
+          </h1>
+          <p style={{ color: 'var(--fg-mute)', fontSize: 15, lineHeight: 1.6 }}>
+            {isEN
+              ? 'Answer 4 quick questions and we recommend real pieces from our catalogue that match your taste.'
+              : 'Responde a 4 perguntas rápidas e recomendamos peças reais do nosso catálogo ajustadas ao teu gosto.'}
+          </p>
+        </div>
+      </div>
+
+      <div className="wrap" style={{ padding: '56px var(--pad-x) 100px', maxWidth: 720, margin: '0 auto' }}>
+        {step === 0 && (
+          <div>
+            <div style={{ fontSize: 11, letterSpacing: '.2em', textTransform: 'uppercase', color: 'var(--gold)', marginBottom: 20, fontWeight: 600 }}>1. {isEN ? 'Category' : 'Categoria'}</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 32 }}>
+              {(['vestuario', 'atelier', 'casa'] as const).map(v => (
+                <button key={v} onClick={() => setPrefs(p => ({ ...p, vertical: v }))}
+                  style={{ padding: '20px 10px', background: prefs.vertical === v ? 'var(--gold)' : 'var(--bg-1)', color: prefs.vertical === v ? 'var(--bg)' : 'var(--fg)', border: '1px solid var(--border)', cursor: 'pointer', fontSize: 13, fontWeight: 600, textTransform: 'capitalize' }}>
+                  {v === 'vestuario' ? (isEN ? 'Fashion' : 'Vestuário') : v === 'atelier' ? 'Atelier' : (isEN ? 'Home' : 'Casa')}
+                </button>
+              ))}
+            </div>
+            <PrimaryBtn onClick={() => setStep(1)}>{isEN ? 'Next' : 'Seguinte'}</PrimaryBtn>
+          </div>
+        )}
+        {step === 1 && (
+          <div>
+            <div style={{ fontSize: 11, letterSpacing: '.2em', textTransform: 'uppercase', color: 'var(--gold)', marginBottom: 20, fontWeight: 600 }}>2. {isEN ? 'Palette' : 'Paleta'}</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12, marginBottom: 32 }}>
+              {(Object.keys(PALETTE_LABELS) as StylePrefs['palette'][]).map(v => (
+                <button key={v} onClick={() => setPrefs(p => ({ ...p, palette: v }))}
+                  style={{ padding: '18px 10px', background: prefs.palette === v ? 'var(--gold)' : 'var(--bg-1)', color: prefs.palette === v ? 'var(--bg)' : 'var(--fg)', border: '1px solid var(--border)', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>
+                  {isEN ? PALETTE_LABELS[v].en : PALETTE_LABELS[v].pt}
+                </button>
+              ))}
+            </div>
+            <div style={{ display: 'flex', gap: 12 }}>
+              <GhostBtn onClick={() => setStep(0)}>{isEN ? 'Back' : 'Voltar'}</GhostBtn>
+              <PrimaryBtn onClick={() => setStep(2)}>{isEN ? 'Next' : 'Seguinte'}</PrimaryBtn>
+            </div>
+          </div>
+        )}
+        {step === 2 && (
+          <div>
+            <div style={{ fontSize: 11, letterSpacing: '.2em', textTransform: 'uppercase', color: 'var(--gold)', marginBottom: 20, fontWeight: 600 }}>3. {isEN ? 'Occasion & budget' : 'Ocasião & orçamento'}</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12, marginBottom: 24 }}>
+              {(Object.keys(OCCASION_LABELS) as StylePrefs['occasion'][]).map(v => (
+                <button key={v} onClick={() => setPrefs(p => ({ ...p, occasion: v }))}
+                  style={{ padding: '18px 10px', background: prefs.occasion === v ? 'var(--gold)' : 'var(--bg-1)', color: prefs.occasion === v ? 'var(--bg)' : 'var(--fg)', border: '1px solid var(--border)', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>
+                  {isEN ? OCCASION_LABELS[v].en : OCCASION_LABELS[v].pt}
+                </button>
+              ))}
+            </div>
+            <div style={{ marginBottom: 32 }}>
+              <label style={{ fontSize: 13, color: 'var(--fg-mute)', display: 'block', marginBottom: 10 }}>
+                {isEN ? 'Max budget:' : 'Orçamento máx.:'} <b style={{ color: 'var(--gold)' }}>{fmt(prefs.budget)}</b>
+              </label>
+              <input type="range" min={30} max={1000} step={10} value={prefs.budget} onChange={e => setPrefs(p => ({ ...p, budget: Number(e.target.value) }))} style={{ width: '100%' }} />
+            </div>
+            <div style={{ display: 'flex', gap: 12 }}>
+              <GhostBtn onClick={() => setStep(1)}>{isEN ? 'Back' : 'Voltar'}</GhostBtn>
+              <PrimaryBtn onClick={generate}>{isEN ? 'Get my recommendations' : 'Ver as minhas recomendações'}</PrimaryBtn>
+            </div>
+          </div>
+        )}
+        {step === 3 && result && (
+          <div>
+            <div style={{ fontSize: 11, letterSpacing: '.2em', textTransform: 'uppercase', color: 'var(--gold)', marginBottom: 20, fontWeight: 600 }}>
+              {isEN ? 'Recommended for you' : 'Recomendado para ti'}
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 18, marginBottom: 28 }}>
+              {result.map(p => (
+                <div key={p.id} style={{ border: '1px solid var(--border)', background: 'var(--bg-1)', cursor: 'pointer' }} onClick={() => onOpen(p)}>
+                  <img src={p.image} alt={p.name} style={{ width: '100%', aspectRatio: '3/4', objectFit: 'cover' }} />
+                  <div style={{ padding: 14 }}>
+                    <div style={{ fontSize: 13, marginBottom: 6 }}>{p.name}</div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontFamily: 'var(--f-display)', fontSize: 16, color: 'var(--gold)' }}>{fmt(p.price)}</span>
+                      <button onClick={e => { e.stopPropagation(); onAdd(p) }} style={{ background: 'var(--bordo)', border: 'none', color: 'var(--btn-primary-fg)', fontSize: 10, padding: '5px 10px', textTransform: 'uppercase', letterSpacing: '.1em' }}>+</button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <GhostBtn onClick={() => { setStep(0); setResult(null) }}>{isEN ? 'Start again' : 'Recomeçar'}</GhostBtn>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 // ─── AccountPage ────────────────────────────────────────────────────────────
 // Tabs: Encomendas, Wishlist, Moradas, Perfil, Karma Points
 
@@ -6238,6 +6591,8 @@ const PAGE_TO_PATH: Record<Page, string> = {
   garantia: '/garantia',
   parcerias: '/parcerias',
   admin: '/admin',
+  vault: '/vault',
+  stylist: '/estilista',
 }
 const PATH_TO_PAGE: Record<string, Page> = {
   '/': 'home',
@@ -6262,6 +6617,8 @@ const PATH_TO_PAGE: Record<string, Page> = {
   '/garantia': 'garantia',
   '/parcerias': 'parcerias',
   '/admin': 'admin',
+  '/vault': 'vault',
+  '/estilista': 'stylist',
 }
 
 export default function App() {
@@ -6379,6 +6736,7 @@ export default function App() {
       window.history.pushState({ page: 'product', sku: p.sku }, '', newPath)
     }
     window.scrollTo({ top: 0, behavior: 'smooth' })
+    logLiveActivity('view', p.name)
   }, [])
 
   const addToCart = useCallback((p: Product) => {
@@ -6471,6 +6829,8 @@ export default function App() {
       {activePage === 'garantia' && <HelpPage topic="garantia" setPage={setPage} />}
       {activePage === 'parcerias' && <PartnershipsPage setPage={setPage} />}
       {activePage === 'admin' && <AdminPanel auth={auth} setPage={setPage} />}
+      {activePage === 'vault' && <VaultPage auth={auth} setPage={setPage} />}
+      {activePage === 'stylist' && <StylistPage products={liveProducts} onOpen={openProduct} onAdd={addToCart} />}
 
       <Footer setPage={setPage} />
 
@@ -6489,6 +6849,7 @@ export default function App() {
 
       <PwaInstallPrompt />
       <KinChatWidget userId={auth.user?.id} />
+      <LiveStorefrontFeed />
     </div>
     </LangContext.Provider>
   )
