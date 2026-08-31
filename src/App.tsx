@@ -459,7 +459,7 @@ function Product360Viewer({
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 type Page = 'home' | 'shop' | 'product' | 'contact' | 'about' | 'blog' | 'custom' | 'vestuario' | 'atelier' | 'casa' | 'success' | 'login' | 'account'
-  | 'giftcards' | 'privacidade' | 'termos' | 'cookies' | 'faq' | 'envio' | 'devolucoes' | 'garantia' | 'parcerias'
+  | 'giftcards' | 'privacidade' | 'termos' | 'cookies' | 'faq' | 'envio' | 'devolucoes' | 'garantia' | 'parcerias' | 'admin'
 
 interface Product {
   id: number
@@ -4532,10 +4532,18 @@ function AccountPage({ auth, setPage, allProducts, onOpen }: {
               dangerouslySetInnerHTML={{ __html: t('account_title').replace('<em>', '<em style="color:var(--gold);font-style:italic">') }} />
             <p style={{ color: 'var(--fg-mute)', fontSize: 14 }}>{auth.user.email}</p>
           </div>
-          <button onClick={async () => { await auth.signOut(); setPage('home') }}
-            style={{ background: 'transparent', border: '1px solid var(--border)', color: 'var(--fg-mute)', padding: '10px 18px', fontSize: 11, letterSpacing: '.16em', textTransform: 'uppercase', cursor: 'pointer' }}>
-            {t('account_signout')}
-          </button>
+          <div style={{ display: 'flex', gap: 10 }}>
+            {auth.isAdmin && (
+              <button onClick={() => setPage('admin')}
+                style={{ background: 'transparent', border: '1px solid var(--gold-3)', color: 'var(--gold)', padding: '10px 18px', fontSize: 11, letterSpacing: '.16em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 700 }}>
+                👑 Admin
+              </button>
+            )}
+            <button onClick={async () => { await auth.signOut(); setPage('home') }}
+              style={{ background: 'transparent', border: '1px solid var(--border)', color: 'var(--fg-mute)', padding: '10px 18px', fontSize: 11, letterSpacing: '.16em', textTransform: 'uppercase', cursor: 'pointer' }}>
+              {t('account_signout')}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -4668,6 +4676,440 @@ function AccountPage({ auth, setPage, allProducts, onOpen }: {
           </div>
         )}
       </div>
+    </div>
+  )
+}
+
+// ─── AdminPanel ─────────────────────────────────────────────────────────────
+// Gerido por auth.isAdmin (profiles.is_admin=true OU email=karmicnode@gmail.com,
+// ambos já calculados em useAuth()). Todas as tabelas lidas/escritas aqui já
+// existem em supabase/schema.sql — nada de novo a criar no backend.
+// NOTA sobre "Produtos": o catálogo real da loja é o array estático
+// ALL_PRODUCTS em código (arquitetura assumida desde o início do projeto —
+// ver comentário SKU-based catalog). A tabela `products` é reservada para
+// uma futura migração dinâmica; esta aba edita essa tabela paralela, não o
+// catálogo ao vivo, e diz isso explicitamente na UI para não confundir.
+type AdminTab = 'dashboard' | 'orders' | 'reviews' | 'partnerships' | 'promos' | 'giftcards' | 'newsletter'
+
+const ADMIN_TABS: { id: AdminTab; label: string }[] = [
+  { id: 'dashboard', label: 'Dashboard' },
+  { id: 'orders', label: 'Encomendas' },
+  { id: 'reviews', label: 'Avaliações' },
+  { id: 'partnerships', label: 'Parcerias' },
+  { id: 'promos', label: 'Promos' },
+  { id: 'giftcards', label: 'Gift Cards' },
+  { id: 'newsletter', label: 'Newsletter' },
+]
+
+function AdminPanel({ auth, setPage }: { auth: ReturnType<typeof useAuth>; setPage: (p: Page) => void }) {
+  const [tab, setTab] = useState<AdminTab>('dashboard')
+
+  useEffect(() => {
+    if (!auth.loading && !auth.isAdmin) setPage('home')
+  }, [auth.loading, auth.isAdmin, setPage])
+
+  if (auth.loading) {
+    return <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--fg-mute)' }}>A carregar...</div>
+  }
+  if (!auth.isAdmin) {
+    return <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--fg-mute)' }}>Acesso restrito.</div>
+  }
+
+  return (
+    <div style={{ padding: 'clamp(20px, 4vw, 50px)', maxWidth: 1300, margin: '0 auto' }}>
+      <div style={{ marginBottom: 24 }}>
+        <div style={{ fontSize: 10, letterSpacing: '.28em', textTransform: 'uppercase', color: 'var(--gold)', fontWeight: 700, marginBottom: 6 }}>Área Administrativa</div>
+        <h1 style={{ fontFamily: 'var(--f-display)', fontSize: 'clamp(26px, 4vw, 38px)', margin: 0, fontWeight: 500 }}>Painel <em style={{ color: 'var(--gold)' }}>Karmic</em></h1>
+      </div>
+
+      <div style={{ display: 'flex', gap: 4, borderBottom: '1px solid var(--border)', marginBottom: 28, flexWrap: 'wrap' }}>
+        {ADMIN_TABS.map(tb => (
+          <button key={tb.id} onClick={() => setTab(tb.id)}
+            style={{ padding: '10px 16px', background: 'transparent', border: 'none', borderBottom: `2px solid ${tab === tb.id ? 'var(--gold)' : 'transparent'}`, color: tab === tb.id ? 'var(--gold)' : 'var(--fg-mute)', fontSize: 11, letterSpacing: '.14em', textTransform: 'uppercase', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+            {tb.label}
+          </button>
+        ))}
+      </div>
+
+      {tab === 'dashboard' && <AdminDashboardTab />}
+      {tab === 'orders' && <AdminOrdersTab />}
+      {tab === 'reviews' && <AdminReviewsTab />}
+      {tab === 'partnerships' && <AdminPartnershipsTab />}
+      {tab === 'promos' && <AdminPromosTab />}
+      {tab === 'giftcards' && <AdminGiftCardsTab />}
+      {tab === 'newsletter' && <AdminNewsletterTab />}
+    </div>
+  )
+}
+
+function AdminStatCard({ label, value }: { label: string; value: string | number }) {
+  return (
+    <div style={{ padding: 18, background: 'var(--bg-1)', border: '1px solid var(--border)' }}>
+      <div style={{ fontSize: 10, letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--fg-mute)', marginBottom: 8, fontWeight: 600 }}>{label}</div>
+      <div style={{ fontFamily: 'var(--f-display)', fontSize: 28, fontWeight: 600, color: 'var(--gold)' }}>{value}</div>
+    </div>
+  )
+}
+
+interface AdminDashboardRow {
+  total_revenue_cents: number; paid_orders: number; total_orders: number; pending_orders: number
+  total_users: number; avg_rating: number; total_reviews: number; pending_reviews: number
+  new_partnerships: number; newsletter_subs: number; active_gift_cards: number; active_promos: number
+  active_products: number; total_karma_distributed: number
+}
+
+function AdminDashboardTab() {
+  const [data, setData] = useState<AdminDashboardRow | null>(null)
+  const [err, setErr] = useState(false)
+
+  useEffect(() => {
+    if (!isSupabaseConfigured) { setErr(true); return }
+    supabase.from('admin_dashboard').select('*').single()
+      .then(({ data, error }) => { if (error) setErr(true); else setData(data as any) }, () => setErr(true))
+  }, [])
+
+  if (!isSupabaseConfigured) {
+    return <p style={{ color: 'var(--fg-mute)', fontSize: 14 }}>Supabase não configurado — o dashboard fica inerte até as credenciais serem definidas.</p>
+  }
+  if (err) return <p style={{ color: 'var(--fg-mute)', fontSize: 14 }}>Não foi possível carregar as métricas (a view admin_dashboard pode não existir ainda na tua base de dados — corre o schema.sql atualizado).</p>
+  if (!data) return <p style={{ color: 'var(--fg-mute)', fontSize: 14 }}>A carregar...</p>
+
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14 }}>
+      <AdminStatCard label="Receita total" value={fmt(data.total_revenue_cents / 100)} />
+      <AdminStatCard label="Encomendas pagas" value={data.paid_orders} />
+      <AdminStatCard label="Encomendas totais" value={data.total_orders} />
+      <AdminStatCard label="Pendentes" value={data.pending_orders} />
+      <AdminStatCard label="Utilizadores" value={data.total_users} />
+      <AdminStatCard label="Avaliação média" value={data.avg_rating} />
+      <AdminStatCard label="Avaliações totais" value={data.total_reviews} />
+      <AdminStatCard label="Avaliações pendentes" value={data.pending_reviews} />
+      <AdminStatCard label="Parcerias novas" value={data.new_partnerships} />
+      <AdminStatCard label="Newsletter (ativos)" value={data.newsletter_subs} />
+      <AdminStatCard label="Gift cards ativos" value={data.active_gift_cards} />
+      <AdminStatCard label="Promos ativas" value={data.active_promos} />
+      <AdminStatCard label="Karma distribuído" value={data.total_karma_distributed} />
+    </div>
+  )
+}
+
+interface AdminOrderRow {
+  id: string; order_number: string | null; customer_email: string; customer_name: string | null
+  status: string; total_cents: number; currency: string; created_at: string; tracking_number: string | null
+}
+const ORDER_STATUSES = ['pending', 'paid', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded']
+
+function AdminOrdersTab() {
+  const [orders, setOrders] = useState<AdminOrderRow[] | null>(null)
+  const [filter, setFilter] = useState('all')
+
+  const load = useCallback(() => {
+    if (!isSupabaseConfigured) { setOrders([]); return }
+    let q = supabase.from('orders').select('id, order_number, customer_email, customer_name, status, total_cents, currency, created_at, tracking_number').order('created_at', { ascending: false }).limit(100)
+    if (filter !== 'all') q = q.eq('status', filter)
+    q.then(({ data }) => setOrders((data as any) || []), () => setOrders([]))
+  }, [filter])
+
+  useEffect(() => { load() }, [load])
+
+  const updateStatus = async (id: string, status: string) => {
+    await supabase.from('orders').update({ status, updated_at: new Date().toISOString() }).eq('id', id)
+    load()
+  }
+
+  return (
+    <div>
+      <div style={{ display: 'flex', gap: 6, marginBottom: 18, flexWrap: 'wrap' }}>
+        <button onClick={() => setFilter('all')} style={{ padding: '6px 12px', background: filter === 'all' ? 'var(--gold)' : 'var(--bg-1)', color: filter === 'all' ? 'var(--bg)' : 'var(--fg-mute)', border: '1px solid var(--border)', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit' }}>Todas</button>
+        {ORDER_STATUSES.map(s => (
+          <button key={s} onClick={() => setFilter(s)} style={{ padding: '6px 12px', background: filter === s ? 'var(--gold)' : 'var(--bg-1)', color: filter === s ? 'var(--bg)' : 'var(--fg-mute)', border: '1px solid var(--border)', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit' }}>{s}</button>
+        ))}
+      </div>
+      {orders === null ? <p style={{ color: 'var(--fg-mute)' }}>A carregar...</p> : orders.length === 0 ? <p style={{ color: 'var(--fg-mute)' }}>Sem encomendas.</p> : (
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+            <thead>
+              <tr style={{ borderBottom: '1px solid var(--border)', textAlign: 'left' }}>
+                {['Nº', 'Cliente', 'Total', 'Estado', 'Data', ''].map(h => (
+                  <th key={h} style={{ padding: '10px 8px', color: 'var(--fg-mute)', fontSize: 10, letterSpacing: '.12em', textTransform: 'uppercase' }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {orders.map(o => (
+                <tr key={o.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                  <td style={{ padding: '10px 8px' }}>{o.order_number || o.id.slice(0, 8)}</td>
+                  <td style={{ padding: '10px 8px' }}>{o.customer_name || o.customer_email}</td>
+                  <td style={{ padding: '10px 8px' }}>{fmt(o.total_cents / 100)}</td>
+                  <td style={{ padding: '10px 8px' }}>
+                    <select value={o.status} onChange={e => updateStatus(o.id, e.target.value)} style={{ background: 'var(--bg-2)', color: 'var(--fg)', border: '1px solid var(--border)', padding: '4px 6px', fontSize: 12, fontFamily: 'inherit' }}>
+                      {ORDER_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                  </td>
+                  <td style={{ padding: '10px 8px', color: 'var(--fg-mute)' }}>{new Date(o.created_at).toLocaleDateString('pt-PT')}</td>
+                  <td style={{ padding: '10px 8px', color: 'var(--fg-mute)' }}>{o.tracking_number || '—'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  )
+}
+
+interface AdminReviewRow {
+  id: string; product_sku: string; user_name: string | null; rating: number
+  title: string | null; body: string | null; status: string; created_at: string
+}
+function AdminReviewsTab() {
+  const [reviews, setReviews] = useState<AdminReviewRow[] | null>(null)
+  const [filter, setFilter] = useState('pending')
+
+  const load = useCallback(() => {
+    if (!isSupabaseConfigured) { setReviews([]); return }
+    let q = supabase.from('reviews').select('id, product_sku, user_name, rating, title, body, status, created_at').order('created_at', { ascending: false }).limit(100)
+    if (filter !== 'all') q = q.eq('status', filter)
+    q.then(({ data }) => setReviews((data as any) || []), () => setReviews([]))
+  }, [filter])
+
+  useEffect(() => { load() }, [load])
+
+  const moderate = async (id: string, status: string) => {
+    await supabase.from('reviews').update({ status, moderated_at: new Date().toISOString() }).eq('id', id)
+    load()
+  }
+
+  return (
+    <div>
+      <div style={{ display: 'flex', gap: 6, marginBottom: 18 }}>
+        {['pending', 'approved', 'rejected', 'flagged', 'all'].map(s => (
+          <button key={s} onClick={() => setFilter(s)} style={{ padding: '6px 12px', background: filter === s ? 'var(--gold)' : 'var(--bg-1)', color: filter === s ? 'var(--bg)' : 'var(--fg-mute)', border: '1px solid var(--border)', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit' }}>{s}</button>
+        ))}
+      </div>
+      {reviews === null ? <p style={{ color: 'var(--fg-mute)' }}>A carregar...</p> : reviews.length === 0 ? <p style={{ color: 'var(--fg-mute)' }}>Sem avaliações.</p> : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {reviews.map(r => (
+            <div key={r.id} style={{ padding: 16, background: 'var(--bg-1)', border: '1px solid var(--border)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, marginBottom: 6, flexWrap: 'wrap' }}>
+                <div><Stars rating={r.rating} size={12} /> <span style={{ fontSize: 12, color: 'var(--fg-mute)', marginLeft: 8 }}>{r.product_sku} · {r.user_name || 'Anónimo'}</span></div>
+                <span style={{ fontSize: 11, textTransform: 'uppercase', color: 'var(--gold)', fontWeight: 700 }}>{r.status}</span>
+              </div>
+              {r.title && <div style={{ fontWeight: 600, marginBottom: 4, fontSize: 14 }}>{r.title}</div>}
+              {r.body && <p style={{ fontSize: 13, color: 'var(--fg-dim)', margin: '0 0 10px' }}>{r.body}</p>}
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button onClick={() => moderate(r.id, 'approved')} style={{ padding: '6px 12px', background: '#2e7d32', color: '#fff', border: 'none', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit' }}>Aprovar</button>
+                <button onClick={() => moderate(r.id, 'rejected')} style={{ padding: '6px 12px', background: 'var(--bordo)', color: '#fff', border: 'none', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit' }}>Rejeitar</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+interface AdminPartnershipRow {
+  id: string; program: string; program_name: string | null; data: Record<string, string>
+  status: string; created_at: string
+}
+function AdminPartnershipsTab() {
+  const [rows, setRows] = useState<AdminPartnershipRow[] | null>(null)
+  const [filter, setFilter] = useState('new')
+
+  const load = useCallback(() => {
+    if (!isSupabaseConfigured) { setRows([]); return }
+    let q = supabase.from('partnership_applications').select('id, program, program_name, data, status, created_at').order('created_at', { ascending: false }).limit(100)
+    if (filter !== 'all') q = q.eq('status', filter)
+    q.then(({ data }) => setRows((data as any) || []), () => setRows([]))
+  }, [filter])
+
+  useEffect(() => { load() }, [load])
+
+  const updateStatus = async (id: string, status: string) => {
+    await supabase.from('partnership_applications').update({ status, reviewed_at: new Date().toISOString() }).eq('id', id)
+    load()
+  }
+
+  return (
+    <div>
+      <div style={{ display: 'flex', gap: 6, marginBottom: 18, flexWrap: 'wrap' }}>
+        {['new', 'reviewing', 'approved', 'rejected', 'contacted', 'all'].map(s => (
+          <button key={s} onClick={() => setFilter(s)} style={{ padding: '6px 12px', background: filter === s ? 'var(--gold)' : 'var(--bg-1)', color: filter === s ? 'var(--bg)' : 'var(--fg-mute)', border: '1px solid var(--border)', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit' }}>{s}</button>
+        ))}
+      </div>
+      {rows === null ? <p style={{ color: 'var(--fg-mute)' }}>A carregar...</p> : rows.length === 0 ? <p style={{ color: 'var(--fg-mute)' }}>Sem candidaturas.</p> : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {rows.map(r => (
+            <div key={r.id} style={{ padding: 16, background: 'var(--bg-1)', border: '1px solid var(--border)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, marginBottom: 8, flexWrap: 'wrap' }}>
+                <strong style={{ fontSize: 14 }}>{r.program_name || r.program}</strong>
+                <span style={{ fontSize: 11, textTransform: 'uppercase', color: 'var(--gold)', fontWeight: 700 }}>{r.status}</span>
+              </div>
+              <div style={{ fontSize: 12, color: 'var(--fg-dim)', marginBottom: 10 }}>
+                {Object.entries(r.data || {}).map(([k, v]) => <div key={k}><strong>{k}:</strong> {String(v)}</div>)}
+              </div>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                {['reviewing', 'approved', 'rejected', 'contacted'].map(s => (
+                  <button key={s} onClick={() => updateStatus(r.id, s)} style={{ padding: '5px 10px', background: 'var(--bg-2)', color: 'var(--fg-mute)', border: '1px solid var(--border)', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit' }}>{s}</button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+interface AdminPromoRow {
+  id: string; code: string; discount_type: string; discount_value: number
+  used_count: number; max_uses: number | null; is_active: boolean
+}
+function AdminPromosTab() {
+  const [rows, setRows] = useState<AdminPromoRow[] | null>(null)
+  const [newCode, setNewCode] = useState('')
+  const [newValue, setNewValue] = useState(10)
+
+  const load = useCallback(() => {
+    if (!isSupabaseConfigured) { setRows([]); return }
+    supabase.from('promo_codes').select('id, code, discount_type, discount_value, used_count, max_uses, is_active').order('created_at', { ascending: false })
+      .then(({ data }) => setRows((data as any) || []), () => setRows([]))
+  }, [])
+
+  useEffect(() => { load() }, [load])
+
+  const toggleActive = async (id: string, is_active: boolean) => {
+    await supabase.from('promo_codes').update({ is_active: !is_active }).eq('id', id)
+    load()
+  }
+
+  const createCode = async () => {
+    if (!newCode.trim()) return
+    await supabase.from('promo_codes').insert({ code: newCode.toUpperCase(), name: newCode, discount_type: 'percentage', discount_value: newValue, is_active: true })
+    setNewCode(''); setNewValue(10)
+    load()
+  }
+
+  return (
+    <div>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 24, flexWrap: 'wrap', alignItems: 'center' }}>
+        <input value={newCode} onChange={e => setNewCode(e.target.value)} placeholder="NOVO_CODIGO" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)', color: 'var(--fg)', padding: '8px 12px', fontSize: 13, fontFamily: 'inherit' }} />
+        <input type="number" value={newValue} onChange={e => setNewValue(Number(e.target.value))} style={{ width: 70, background: 'var(--bg-2)', border: '1px solid var(--border)', color: 'var(--fg)', padding: '8px 12px', fontSize: 13, fontFamily: 'inherit' }} />
+        <span style={{ fontSize: 12, color: 'var(--fg-mute)' }}>% desconto</span>
+        <button onClick={createCode} style={{ padding: '8px 16px', background: 'var(--gold)', color: 'var(--bg)', border: 'none', fontSize: 11, letterSpacing: '.14em', textTransform: 'uppercase', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>Criar</button>
+      </div>
+      {rows === null ? <p style={{ color: 'var(--fg-mute)' }}>A carregar...</p> : (
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+          <thead>
+            <tr style={{ borderBottom: '1px solid var(--border)', textAlign: 'left' }}>
+              {['Código', 'Tipo', 'Valor', 'Usos', 'Ativo'].map(h => <th key={h} style={{ padding: '10px 8px', color: 'var(--fg-mute)', fontSize: 10, textTransform: 'uppercase' }}>{h}</th>)}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map(p => (
+              <tr key={p.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                <td style={{ padding: '10px 8px', fontWeight: 600 }}>{p.code}</td>
+                <td style={{ padding: '10px 8px' }}>{p.discount_type}</td>
+                <td style={{ padding: '10px 8px' }}>{p.discount_value}{p.discount_type === 'percentage' ? '%' : ''}</td>
+                <td style={{ padding: '10px 8px' }}>{p.used_count}{p.max_uses ? ` / ${p.max_uses}` : ''}</td>
+                <td style={{ padding: '10px 8px' }}>
+                  <button onClick={() => toggleActive(p.id, p.is_active)} style={{ padding: '4px 10px', background: p.is_active ? '#2e7d32' : 'var(--bg-3)', color: '#fff', border: 'none', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit' }}>{p.is_active ? 'Ativo' : 'Inativo'}</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </div>
+  )
+}
+
+interface AdminGiftCardRow {
+  id: string; code: string; initial_value_cents: number; remaining_value_cents: number
+  recipient_email: string | null; status: string; created_at: string
+}
+function AdminGiftCardsTab() {
+  const [rows, setRows] = useState<AdminGiftCardRow[] | null>(null)
+
+  useEffect(() => {
+    if (!isSupabaseConfigured) { setRows([]); return }
+    supabase.from('gift_cards').select('id, code, initial_value_cents, remaining_value_cents, recipient_email, status, created_at').order('created_at', { ascending: false }).limit(100)
+      .then(({ data }) => setRows((data as any) || []), () => setRows([]))
+  }, [])
+
+  return (
+    <div>
+      {rows === null ? <p style={{ color: 'var(--fg-mute)' }}>A carregar...</p> : rows.length === 0 ? <p style={{ color: 'var(--fg-mute)' }}>Sem cartões-presente.</p> : (
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+          <thead>
+            <tr style={{ borderBottom: '1px solid var(--border)', textAlign: 'left' }}>
+              {['Código', 'Valor inicial', 'Restante', 'Destinatário', 'Estado', 'Data'].map(h => <th key={h} style={{ padding: '10px 8px', color: 'var(--fg-mute)', fontSize: 10, textTransform: 'uppercase' }}>{h}</th>)}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map(g => (
+              <tr key={g.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                <td style={{ padding: '10px 8px', fontWeight: 600 }}>{g.code}</td>
+                <td style={{ padding: '10px 8px' }}>{fmt(g.initial_value_cents / 100)}</td>
+                <td style={{ padding: '10px 8px' }}>{fmt(g.remaining_value_cents / 100)}</td>
+                <td style={{ padding: '10px 8px' }}>{g.recipient_email || '—'}</td>
+                <td style={{ padding: '10px 8px' }}>{g.status}</td>
+                <td style={{ padding: '10px 8px', color: 'var(--fg-mute)' }}>{new Date(g.created_at).toLocaleDateString('pt-PT')}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </div>
+  )
+}
+
+interface AdminNewsletterRow { email: string; language: string; is_active: boolean; created_at: string }
+function AdminNewsletterTab() {
+  const [rows, setRows] = useState<AdminNewsletterRow[] | null>(null)
+
+  useEffect(() => {
+    if (!isSupabaseConfigured) { setRows([]); return }
+    supabase.from('newsletter_subs').select('email, language, is_active, created_at').order('created_at', { ascending: false }).limit(500)
+      .then(({ data }) => setRows((data as any) || []), () => setRows([]))
+  }, [])
+
+  const exportCsv = () => {
+    if (!rows || !rows.length) return
+    const csv = 'email,language,active,created_at\n' + rows.map(r => `${r.email},${r.language},${r.is_active},${r.created_at}`).join('\n')
+    const blob = new Blob([csv], { type: 'text/csv' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url; a.download = 'newsletter_subs.csv'; a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  return (
+    <div>
+      <div style={{ marginBottom: 18, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <span style={{ fontSize: 13, color: 'var(--fg-mute)' }}>{rows?.length ?? 0} inscritos</span>
+        <button onClick={exportCsv} disabled={!rows?.length} style={{ padding: '8px 16px', background: 'var(--gold)', color: 'var(--bg)', border: 'none', fontSize: 11, letterSpacing: '.14em', textTransform: 'uppercase', fontWeight: 700, cursor: rows?.length ? 'pointer' : 'not-allowed', fontFamily: 'inherit' }}>Exportar CSV</button>
+      </div>
+      {rows === null ? <p style={{ color: 'var(--fg-mute)' }}>A carregar...</p> : (
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+          <thead>
+            <tr style={{ borderBottom: '1px solid var(--border)', textAlign: 'left' }}>
+              {['Email', 'Idioma', 'Ativo', 'Desde'].map(h => <th key={h} style={{ padding: '10px 8px', color: 'var(--fg-mute)', fontSize: 10, textTransform: 'uppercase' }}>{h}</th>)}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map(r => (
+              <tr key={r.email} style={{ borderBottom: '1px solid var(--border)' }}>
+                <td style={{ padding: '10px 8px' }}>{r.email}</td>
+                <td style={{ padding: '10px 8px' }}>{r.language}</td>
+                <td style={{ padding: '10px 8px' }}>{r.is_active ? '✓' : '✗'}</td>
+                <td style={{ padding: '10px 8px', color: 'var(--fg-mute)' }}>{new Date(r.created_at).toLocaleDateString('pt-PT')}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
     </div>
   )
 }
@@ -5349,6 +5791,7 @@ const PAGE_TO_PATH: Record<Page, string> = {
   devolucoes: '/devolucoes',
   garantia: '/garantia',
   parcerias: '/parcerias',
+  admin: '/admin',
 }
 const PATH_TO_PAGE: Record<string, Page> = {
   '/': 'home',
@@ -5372,6 +5815,7 @@ const PATH_TO_PAGE: Record<string, Page> = {
   '/devolucoes': 'devolucoes',
   '/garantia': 'garantia',
   '/parcerias': 'parcerias',
+  '/admin': 'admin',
 }
 
 export default function App() {
@@ -5580,6 +6024,7 @@ export default function App() {
       {activePage === 'devolucoes' && <HelpPage topic="devolucoes" setPage={setPage} />}
       {activePage === 'garantia' && <HelpPage topic="garantia" setPage={setPage} />}
       {activePage === 'parcerias' && <PartnershipsPage setPage={setPage} />}
+      {activePage === 'admin' && <AdminPanel auth={auth} setPage={setPage} />}
 
       <Footer setPage={setPage} />
 
