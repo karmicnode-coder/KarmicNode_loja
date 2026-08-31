@@ -4689,12 +4689,14 @@ function AccountPage({ auth, setPage, allProducts, onOpen }: {
 // ver comentário SKU-based catalog). A tabela `products` é reservada para
 // uma futura migração dinâmica; esta aba edita essa tabela paralela, não o
 // catálogo ao vivo, e diz isso explicitamente na UI para não confundir.
-type AdminTab = 'dashboard' | 'orders' | 'reviews' | 'partnerships' | 'promos' | 'giftcards' | 'newsletter'
+type AdminTab = 'dashboard' | 'orders' | 'reviews' | 'partnerships' | 'promos' | 'giftcards' | 'newsletter' | 'products' | 'users'
 
 const ADMIN_TABS: { id: AdminTab; label: string }[] = [
   { id: 'dashboard', label: 'Dashboard' },
   { id: 'orders', label: 'Encomendas' },
+  { id: 'products', label: 'Produtos' },
   { id: 'reviews', label: 'Avaliações' },
+  { id: 'users', label: 'Utilizadores' },
   { id: 'partnerships', label: 'Parcerias' },
   { id: 'promos', label: 'Promos' },
   { id: 'giftcards', label: 'Gift Cards' },
@@ -4733,7 +4735,9 @@ function AdminPanel({ auth, setPage }: { auth: ReturnType<typeof useAuth>; setPa
 
       {tab === 'dashboard' && <AdminDashboardTab />}
       {tab === 'orders' && <AdminOrdersTab />}
+      {tab === 'products' && <AdminProductsTab />}
       {tab === 'reviews' && <AdminReviewsTab />}
+      {tab === 'users' && <AdminUsersTab currentUserId={auth.user?.id} />}
       {tab === 'partnerships' && <AdminPartnershipsTab />}
       {tab === 'promos' && <AdminPromosTab />}
       {tab === 'giftcards' && <AdminGiftCardsTab />}
@@ -4956,6 +4960,172 @@ function AdminPartnershipsTab() {
               </div>
             </div>
           ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── AdminProductsTab ───────────────────────────────────────────────────
+// IMPORTANTE: esta aba edita a tabela `products` do Supabase, que existe
+// no schema como catálogo reservado para uma FUTURA migração para catálogo
+// dinâmico (ver supabase/schema.sql secção 3). A loja pública em produção
+// continua a ler o catálogo ESTÁTICO embutido em ALL_PRODUCTS (App.tsx) —
+// editar aqui NÃO altera o que os clientes veem na loja. Mantido assim de
+// propósito para não misturar as duas fontes de dados sem migração
+// explícita; serve para já para gerir stock/preço de forma centralizada
+// e preparar essa migração futura.
+interface AdminProductRow {
+  id: string; sku: string; name: string; category: string; vertical: string | null
+  price_cents: number; stock: number; is_active: boolean; is_featured: boolean
+}
+function AdminProductsTab() {
+  const [rows, setRows] = useState<AdminProductRow[] | null>(null)
+  const [search, setSearch] = useState('')
+  const [showForm, setShowForm] = useState(false)
+  const [formSku, setFormSku] = useState('')
+  const [formName, setFormName] = useState('')
+  const [formCategory, setFormCategory] = useState('')
+  const [formPrice, setFormPrice] = useState(0)
+  const [formStock, setFormStock] = useState(0)
+  const [saving, setSaving] = useState(false)
+
+  const load = useCallback(() => {
+    if (!isSupabaseConfigured) { setRows([]); return }
+    supabase.from('products').select('id, sku, name, category, vertical, price_cents, stock, is_active, is_featured').order('created_at', { ascending: false }).limit(200)
+      .then(({ data }) => setRows((data as any) || []), () => setRows([]))
+  }, [])
+
+  useEffect(() => { load() }, [load])
+
+  const toggleActive = async (id: string, is_active: boolean) => {
+    await supabase.from('products').update({ is_active: !is_active }).eq('id', id)
+    load()
+  }
+
+  const updateStock = async (id: string, stock: number) => {
+    await supabase.from('products').update({ stock }).eq('id', id)
+    load()
+  }
+
+  const createProduct = async () => {
+    if (!formSku.trim() || !formName.trim() || !formCategory.trim()) return
+    setSaving(true)
+    await supabase.from('products').insert({
+      sku: formSku.trim().toUpperCase(), name: formName.trim(), category: formCategory.trim(),
+      price_cents: Math.round(formPrice * 100), stock: formStock, is_active: true,
+    })
+    setSaving(false); setShowForm(false)
+    setFormSku(''); setFormName(''); setFormCategory(''); setFormPrice(0); setFormStock(0)
+    load()
+  }
+
+  const filtered = rows?.filter(r => !search || r.sku.toLowerCase().includes(search.toLowerCase()) || r.name.toLowerCase().includes(search.toLowerCase())) ?? null
+
+  return (
+    <div>
+      <div style={{ padding: 14, marginBottom: 20, background: 'var(--gold)15', border: '1px solid var(--gold-3)', fontSize: 12, color: 'var(--fg-dim)', lineHeight: 1.6 }}>
+        ⚠️ Esta tabela é um catálogo <b>reservado para migração futura</b>. A loja pública lê o catálogo estático (ALL_PRODUCTS) — editar aqui não afeta o que os clientes veem, ainda.
+      </div>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 18, flexWrap: 'wrap', alignItems: 'center' }}>
+        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Pesquisar SKU ou nome..." style={{ flex: 1, minWidth: 200, background: 'var(--bg-2)', border: '1px solid var(--border)', color: 'var(--fg)', padding: '8px 12px', fontSize: 13, fontFamily: 'inherit' }} />
+        <button onClick={() => setShowForm(v => !v)} style={{ padding: '8px 16px', background: 'var(--gold)', color: 'var(--bg)', border: 'none', fontSize: 11, letterSpacing: '.14em', textTransform: 'uppercase', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+          {showForm ? 'Cancelar' : '+ Novo Produto'}
+        </button>
+      </div>
+      {showForm && (
+        <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap', alignItems: 'center', padding: 14, background: 'var(--bg-1)', border: '1px solid var(--border)' }}>
+          <input value={formSku} onChange={e => setFormSku(e.target.value)} placeholder="SKU (ex: KN-050)" style={{ width: 120, background: 'var(--bg-2)', border: '1px solid var(--border)', color: 'var(--fg)', padding: '8px 10px', fontSize: 13, fontFamily: 'inherit' }} />
+          <input value={formName} onChange={e => setFormName(e.target.value)} placeholder="Nome" style={{ flex: 1, minWidth: 140, background: 'var(--bg-2)', border: '1px solid var(--border)', color: 'var(--fg)', padding: '8px 10px', fontSize: 13, fontFamily: 'inherit' }} />
+          <input value={formCategory} onChange={e => setFormCategory(e.target.value)} placeholder="Categoria" style={{ width: 140, background: 'var(--bg-2)', border: '1px solid var(--border)', color: 'var(--fg)', padding: '8px 10px', fontSize: 13, fontFamily: 'inherit' }} />
+          <input type="number" value={formPrice} onChange={e => setFormPrice(Number(e.target.value))} placeholder="Preço €" style={{ width: 90, background: 'var(--bg-2)', border: '1px solid var(--border)', color: 'var(--fg)', padding: '8px 10px', fontSize: 13, fontFamily: 'inherit' }} />
+          <input type="number" value={formStock} onChange={e => setFormStock(Number(e.target.value))} placeholder="Stock" style={{ width: 80, background: 'var(--bg-2)', border: '1px solid var(--border)', color: 'var(--fg)', padding: '8px 10px', fontSize: 13, fontFamily: 'inherit' }} />
+          <button onClick={createProduct} disabled={saving} style={{ padding: '8px 16px', background: 'var(--gold)', color: 'var(--bg)', border: 'none', fontSize: 11, letterSpacing: '.1em', textTransform: 'uppercase', fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}>
+            {saving ? 'A guardar...' : 'Guardar'}
+          </button>
+        </div>
+      )}
+      {filtered === null ? <p style={{ color: 'var(--fg-mute)' }}>A carregar...</p> : filtered.length === 0 ? <p style={{ color: 'var(--fg-mute)' }}>Sem produtos na tabela `products` (o catálogo público continua a funcionar via ALL_PRODUCTS).</p> : (
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+            <thead>
+              <tr style={{ borderBottom: '1px solid var(--border)', textAlign: 'left' }}>
+                {['SKU', 'Nome', 'Categoria', 'Preço', 'Stock', 'Ativo'].map(h => <th key={h} style={{ padding: '10px 8px', color: 'var(--fg-mute)', fontSize: 10, textTransform: 'uppercase' }}>{h}</th>)}
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map(p => (
+                <tr key={p.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                  <td style={{ padding: '10px 8px', fontWeight: 600 }}>{p.sku}</td>
+                  <td style={{ padding: '10px 8px' }}>{p.name}</td>
+                  <td style={{ padding: '10px 8px', color: 'var(--fg-mute)' }}>{p.category}</td>
+                  <td style={{ padding: '10px 8px' }}>{fmt(p.price_cents / 100)}</td>
+                  <td style={{ padding: '10px 8px' }}>
+                    <input type="number" defaultValue={p.stock} onBlur={e => { const v = Number(e.target.value); if (v !== p.stock) updateStock(p.id, v) }} style={{ width: 60, background: 'var(--bg-2)', border: '1px solid var(--border)', color: 'var(--fg)', padding: '4px 6px', fontSize: 12, fontFamily: 'inherit' }} />
+                  </td>
+                  <td style={{ padding: '10px 8px' }}>
+                    <button onClick={() => toggleActive(p.id, p.is_active)} style={{ padding: '4px 10px', background: p.is_active ? '#2e7d32' : 'var(--bg-3)', color: '#fff', border: 'none', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit' }}>{p.is_active ? 'Ativo' : 'Inativo'}</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── AdminUsersTab ──────────────────────────────────────────────────────
+interface AdminUserRow {
+  id: string; email: string | null; full_name: string | null; is_admin: boolean; created_at: string
+}
+function AdminUsersTab({ currentUserId }: { currentUserId?: string }) {
+  const [rows, setRows] = useState<AdminUserRow[] | null>(null)
+  const [search, setSearch] = useState('')
+
+  const load = useCallback(() => {
+    if (!isSupabaseConfigured) { setRows([]); return }
+    supabase.from('profiles').select('id, email, full_name, is_admin, created_at').order('created_at', { ascending: false }).limit(300)
+      .then(({ data }) => setRows((data as any) || []), () => setRows([]))
+  }, [])
+
+  useEffect(() => { load() }, [load])
+
+  const toggleAdmin = async (id: string, is_admin: boolean) => {
+    if (id === currentUserId && is_admin) {
+      if (!window.confirm('Vais remover o teu próprio acesso de admin. Continuar?')) return
+    }
+    await supabase.from('profiles').update({ is_admin: !is_admin }).eq('id', id)
+    load()
+  }
+
+  const filtered = rows?.filter(r => !search || (r.email || '').toLowerCase().includes(search.toLowerCase()) || (r.full_name || '').toLowerCase().includes(search.toLowerCase())) ?? null
+
+  return (
+    <div>
+      <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Pesquisar por email ou nome..." style={{ width: '100%', maxWidth: 320, marginBottom: 18, background: 'var(--bg-2)', border: '1px solid var(--border)', color: 'var(--fg)', padding: '8px 12px', fontSize: 13, fontFamily: 'inherit', display: 'block' }} />
+      {filtered === null ? <p style={{ color: 'var(--fg-mute)' }}>A carregar...</p> : filtered.length === 0 ? <p style={{ color: 'var(--fg-mute)' }}>Sem utilizadores.</p> : (
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+            <thead>
+              <tr style={{ borderBottom: '1px solid var(--border)', textAlign: 'left' }}>
+                {['Email', 'Nome', 'Desde', 'Admin'].map(h => <th key={h} style={{ padding: '10px 8px', color: 'var(--fg-mute)', fontSize: 10, textTransform: 'uppercase' }}>{h}</th>)}
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map(u => (
+                <tr key={u.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                  <td style={{ padding: '10px 8px' }}>{u.email || '—'}</td>
+                  <td style={{ padding: '10px 8px', color: 'var(--fg-mute)' }}>{u.full_name || '—'}</td>
+                  <td style={{ padding: '10px 8px', color: 'var(--fg-mute)' }}>{new Date(u.created_at).toLocaleDateString('pt-PT')}</td>
+                  <td style={{ padding: '10px 8px' }}>
+                    <button onClick={() => toggleAdmin(u.id, u.is_admin)} style={{ padding: '4px 10px', background: u.is_admin ? 'var(--gold)' : 'var(--bg-3)', color: u.is_admin ? 'var(--bg)' : '#fff', border: 'none', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit', fontWeight: 700 }}>{u.is_admin ? '👑 Admin' : 'Tornar admin'}</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
     </div>
