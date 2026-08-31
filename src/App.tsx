@@ -4599,13 +4599,42 @@ export default function App() {
     setCartItems(prev => prev.filter(i => i.id !== id))
   }, [])
 
+  // Sincroniza a wishlist local (Set<number> por id) com a tabela Supabase
+  // `wishlist` (product_sku) quando o utilizador inicia sessão.
+  useEffect(() => {
+    if (!auth.user || !isSupabaseConfigured) return
+    supabase.from('wishlist').select('product_sku, product_id_local').eq('user_id', auth.user.id)
+      .then(({ data }) => {
+        if (!data) return
+        const ids = data
+          .map((r: any) => {
+            if (typeof r.product_id_local === 'number') return r.product_id_local
+            const p = liveProducts.find(x => x.sku === r.product_sku) || ALL_PRODUCTS.find(x => x.sku === r.product_sku)
+            return p?.id
+          })
+          .filter((x: any): x is number => typeof x === 'number')
+        setWishlist(prev => new Set([...prev, ...ids]))
+      }, () => {})
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [auth.user])
+
   const toggleWish = useCallback((id: number) => {
+    const isRemoving = wishlist.has(id)
     setWishlist(prev => {
       const n = new Set(prev)
       n.has(id) ? n.delete(id) : n.add(id)
       return n
     })
-  }, [])
+    if (auth.user && isSupabaseConfigured) {
+      const product = liveProducts.find(p => p.id === id) || ALL_PRODUCTS.find(p => p.id === id)
+      const sku = product?.sku || String(id)
+      if (isRemoving) {
+        supabase.from('wishlist').delete().eq('user_id', auth.user.id).eq('product_sku', sku).then(() => {}, () => {})
+      } else {
+        supabase.from('wishlist').insert({ user_id: auth.user.id, product_sku: sku, product_id_local: id }).then(() => {}, () => {})
+      }
+    }
+  }, [auth.user, liveProducts, wishlist])
 
   const cartCount = cartItems.reduce((s, i) => s + i.qty, 0)
 
