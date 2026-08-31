@@ -67,6 +67,12 @@ async function persistOrder(session) {
     custom: Object.fromEntries(
       Object.entries(li.price?.product?.metadata || {}).filter(([k]) => k.startsWith('custom_'))
     ),
+    // Multivendor Printful: quando o checkout (api/checkout.js) propagou
+    // metadata.printful_variant_id (produto do catálogo com Product.printfulVariantId
+    // definido), guarda-o aqui para marcar order_items.source='printful' abaixo.
+    printfulVariantId: li.price?.product?.metadata?.printful_variant_id
+      ? Number(li.price.product.metadata.printful_variant_id)
+      : null,
   }))
 
   // Tenta associar a um user_id existente via email (não bloqueia se não encontrar)
@@ -118,8 +124,14 @@ async function persistOrder(session) {
     quantity: i.qty,
     unit_price_cents: i.unit_price_cents,
     total_cents: i.total_cents,
-    custom_design: Object.keys(i.custom).length ? i.custom : null,
-    source: Object.keys(i.custom).length ? 'custom' : 'manual',
+    // Multivendor Printful tem prioridade sobre 'custom': um produto Printful
+    // marcado (Product.printfulVariantId) que também seja personalizado ainda
+    // precisa do variant_id real para poder ser enviado à Printful; a
+    // personalização em si (custom_design) continua guardada normalmente.
+    custom_design: i.printfulVariantId
+      ? { ...i.custom, printful_variant_id: i.printfulVariantId }
+      : (Object.keys(i.custom).length ? i.custom : null),
+    source: i.printfulVariantId ? 'printful' : (Object.keys(i.custom).length ? 'custom' : 'manual'),
   }))
   if (orderItemsPayload.length) {
     // Evita duplicar linhas se o webhook for reentregue pelo Stripe

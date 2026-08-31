@@ -115,7 +115,18 @@ export default async function handler(req, res) {
       // Cartão-presente: o webhook usa este campo para ativar a linha em
       // gift_cards (estado 'pending' → 'active') quando o pagamento é confirmado.
       if (item.giftCardCode) metadata.gift_card_code = String(item.giftCardCode)
+      // Multivendor Printful: se o produto tiver uma variante Printful real
+      // associada (Product.printfulVariantId no catálogo), propaga-a como
+      // metadata para o webhook marcar este order_item como source='printful'
+      // e permitir depois disparar api/printful/order.js a partir do Admin Panel.
+      if (item.printfulVariantId) metadata.printful_variant_id = String(item.printfulVariantId)
 
+      // Nota: quando o item usa um Price Stripe já existente (stripeId), a
+      // metadata calculada acima (sku/category/printful_variant_id) NÃO é
+      // enviada — o Stripe Product associado a esse Price já tem a sua
+      // própria metadata definida no dashboard. Para produtos Printful,
+      // usar sempre o caminho price_data dinâmico (sem stripeId) para que
+      // printful_variant_id chegue ao webhook.
       if (item.stripeId && !item._customization) {
         return {
           price: item.stripeId,

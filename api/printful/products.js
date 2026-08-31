@@ -11,13 +11,48 @@
 // Nenhum SKU do catálogo estático atual (ALL_PRODUCTS em src/App.tsx) está
 // marcado como proveniente do Printful, por isso este endpoint fica
 // infraestrutura pronta mas dormente até um produto real ser ligado.
+//
+// Autenticação: aberto ao browser autenticado como admin (o Admin Panel
+// só monta este pedido depois de auth.isAdmin ser true no frontend) OU via
+// x-admin-secret (uso server-to-server). Não expõe segredos — só nomes/
+// thumbnails de produtos já sincronizados — mas fica atrás do painel admin
+// por consistência com o resto da integração.
+
+import { createClient } from '@supabase/supabase-js'
 
 const PRINTFUL_BASE = 'https://api.printful.com'
+const ADMIN_EMAIL = 'karmicnode@gmail.com'
+
+const supabaseUrl = process.env.SUPABASE_URL
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+const supabaseAdmin = (supabaseUrl && supabaseServiceKey)
+  ? createClient(supabaseUrl, supabaseServiceKey, { auth: { persistSession: false } })
+  : null
+
+async function isAuthorized(req) {
+  const adminSecret = process.env.ADMIN_API_SECRET
+  if (adminSecret && req.headers['x-admin-secret'] === adminSecret) return true
+
+  const authHeader = req.headers['authorization'] || ''
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null
+  if (token && supabaseAdmin) {
+    try {
+      const { data, error } = await supabaseAdmin.auth.getUser(token)
+      if (!error && data?.user?.email === ADMIN_EMAIL) return true
+    } catch { /* token inválido — cai para não autorizado */ }
+  }
+  return false
+}
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-admin-secret')
   if (req.method === 'OPTIONS') return res.status(200).end()
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' })
+
+  if (!(await isAuthorized(req))) {
+    return res.status(401).json({ error: 'Não autorizado.' })
+  }
 
   const apiKey = process.env.PRINTFUL_API_KEY
   const storeId = process.env.PRINTFUL_STORE_ID

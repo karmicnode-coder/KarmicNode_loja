@@ -532,6 +532,14 @@ interface Product {
   // com AR (Android Scene Viewer / iOS Quick Look).
   model3dUrl?: string
   model3dIosUrl?: string
+  // Multivendor Printful (print-on-demand real). Opcional — nenhum produto do
+  // catálogo estático atual (ALL_PRODUCTS) está mapeado a uma variante real da
+  // Printful, por isso este campo fica undefined em todo o catálogo por agora.
+  // Quando definido, o checkout (api/checkout.js) propaga este valor como
+  // metadata do line item Stripe, e o webhook (api/stripe-webhook.js) usa-o
+  // para marcar order_items.source='printful' com custom_design.printful_variant_id,
+  // permitindo depois disparar api/printful/order.js a partir do Admin Panel.
+  printfulVariantId?: number
   nameEn?: string
   descriptionEn?: string
   categoryEn?: string
@@ -5566,16 +5574,26 @@ function AdminDashboardTab() {
 interface AdminOrderRow {
   id: string; order_number: string | null; customer_email: string; customer_name: string | null
   status: string; total_cents: number; currency: string; created_at: string; tracking_number: string | null
+  // Multivendor Printful — colunas já existentes em schema.sql (orders), agora
+  // lidas aqui para mostrar o estado de fulfillment e permitir disparar o envio
+  // real à Printful a partir deste painel (ver sendToPrintful abaixo).
+  printful_order_id: string | null
+  printful_status: string | null
 }
 const ORDER_STATUSES = ['pending', 'paid', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded']
 
 function AdminOrdersTab() {
   const [orders, setOrders] = useState<AdminOrderRow[] | null>(null)
   const [filter, setFilter] = useState('all')
+  // Multivendor Printful: id da encomenda a meio do disparo de fulfillment
+  // (desativa o botão dessa linha para evitar duplo-clique) + mensagens de
+  // resultado por encomenda (sucesso ou erro honesto vindo de /api/printful/order).
+  const [printfulBusy, setPrintfulBusy] = useState<string | null>(null)
+  const [printfulMsg, setPrintfulMsg] = useState<Record<string, string>>({})
 
   const load = useCallback(() => {
     if (!isSupabaseConfigured) { setOrders([]); return }
-    let q = supabase.from('orders').select('id, order_number, customer_email, customer_name, status, total_cents, currency, created_at, tracking_number').order('created_at', { ascending: false }).limit(100)
+    let q = supabase.from('orders').select('id, order_number, customer_email, customer_name, status, total_cents, currency, created_at, tracking_number, printful_order_id, printful_status').order('created_at', { ascending: false }).limit(100)
     if (filter !== 'all') q = q.eq('status', filter)
     q.then(({ data }) => setOrders((data as any) || []), () => setOrders([]))
   }, [filter])
@@ -5585,6 +5603,41 @@ function AdminOrdersTab() {
   const updateStatus = async (id: string, status: string) => {
     await supabase.from('orders').update({ status, updated_at: new Date().toISOString() }).eq('id', id)
     load()
+  }
+
+  // Multivendor Printful: dispara a criação real da encomenda de fulfillment
+  // via api/printful/order.js, autenticando com o access_token da sessão
+  // Supabase atual (o endpoint valida server-side que o email == admin —
+  // nunca expõe ADMIN_API_SECRET ao browser). Endpoint falha honestamente
+  // (400/503/erro) se faltar PRINTFUL_API_KEY ou se a encomenda não tiver
+  // nenhuma linha com source='printful' + printful_variant_id definido.
+  const sendToPrintful = async (orderId: string) => {
+    setPrintfulBusy(orderId)
+    setPrintfulMsg(m => ({ ...m, [orderId]: '' }))
+    try {
+      const { data: sessionData } = await supabase.auth.getSession()
+      const token = sessionData.session?.access_token
+      if (!token) {
+        setPrintfulMsg(m => ({ ...m, [orderId]: 'Sessão inválida — inicie sessão de novo.' }))
+        return
+      }
+      const r = await fetch('/api/printful/order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ order_id: orderId }),
+      })
+      const data = await r.json()
+      if (!r.ok) {
+        setPrintfulMsg(m => ({ ...m, [orderId]: data?.error || `Erro ${r.status}` }))
+      } else {
+        setPrintfulMsg(m => ({ ...m, [orderId]: `Enviado — Printful #${data.printful_order_id} (${data.status})` }))
+        load()
+      }
+    } catch (e: any) {
+      setPrintfulMsg(m => ({ ...m, [orderId]: e?.message || 'Erro de rede' }))
+    } finally {
+      setPrintfulBusy(null)
+    }
   }
 
   return (
@@ -5600,7 +5653,7 @@ function AdminOrdersTab() {
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
             <thead>
               <tr style={{ borderBottom: '1px solid var(--border)', textAlign: 'left' }}>
-                {['Nº', 'Cliente', 'Total', 'Estado', 'Data', ''].map(h => (
+                {['Nº', 'Cliente', 'Total', 'Estado', 'Data', 'Tracking', 'Printful'].map(h => (
                   <th key={h} style={{ padding: '10px 8px', color: 'var(--fg-mute)', fontSize: 10, letterSpacing: '.12em', textTransform: 'uppercase' }}>{h}</th>
                 ))}
               </tr>
@@ -5618,6 +5671,22 @@ function AdminOrdersTab() {
                   </td>
                   <td style={{ padding: '10px 8px', color: 'var(--fg-mute)' }}>{new Date(o.created_at).toLocaleDateString('pt-PT')}</td>
                   <td style={{ padding: '10px 8px', color: 'var(--fg-mute)' }}>{o.tracking_number || '—'}</td>
+                  <td style={{ padding: '10px 8px', minWidth: 160 }}>
+                    {o.printful_order_id ? (
+                      <span style={{ fontSize: 11, color: 'var(--fg-mute)' }}>#{o.printful_order_id} · {o.printful_status || '—'}</span>
+                    ) : (
+                      <button
+                        onClick={() => sendToPrintful(o.id)}
+                        disabled={printfulBusy === o.id}
+                        style={{ padding: '5px 10px', background: 'var(--bg-2)', color: 'var(--gold)', border: '1px solid var(--gold)', fontSize: 11, cursor: printfulBusy === o.id ? 'wait' : 'pointer', fontFamily: 'inherit', opacity: printfulBusy === o.id ? 0.6 : 1 }}
+                      >
+                        {printfulBusy === o.id ? 'A enviar...' : 'Enviar → Printful'}
+                      </button>
+                    )}
+                    {printfulMsg[o.id] && (
+                      <div style={{ fontSize: 10, color: printfulMsg[o.id].startsWith('Enviado') ? '#2e7d32' : 'var(--bordo)', marginTop: 4, maxWidth: 200 }}>{printfulMsg[o.id]}</div>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>
