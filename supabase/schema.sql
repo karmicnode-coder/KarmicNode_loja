@@ -206,6 +206,22 @@ create policy "products_admin_manage" on products for all to authenticated
 grant select on products to anon, authenticated;
 grant insert, update, delete on products to authenticated;
 
+-- Decrementa o stock de um produto pelo SKU, sem nunca ir a negativo.
+-- Chamado pelo api/stripe-webhook.js (via service_role, security definer)
+-- após um checkout.session.completed. Se o SKU ainda não existir na tabela
+-- `products` (catálogo ainda estático em App.tsx), simplesmente não faz nada
+-- — não bloqueia a persistência da encomenda.
+create or replace function decrement_product_stock(p_sku text, p_qty int)
+returns void language plpgsql security definer as $$
+begin
+  update products
+  set stock = greatest(0, stock - p_qty), updated_at = now()
+  where sku = p_sku;
+end;
+$$;
+
+grant execute on function decrement_product_stock(text, int) to service_role;
+
 
 -- ═══════════════════════════════════════════════════════════════════════
 -- 4. ORDERS — encomendas (escritas pelo stripe-webhook.js após pagamento)
