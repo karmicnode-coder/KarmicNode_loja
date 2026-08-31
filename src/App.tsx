@@ -4,6 +4,7 @@ import { type Lang, type TKey, createT, getArr } from '@/i18n'
 import { useAuth } from '@/hooks/useAuth'
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import { awardKarma, fetchKarmaSummary, type KarmaProfileLite } from '@/lib/karma'
+import { isPushSupported, subscribeToPush } from '@/lib/pwa'
 
 const LangContext = createContext<{ lang: Lang; t: (k: TKey) => string; arr: (k: TKey) => string[] }>({
   lang: 'pt', t: k => k, arr: () => [],
@@ -2063,6 +2064,48 @@ function KarmaHeaderBadge({ userId, onClick }: { userId: string; onClick: () => 
   )
 }
 
+// ─── PushNotificationToggle ──────────────────────────────────────────────
+// Botão na aba Perfil da conta para ativar notificações push. Fica inerte
+// (mostra aviso, não rebenta) se o navegador não suportar push ou se
+// VITE_VAPID_PUBLIC_KEY não estiver configurada.
+function PushNotificationToggle({ userId }: { userId: string }) {
+  const { lang } = useLang()
+  const isEN = lang === 'en'
+  const [supported, setSupported] = useState<boolean | null>(null)
+  const [status, setStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle')
+  const [errMsg, setErrMsg] = useState('')
+
+  useEffect(() => { isPushSupported().then(setSupported) }, [])
+
+  if (supported === null) return null
+
+  const activate = async () => {
+    setStatus('loading')
+    const res = await subscribeToPush(userId)
+    if (res.ok) { setStatus('done') } else { setStatus('error'); setErrMsg(res.error || '') }
+  }
+
+  return (
+    <div style={{ marginTop: 24, paddingTop: 24, borderTop: '1px solid var(--border)' }}>
+      <label style={{ display: 'block', fontSize: 10, letterSpacing: '.22em', textTransform: 'uppercase', color: 'var(--gold)', marginBottom: 10, fontWeight: 500 }}>
+        {isEN ? 'Push Notifications' : 'Notificações Push'}
+      </label>
+      {!supported ? (
+        <p style={{ fontSize: 12, color: 'var(--fg-mute)', lineHeight: 1.6 }}>
+          {isEN ? 'Not available on this device/browser yet.' : 'Ainda não disponível neste dispositivo/navegador.'}
+        </p>
+      ) : status === 'done' ? (
+        <p style={{ fontSize: 13, color: 'var(--gold)' }}>✓ {isEN ? 'Notifications activated.' : 'Notificações ativadas.'}</p>
+      ) : (
+        <>
+          <GhostBtn onClick={activate}>{status === 'loading' ? (isEN ? 'Activating...' : 'A ativar...') : (isEN ? 'Enable notifications' : 'Ativar notificações')}</GhostBtn>
+          {status === 'error' && <p style={{ marginTop: 10, fontSize: 12, color: 'var(--bordo)' }}>⚠ {errMsg}</p>}
+        </>
+      )}
+    </div>
+  )
+}
+
 function IconBtn({ onClick, children }: { onClick: () => void; children: ReactNode }) {
   const [hov, setHov] = useState(false)
   return (
@@ -2070,6 +2113,62 @@ function IconBtn({ onClick, children }: { onClick: () => void; children: ReactNo
       style={{ width: 38, height: 38, border: `1px solid ${hov ? 'var(--gold)' : 'var(--border)'}`, background: 'transparent', color: hov ? 'var(--gold)' : 'var(--fg-mute)', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all .2s ease' }}>
       {children}
     </button>
+  )
+}
+
+// ─── PWA Install Prompt ──────────────────────────────────────────────────
+// Escuta `beforeinstallprompt` (Chrome/Edge/Android) e mostra um banner
+// discreto de instalação. Não faz nada em navegadores sem suporte
+// (Safari/iOS) — a instalação aí é feita manualmente via "Adicionar ao
+// ecrã principal", que já funciona com o manifest.webmanifest presente.
+function PwaInstallPrompt() {
+  const { lang } = useLang()
+  const isEN = lang === 'en'
+  const [deferredEvent, setDeferredEvent] = useState<any>(null)
+  const [dismissed, setDismissed] = useState(() => {
+    try { return localStorage.getItem('kn-pwa-dismissed') === '1' } catch { return false }
+  })
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      e.preventDefault()
+      setDeferredEvent(e)
+    }
+    window.addEventListener('beforeinstallprompt', handler)
+    return () => window.removeEventListener('beforeinstallprompt', handler)
+  }, [])
+
+  if (!deferredEvent || dismissed) return null
+
+  const dismiss = () => {
+    setDismissed(true)
+    try { localStorage.setItem('kn-pwa-dismissed', '1') } catch {}
+  }
+
+  const install = async () => {
+    try {
+      deferredEvent.prompt()
+      await deferredEvent.userChoice
+    } catch {}
+    setDeferredEvent(null)
+  }
+
+  return (
+    <div style={{
+      position: 'fixed', bottom: 20, left: 20, right: 20, maxWidth: 380, zIndex: 200,
+      background: 'var(--bg-1)', border: '1px solid var(--gold-3)', boxShadow: '0 12px 40px rgba(0,0,0,.35)',
+      padding: 16, display: 'flex', alignItems: 'center', gap: 14,
+    }}>
+      <img src={logoImg} alt="Karmic Node" style={{ width: 36, height: 36, objectFit: 'contain', flexShrink: 0 }} />
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 2 }}>{isEN ? 'Install the app' : 'Instalar a app'}</div>
+        <div style={{ fontSize: 11, color: 'var(--fg-mute)', lineHeight: 1.4 }}>{isEN ? 'Faster access, works offline.' : 'Acesso mais rápido, funciona offline.'}</div>
+      </div>
+      <button onClick={install} style={{ padding: '8px 14px', background: 'var(--gold)', color: 'var(--bg)', border: 'none', fontSize: 11, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}>
+        {isEN ? 'Install' : 'Instalar'}
+      </button>
+      <button onClick={dismiss} aria-label="Fechar" style={{ background: 'transparent', border: 'none', color: 'var(--fg-mute)', cursor: 'pointer', fontSize: 16, padding: 4, flexShrink: 0 }}>×</button>
+    </div>
   )
 }
 
@@ -4673,6 +4772,8 @@ function AccountPage({ auth, setPage, allProducts, onOpen }: {
               setSavedMsg(true)
               window.setTimeout(() => setSavedMsg(false), 2400)
             }}>{t('account_profile_save')}</PrimaryBtn>
+
+            <PushNotificationToggle userId={auth.user.id} />
           </div>
         )}
       </div>
@@ -6210,6 +6311,8 @@ export default function App() {
       <button className={`kn-back-top ${backTop ? 'visible' : ''}`} onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 15l-6-6-6 6" /></svg>
       </button>
+
+      <PwaInstallPrompt />
     </div>
     </LangContext.Provider>
   )
