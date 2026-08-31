@@ -1753,6 +1753,111 @@ function CartDrawer({ open, onClose, items, updateQty, remove }: {
   )
 }
 
+// ─── KIN — Chatbot IA ────────────────────────────────────────────────────
+// Widget flutuante que fala com api/chat.js (LLM server-side, chave nunca
+// exposta ao browser). Persona/tom "KIN": direto, discreto, sem emojis
+// fofos nem entusiasmo performativo — ver system prompt em api/chat.js.
+interface KinMessage { role: 'user' | 'assistant'; content: string }
+
+function KinChatWidget({ userId }: { userId?: string }) {
+  const { lang } = useLang()
+  const isEN = lang === 'en'
+  const [open, setOpen] = useState(false)
+  const [messages, setMessages] = useState<KinMessage[]>([])
+  const [input, setInput] = useState('')
+  const [loading, setLoading] = useState(false)
+  const sessionIdRef = useRef<string>('')
+  const scrollRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    try {
+      let sid = localStorage.getItem('kn-kin-session')
+      if (!sid) { sid = 'kin-' + Math.random().toString(36).slice(2) + Date.now().toString(36); localStorage.setItem('kn-kin-session', sid) }
+      sessionIdRef.current = sid
+    } catch { sessionIdRef.current = 'kin-' + Date.now() }
+  }, [])
+
+  useEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+  }, [messages, open])
+
+  const introMsg = isEN ? "I'm KIN. I'll be around." : 'Sou o KIN. Fico por aqui se precisares.'
+
+  const send = async () => {
+    const text = input.trim()
+    if (!text || loading) return
+    const nextMessages: KinMessage[] = [...messages, { role: 'user', content: text }]
+    setMessages(nextMessages)
+    setInput('')
+    setLoading(true)
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: nextMessages, sessionId: sessionIdRef.current, userId }),
+      })
+      const data = await res.json().catch(() => null)
+      const reply = data?.reply || (isEN ? 'That escapes me. I\'ll pass you to Rafael or Rodrigo?' : 'Isso escapa-me. Passo-te ao Rafael ou ao Rodrigo?')
+      setMessages(m => [...m, { role: 'assistant', content: reply }])
+    } catch {
+      setMessages(m => [...m, { role: 'assistant', content: isEN ? 'That escapes me right now. karmicnode@gmail.com.' : 'Isso escapa-me agora. karmicnode@gmail.com.' }])
+    }
+    setLoading(false)
+  }
+
+  return (
+    <>
+      <button onClick={() => setOpen(v => !v)} aria-label="KIN"
+        style={{
+          position: 'fixed', bottom: 20, right: 20, zIndex: 190, width: 54, height: 54, borderRadius: '50%',
+          background: 'var(--gold)', color: 'var(--bg)', border: 'none', cursor: 'pointer',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 24px rgba(0,0,0,.35)',
+          fontFamily: 'var(--f-display)', fontSize: 18, fontWeight: 600, transition: 'transform .2s ease',
+        }}
+        onMouseEnter={e => (e.currentTarget.style.transform = 'scale(1.06)')}
+        onMouseLeave={e => (e.currentTarget.style.transform = 'none')}>
+        {open ? '×' : 'K'}
+      </button>
+
+      {open && (
+        <div style={{
+          position: 'fixed', bottom: 84, right: 20, zIndex: 190, width: 340, maxWidth: 'calc(100vw - 40px)',
+          height: 460, maxHeight: 'calc(100vh - 140px)', background: 'var(--bg-1)', border: '1px solid var(--gold-3)',
+          boxShadow: '0 20px 60px rgba(0,0,0,.45)', display: 'flex', flexDirection: 'column', overflow: 'hidden',
+        }}>
+          <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ width: 30, height: 30, borderRadius: '50%', background: 'var(--gold)', color: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--f-display)', fontWeight: 700, fontSize: 14 }}>K</div>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 13 }}>KIN</div>
+              <div style={{ fontSize: 10, color: 'var(--fg-mute)', letterSpacing: '.06em' }}>Karmic Node</div>
+            </div>
+          </div>
+
+          <div ref={scrollRef} style={{ flex: 1, overflowY: 'auto', padding: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{ alignSelf: 'flex-start', maxWidth: '85%', background: 'var(--bg-2)', color: 'var(--fg-dim)', padding: '8px 12px', fontSize: 13, lineHeight: 1.5 }}>{introMsg}</div>
+            {messages.map((m, i) => (
+              <div key={i} style={{
+                alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start', maxWidth: '85%',
+                background: m.role === 'user' ? 'var(--gold)' : 'var(--bg-2)', color: m.role === 'user' ? 'var(--bg)' : 'var(--fg-dim)',
+                padding: '8px 12px', fontSize: 13, lineHeight: 1.5,
+              }}>{m.content}</div>
+            ))}
+            {loading && <div style={{ alignSelf: 'flex-start', fontSize: 12, color: 'var(--fg-mute)' }}>{isEN ? 'Thinking...' : 'A pensar...'}</div>}
+          </div>
+
+          <div style={{ display: 'flex', borderTop: '1px solid var(--border)' }}>
+            <input value={input} onChange={e => setInput(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') send() }}
+              placeholder={isEN ? 'Ask KIN...' : 'Pergunta ao KIN...'}
+              style={{ flex: 1, background: 'transparent', border: 'none', padding: '12px 14px', color: 'var(--fg)', fontSize: 13, outline: 'none', fontFamily: 'inherit' }} />
+            <button onClick={send} disabled={loading || !input.trim()} style={{ padding: '0 18px', background: 'transparent', border: 'none', color: 'var(--gold)', cursor: loading ? 'not-allowed' : 'pointer', fontWeight: 700, fontSize: 13 }}>→</button>
+          </div>
+        </div>
+      )}
+    </>
+  )
+}
+
 // ─── Header ───────────────────────────────────────────────────────────────────
 
 function HeaderNavLink({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
@@ -6313,6 +6418,7 @@ export default function App() {
       </button>
 
       <PwaInstallPrompt />
+      <KinChatWidget userId={auth.user?.id} />
     </div>
     </LangContext.Provider>
   )
