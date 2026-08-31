@@ -2195,6 +2195,16 @@ function Header({ activePage, navigate, cartCount, openCart, lang, setLang, auth
           style={{ fontFamily: 'var(--f-display)', fontSize: 28, fontWeight: 500, color: 'var(--fg)', letterSpacing: '.04em' }}>
           {t('nav_contact')}
         </a>
+        <a href="#" onClick={e => { e.preventDefault(); navigate('stylist'); setNavOpen(false) }}
+          style={{ fontFamily: 'var(--f-display)', fontSize: 28, fontWeight: 500, color: 'var(--fg)', letterSpacing: '.04em' }}>
+          {lang === 'en' ? 'Stylist' : 'Estilista'}
+        </a>
+        {auth.user && (
+          <a href="#" onClick={e => { e.preventDefault(); navigate('vault'); setNavOpen(false) }}
+            style={{ fontFamily: 'var(--f-display)', fontSize: 28, fontWeight: 500, color: 'var(--fg)', letterSpacing: '.04em' }}>
+            {lang === 'en' ? 'Vault' : 'Cofre'}
+          </a>
+        )}
         <div style={{ marginTop: 16, paddingTop: 24, borderTop: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: 12, width: '100%' }}>
           <a href="#" onClick={e => { e.preventDefault(); navigate(auth.user ? 'account' : 'login'); setNavOpen(false) }} style={{ fontSize: 14, color: 'var(--fg-mute)', letterSpacing: '.14em', textTransform: 'uppercase' }}>{auth.user ? t('nav_account') : t('login_eyebrow')}</a>
           <a href="#" onClick={e => { e.preventDefault(); navigate('about'); setNavOpen(false) }} style={{ fontSize: 14, color: 'var(--fg-mute)', letterSpacing: '.14em', textTransform: 'uppercase' }}>{t('nav_about')}</a>
@@ -2385,6 +2395,125 @@ function HomeTesti({ t }: { t: { q: string; name: string; role: string; rating: 
   )
 }
 
+// ─── EditorialCoverSection — capa estilo revista, puramente visual/editorial ──
+// Bloco de "capa de revista" para a homepage. Não tem dependência de backend —
+// é uma secção de storytelling de marca, semelhante em espírito a "PROMO
+// BANNER"/"NEW ARRIVALS" já existentes. Liga a "Ler a história" (blog) e a
+// "Ver a coleção" (loja) — reutiliza conteúdo real já existente, não inventa
+// nada novo (nenhuma "revista" ou "editorial" fictícia é referenciada como
+// se existisse fora deste bloco).
+function EditorialCoverSection({ setPage }: { setPage: (p: Page) => void }) {
+  const { lang } = useLang()
+  const isEN = lang === 'en'
+  return (
+    <section style={{ position: 'relative', overflow: 'hidden', borderBottom: '1px solid var(--border)', minHeight: 'clamp(420px,60vw,640px)', display: 'flex', alignItems: 'flex-end' }}>
+      <img
+        src="https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=1600&q=85"
+        alt={isEN ? 'Karmic Node editorial cover' : 'Capa editorial Karmic Node'}
+        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', filter: 'grayscale(.25) brightness(.62)' }}
+      />
+      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(11,11,12,0) 30%, rgba(11,11,12,.92) 100%)' }} />
+      <div className="wrap" style={{ position: 'relative', zIndex: 2, width: '100%', padding: 'clamp(40px,6vw,70px) var(--pad-x) clamp(48px,6vw,72px)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 30, flexWrap: 'wrap' }}>
+          <div style={{ maxWidth: 640 }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10, marginBottom: 18, padding: '5px 14px', border: '1px solid var(--gold-3)', color: 'var(--gold)', fontSize: 10, letterSpacing: '.28em', textTransform: 'uppercase', fontWeight: 700 }}>
+              {isEN ? 'Editorial · Issue 01' : 'Editorial · Edição 01'}
+            </div>
+            <h2 style={{ fontFamily: 'var(--f-display)', fontSize: 'clamp(38px,6vw,84px)', fontWeight: 500, lineHeight: 1.02, margin: '0 0 16px', color: '#F5F2ED' }}>
+              {isEN ? 'The art of ' : 'A arte de '}<em style={{ color: 'var(--gold)', fontStyle: 'italic' }}>{isEN ? 'wearing yourself' : 'te vestires a ti'}</em>.
+            </h2>
+            <p style={{ color: 'rgba(245,242,237,.78)', fontSize: 'clamp(14px,1.1vw,17px)', lineHeight: 1.65, maxWidth: '48ch' }}>
+              {isEN
+                ? 'A closer look at the pieces, textures and stories behind this season — straight from the Karmic Node journal.'
+                : 'Um olhar mais próximo sobre as peças, texturas e histórias desta estação — direto do diário Karmic Node.'}
+            </p>
+          </div>
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+            <button onClick={() => setPage('blog')}
+              style={{ padding: '13px 26px', background: 'var(--gold)', border: 'none', color: 'var(--bg)', fontFamily: 'var(--f-sans)', fontSize: 11, letterSpacing: '.2em', textTransform: 'uppercase', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+              {isEN ? 'Read the story' : 'Ler a história'}
+            </button>
+            <button onClick={() => setPage('shop')}
+              style={{ padding: '13px 26px', background: 'transparent', border: '1px solid rgba(245,242,237,.4)', color: '#F5F2ED', fontFamily: 'var(--f-sans)', fontSize: 11, letterSpacing: '.2em', textTransform: 'uppercase', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+              {isEN ? 'Shop the look' : 'Ver a coleção'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ─── StyleFinderSection — mini "encontra o teu estilo" embutido na homepage ──
+// Versão condensada/rápida (1 clique, sem wizard) do motor de recomendação
+// usado na página completa /estilista (StylistPage). Propositadamente mais
+// simples: 3 botões de vertical → mostra até 3 peças reais, ordenadas por
+// rating, do vertical escolhido. É o mesmo motor de regras honesto (não gera
+// "outfits com IA"), só que resumido para caber na home. Tem CTA para a
+// experiência completa em /estilista.
+function StyleFinderSection({ products, onOpen, onAdd, setPage }: {
+  products: Product[]; onOpen: (p: Product) => void; onAdd: (p: Product) => void; setPage: (p: Page) => void
+}) {
+  const { lang } = useLang()
+  const isEN = lang === 'en'
+  const [picked, setPicked] = useState<'vestuario' | 'atelier' | 'casa' | null>(null)
+
+  const results = picked
+    ? [...products].filter(p => p.vertical === picked).sort((a, b) => b.rating - a.rating).slice(0, 3)
+    : []
+
+  const OPTS: { id: 'vestuario' | 'atelier' | 'casa'; labelPt: string; labelEn: string }[] = [
+    { id: 'vestuario', labelPt: 'Vestuário', labelEn: 'Fashion' },
+    { id: 'atelier', labelPt: 'Atelier', labelEn: 'Atelier' },
+    { id: 'casa', labelPt: 'Casa', labelEn: 'Home' },
+  ]
+
+  return (
+    <section style={{ padding: 'clamp(56px,7vw,90px) 0', background: 'var(--bg-1)', borderBottom: '1px solid var(--border)' }}>
+      <div className="wrap">
+        <SectionHead eyebrow={isEN ? 'Style Finder' : 'Encontra o teu Estilo'}
+          title={(isEN ? 'What are you looking for <em>today</em>?' : 'O que procuras <em>hoje</em>?').replace('<em>', "<em class='gold-text'>")}
+          lead={isEN
+            ? 'Pick a category and we\'ll instantly suggest real, top-rated pieces from our catalogue.'
+            : 'Escolhe uma categoria e sugerimos, na hora, peças reais e bem avaliadas do nosso catálogo.'}
+          cta={<GhostBtn onClick={() => setPage('stylist')}>{isEN ? 'Full stylist quiz' : 'Questionário completo'}</GhostBtn>} />
+
+        <div style={{ display: 'flex', gap: 10, marginTop: 30, marginBottom: 32, flexWrap: 'wrap' }}>
+          {OPTS.map(o => (
+            <button key={o.id} onClick={() => setPicked(o.id)}
+              style={{ padding: '12px 24px', background: picked === o.id ? 'var(--gold)' : 'transparent', color: picked === o.id ? 'var(--bg)' : 'var(--fg)', border: '1px solid var(--border)', fontSize: 12, fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
+              {isEN ? o.labelEn : o.labelPt}
+            </button>
+          ))}
+        </div>
+
+        {picked && (
+          results.length > 0 ? (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 18 }}>
+              {results.map(p => (
+                <div key={p.id} style={{ border: '1px solid var(--border)', background: 'var(--bg)', cursor: 'pointer' }} onClick={() => onOpen(p)}>
+                  <img src={p.image} alt={p.name} style={{ width: '100%', aspectRatio: '3/4', objectFit: 'cover' }} />
+                  <div style={{ padding: 14 }}>
+                    <div style={{ fontSize: 13, marginBottom: 6 }}>{p.name}</div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontFamily: 'var(--f-display)', fontSize: 16, color: 'var(--gold)' }}>{fmt(p.price)}</span>
+                      <button onClick={e => { e.stopPropagation(); onAdd(p) }} style={{ background: 'var(--bordo)', border: 'none', color: 'var(--btn-primary-fg)', fontSize: 10, padding: '5px 10px', textTransform: 'uppercase', letterSpacing: '.1em' }}>+</button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p style={{ color: 'var(--fg-mute)', fontSize: 13 }}>
+              {isEN ? 'No pieces found for this category yet.' : 'Ainda não há peças para esta categoria.'}
+            </p>
+          )
+        )}
+      </div>
+    </section>
+  )
+}
+
 function HomePage({ onAdd, onOpen, wishlist, toggleWish, setPage, products }: {
   onAdd: (p: Product) => void; onOpen: (p: Product) => void
   wishlist: Set<number>; toggleWish: (id: number) => void
@@ -2474,6 +2603,9 @@ function HomePage({ onAdd, onOpen, wishlist, toggleWish, setPage, products }: {
         </div>
       </section>
 
+      {/* EDITORIAL COVER */}
+      <EditorialCoverSection setPage={setPage} />
+
       {/* CATEGORIES */}
       <section style={{ padding: 'clamp(52px,6vw,80px) 0', borderBottom: '1px solid var(--border)' }}>
         <div className="wrap">
@@ -2490,6 +2622,9 @@ function HomePage({ onAdd, onOpen, wishlist, toggleWish, setPage, products }: {
 
       {/* BESTSELLERS CAROUSEL */}
       <ProductCarousel eyebrow={t('home_bestsellers_eyebrow')} title={t('home_bestsellers_title').replace('<em>', "<em class='gold-text'>")} products={products} onAdd={onAdd} onOpen={onOpen} wishlist={wishlist} toggleWish={toggleWish} />
+
+      {/* STYLE FINDER (mini, embutido na home) */}
+      <StyleFinderSection products={products} onOpen={onOpen} onAdd={onAdd} setPage={setPage} />
 
       {/* PROMO BANNER */}
       <section style={{ position: 'relative', overflow: 'hidden', background: `radial-gradient(900px 500px at 25% 50%, rgba(139,30,45,0.45), transparent 65%), var(--bg-2)`, borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)', padding: 'clamp(56px,7vw,96px) 0' }}>
@@ -5318,7 +5453,7 @@ function AccountPage({ auth, setPage, allProducts, onOpen }: {
 // ver comentário SKU-based catalog). A tabela `products` é reservada para
 // uma futura migração dinâmica; esta aba edita essa tabela paralela, não o
 // catálogo ao vivo, e diz isso explicitamente na UI para não confundir.
-type AdminTab = 'dashboard' | 'orders' | 'reviews' | 'partnerships' | 'promos' | 'giftcards' | 'newsletter' | 'products' | 'users'
+type AdminTab = 'dashboard' | 'orders' | 'reviews' | 'partnerships' | 'promos' | 'giftcards' | 'newsletter' | 'products' | 'users' | 'health'
 
 const ADMIN_TABS: { id: AdminTab; label: string }[] = [
   { id: 'dashboard', label: 'Dashboard' },
@@ -5330,6 +5465,7 @@ const ADMIN_TABS: { id: AdminTab; label: string }[] = [
   { id: 'promos', label: 'Promos' },
   { id: 'giftcards', label: 'Gift Cards' },
   { id: 'newsletter', label: 'Newsletter' },
+  { id: 'health', label: 'Health Monitor' },
 ]
 
 function AdminPanel({ auth, setPage }: { auth: ReturnType<typeof useAuth>; setPage: (p: Page) => void }) {
@@ -5371,6 +5507,7 @@ function AdminPanel({ auth, setPage }: { auth: ReturnType<typeof useAuth>; setPa
       {tab === 'promos' && <AdminPromosTab />}
       {tab === 'giftcards' && <AdminGiftCardsTab />}
       {tab === 'newsletter' && <AdminNewsletterTab />}
+      {tab === 'health' && <AdminHealthTab />}
     </div>
   )
 }
@@ -5757,6 +5894,197 @@ function AdminUsersTab({ currentUserId }: { currentUserId?: string }) {
           </table>
         </div>
       )}
+    </div>
+  )
+}
+
+// ─── AdminHealthTab — Health Monitor bot ───────────────────────────────
+// Bot de auto-diagnóstico honesto: corre uma bateria de testes reais (não
+// simulados) contra as peças vivas do sistema — ligação Supabase, tabelas
+// críticas, RPC de karma, e os endpoints serverless em /api. Cada teste é
+// um pedido de rede real com um resultado real (passa/falha), nunca um
+// valor inventado. Regista o resultado em `health_checks` (schema.sql
+// secção 14) para histórico — visível também em `health_recent`.
+// NOTA: a implementação de referência original (_project_v4) foi perdida
+// permanentemente do sandbox; este é um redesenho de raiz, mais simples e
+// mais honesto (sem depender de nenhum global inexistente).
+interface HealthTestResult {
+  name: string
+  ok: boolean
+  detail: string
+  ms: number
+}
+
+async function runHealthTest(name: string, fn: () => Promise<void>): Promise<HealthTestResult> {
+  const start = performance.now()
+  try {
+    await fn()
+    return { name, ok: true, detail: 'OK', ms: Math.round(performance.now() - start) }
+  } catch (e: any) {
+    return { name, ok: false, detail: (e?.message || String(e)).slice(0, 180), ms: Math.round(performance.now() - start) }
+  }
+}
+
+async function runAllHealthTests(): Promise<HealthTestResult[]> {
+  const tests: HealthTestResult[] = []
+
+  tests.push(await runHealthTest('Supabase — configuração', async () => {
+    if (!isSupabaseConfigured) throw new Error('VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY não definidos — funcionalidades avançadas inertes (esperado se ainda não configurado).')
+  }))
+
+  if (isSupabaseConfigured) {
+    tests.push(await runHealthTest('Supabase — sessão/auth', async () => {
+      const { error } = await supabase.auth.getSession()
+      if (error) throw error
+    }))
+    tests.push(await runHealthTest('Tabela karma_profiles', async () => {
+      const { error } = await supabase.from('karma_profiles').select('user_id', { head: true, count: 'exact' }).limit(1)
+      if (error) throw error
+    }))
+    tests.push(await runHealthTest('Tabela orders', async () => {
+      const { error } = await supabase.from('orders').select('id', { head: true, count: 'exact' }).limit(1)
+      if (error) throw error
+    }))
+    tests.push(await runHealthTest('Tabela reviews', async () => {
+      const { error } = await supabase.from('reviews').select('id', { head: true, count: 'exact' }).limit(1)
+      if (error) throw error
+    }))
+    tests.push(await runHealthTest('Tabela live_activity', async () => {
+      const { error } = await supabase.from('live_activity').select('id', { head: true, count: 'exact' }).limit(1)
+      if (error) throw error
+    }))
+    tests.push(await runHealthTest('Tabela vault_visits', async () => {
+      const { error } = await supabase.from('vault_visits').select('id', { head: true, count: 'exact' }).limit(1)
+      if (error) throw error
+    }))
+    tests.push(await runHealthTest('Tabela style_preferences', async () => {
+      const { error } = await supabase.from('style_preferences').select('user_id', { head: true, count: 'exact' }).limit(1)
+      if (error) throw error
+    }))
+    tests.push(await runHealthTest('Tabela health_checks (escrita)', async () => {
+      // Não insere aqui — a escrita real acontece depois de todos os testes,
+      // com o resumo completo. Este teste só confirma que a tabela é legível.
+      const { error } = await supabase.from('health_checks').select('id', { head: true, count: 'exact' }).limit(1)
+      if (error) throw error
+    }))
+  }
+
+  tests.push(await runHealthTest('API /api/products', async () => {
+    const res = await fetch('/api/products')
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  }))
+
+  tests.push(await runHealthTest('API /api/chat (KIN)', async () => {
+    // Só verifica que o endpoint responde a um pedido inválido de forma
+    // controlada (400/405), não que o LLM está configurado — evita gastar
+    // tokens reais num self-test.
+    const res = await fetch('/api/chat', { method: 'GET' })
+    if (res.status >= 500) throw new Error(`HTTP ${res.status} (erro do servidor)`)
+  }))
+
+  return tests
+}
+
+function AdminHealthTab() {
+  const auth = useAuth()
+  const [running, setRunning] = useState(false)
+  const [results, setResults] = useState<HealthTestResult[] | null>(null)
+  const [history, setHistory] = useState<any[] | null>(null)
+  const [lastSavedError, setLastSavedError] = useState<string | null>(null)
+
+  const loadHistory = useCallback(() => {
+    if (!isSupabaseConfigured) { setHistory([]); return }
+    supabase.from('health_recent').select('*').limit(15)
+      .then(({ data }) => setHistory((data as any) || []), () => setHistory([]))
+  }, [])
+
+  useEffect(() => { loadHistory() }, [loadHistory])
+
+  const runCheck = async () => {
+    setRunning(true)
+    setLastSavedError(null)
+    const tests = await runAllHealthTests()
+    setResults(tests)
+    const passed = tests.filter(t => t.ok).length
+    const failed = tests.length - passed
+
+    if (isSupabaseConfigured) {
+      try {
+        const { error } = await supabase.from('health_checks').insert({
+          total_tests: tests.length,
+          passed,
+          failed,
+          failed_details: tests.filter(t => !t.ok).map(t => ({ name: t.name, detail: t.detail })),
+          checked_by: auth.user?.id || null,
+          checked_by_email: auth.user?.email || null,
+          url: window.location.href,
+          user_agent: navigator.userAgent,
+        })
+        if (error) throw error
+        loadHistory()
+      } catch (e: any) {
+        setLastSavedError(e?.message || 'Erro ao gravar histórico (RLS pode exigir email admin karmicnode@gmail.com).')
+      }
+    }
+    setRunning(false)
+  }
+
+  return (
+    <div>
+      <div style={{ padding: 14, marginBottom: 20, background: 'var(--bg-1)', border: '1px solid var(--border)', fontSize: 12, color: 'var(--fg-dim)', lineHeight: 1.6 }}>
+        Corre testes reais (pedidos de rede reais) contra Supabase e os endpoints /api. Não simula resultados — se algo falhar, aparece como falha real. O histórico é guardado em <code>health_checks</code> (visível só para karmicnode@gmail.com, conforme RLS).
+      </div>
+
+      <button onClick={runCheck} disabled={running}
+        style={{ padding: '10px 22px', background: 'var(--gold)', color: 'var(--bg)', border: 'none', fontSize: 12, letterSpacing: '.14em', textTransform: 'uppercase', fontWeight: 700, cursor: running ? 'not-allowed' : 'pointer', fontFamily: 'inherit', marginBottom: 24 }}>
+        {running ? 'A correr testes...' : '▶ Correr diagnóstico agora'}
+      </button>
+
+      {results && (
+        <div style={{ marginBottom: 28 }}>
+          <div style={{ display: 'flex', gap: 14, marginBottom: 14 }}>
+            <AdminStatCard label="Testes" value={results.length} />
+            <AdminStatCard label="Passou" value={results.filter(t => t.ok).length} />
+            <AdminStatCard label="Falhou" value={results.filter(t => !t.ok).length} />
+          </div>
+          {lastSavedError && <p style={{ color: 'var(--bordo-3)', fontSize: 12, marginBottom: 10 }}>⚠️ Resultado não gravado no histórico: {lastSavedError}</p>}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {results.map(r => (
+              <div key={r.name} style={{ display: 'flex', justifyContent: 'space-between', gap: 10, padding: '10px 14px', background: 'var(--bg-1)', border: `1px solid ${r.ok ? 'var(--border)' : 'var(--bordo-3)'}`, fontSize: 13 }}>
+                <span>{r.ok ? '✅' : '❌'} {r.name}</span>
+                <span style={{ color: r.ok ? 'var(--fg-mute)' : 'var(--bordo-3)', fontSize: 12, textAlign: 'right' }}>{r.detail} · {r.ms}ms</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div>
+        <div style={{ fontSize: 11, letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--gold)', fontWeight: 700, marginBottom: 12 }}>Histórico recente</div>
+        {history === null ? <p style={{ color: 'var(--fg-mute)', fontSize: 13 }}>A carregar...</p> : history.length === 0 ? <p style={{ color: 'var(--fg-mute)', fontSize: 13 }}>Sem diagnósticos anteriores.</p> : (
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+              <thead>
+                <tr style={{ borderBottom: '1px solid var(--border)', textAlign: 'left' }}>
+                  {['Data', 'Testes', 'Passou', 'Falhou', '%', 'Por'].map(h => <th key={h} style={{ padding: '8px 6px', color: 'var(--fg-mute)', fontSize: 10, textTransform: 'uppercase' }}>{h}</th>)}
+                </tr>
+              </thead>
+              <tbody>
+                {history.map((h, i) => (
+                  <tr key={i} style={{ borderBottom: '1px solid var(--border)' }}>
+                    <td style={{ padding: '8px 6px', color: 'var(--fg-mute)' }}>{new Date(h.created_at).toLocaleString('pt-PT')}</td>
+                    <td style={{ padding: '8px 6px' }}>{h.total_tests}</td>
+                    <td style={{ padding: '8px 6px', color: '#2e7d32' }}>{h.passed}</td>
+                    <td style={{ padding: '8px 6px', color: h.failed > 0 ? 'var(--bordo-3)' : 'var(--fg-mute)' }}>{h.failed}</td>
+                    <td style={{ padding: '8px 6px' }}>{h.pct}%</td>
+                    <td style={{ padding: '8px 6px', color: 'var(--fg-mute)' }}>{h.checked_by_email || '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
