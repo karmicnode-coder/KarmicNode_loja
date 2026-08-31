@@ -136,7 +136,34 @@ async function persistOrder(session) {
     } catch { /* função/produto pode não existir ainda — não bloqueia a encomenda */ }
   }
 
-  return order.id
+  // Karma: compra dá 100 pontos + 1 ponto por euro gasto (ver src/lib/karma.ts
+  // no frontend para a mesma tabela de pontos). Nunca bloqueia a encomenda.
+  if (userId) {
+    try {
+      const pts = 100 + Math.floor((session.amount_total || 0) / 100)
+      await supabaseAdmin.rpc('award_karma', {
+        p_user_id: userId,
+        p_action: 'purchase',
+        p_points: pts,
+        p_metadata: { order_id: order.id, amount_cents: session.amount_total },
+      })
+    } catch (e) { console.error('[webhook] Falha ao atribuir karma:', e) }
+  }
+
+  // Ativação de cartão-presente: se algum line item corresponder a um gift card
+  // comprado através da GiftCardsPage (metadata.gift_card_code no Stripe product),
+  // ativa a linha correspondente na tabela gift_cards (estava 'pending').
+  for (const li of session.line_items.data) {
+    const gcCode = li.price?.product?.metadata?.gift_card_code
+    if (!gcCode) continue
+    try {
+      await supabaseAdmin.from('gift_cards')
+        .update({ status: 'active', order_id: order.id, activated_at: new Date().toISOString() })
+        .eq('code', gcCode)
+    } catch (e) { console.error('[webhook] Falha ao ativar gift card:', gcCode, e) }
+  }
+
+  return { orderId: order.id, userId }
 }
 
 export default async function handler(req, res) {
@@ -179,7 +206,8 @@ export default async function handler(req, res) {
         let orderId = null
         if (supabaseAdmin) {
           try {
-            orderId = await persistOrder(full)
+            const result = await persistOrder(full)
+            orderId = result.orderId
           } catch (e) {
             console.error('[webhook] Falha ao persistir encomenda em Supabase:', e)
           }

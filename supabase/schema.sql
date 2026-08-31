@@ -481,8 +481,12 @@ create table if not exists gift_cards (
   status text default 'active' check (status in ('pending', 'active', 'used', 'expired', 'cancelled')),
   expires_at timestamptz default (now() + interval '2 years'),
   created_at timestamptz default now(),
-  redeemed_at timestamptz
+  redeemed_at timestamptz,
+  activated_at timestamptz
 );
+
+-- Coluna nova em bases já existentes (bootstrap idempotente)
+alter table gift_cards add column if not exists activated_at timestamptz;
 
 create index if not exists idx_gift_cards_code on gift_cards(code);
 

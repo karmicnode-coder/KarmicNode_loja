@@ -3,6 +3,7 @@ import logoImg from '@/imports/Logo_KarmicNode_sem_fundo.png'
 import { type Lang, type TKey, createT, getArr } from '@/i18n'
 import { useAuth } from '@/hooks/useAuth'
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
+import { awardKarma } from '@/lib/karma'
 
 const LangContext = createContext<{ lang: Lang; t: (k: TKey) => string; arr: (k: TKey) => string[] }>({
   lang: 'pt', t: k => k, arr: () => [],
@@ -3960,19 +3961,38 @@ function Countdown() {
 }
 
 function NewsletterForm() {
-  const { t } = useLang()
+  const { t, lang } = useLang()
   const [email, setEmail] = useState('')
   const [done, setDone] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!email) return
+    setSubmitting(true)
+    try {
+      if (isSupabaseConfigured) {
+        await supabase.from('newsletter_subs').upsert({ email, language: lang, is_active: true }, { onConflict: 'email' })
+      }
+      awardKarma('newsletter_signup')
+      setDone(true)
+    } catch {
+      setDone(true) // não bloqueia a UX por causa de um erro de persistência
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
   return done ? (
     <div style={{ padding: '18px 28px', border: '1px solid var(--gold-3)', display: 'flex', alignItems: 'center', gap: 12, justifyContent: 'center', color: 'var(--gold)' }}>
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12" /></svg>
       <span style={{ fontSize: 14 }}>{t('newsletter_success')}</span>
     </div>
   ) : (
-    <form onSubmit={e => { e.preventDefault(); if (email) setDone(true) }} style={{ display: 'flex', border: '1px solid var(--gold-3)' }}>
+    <form onSubmit={handleSubmit} style={{ display: 'flex', border: '1px solid var(--gold-3)' }}>
       <input type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder={t('newsletter_placeholder')}
         style={{ flex: 1, background: 'transparent', border: 'none', padding: '14px 18px', color: 'var(--fg)', fontFamily: 'var(--f-sans)', fontSize: 14, outline: 'none' }} />
-      <button type="submit" style={{ padding: '14px 22px', background: 'var(--gold)', border: 'none', color: 'var(--bg)', fontFamily: 'var(--f-sans)', fontSize: 11, letterSpacing: '.2em', textTransform: 'uppercase', fontWeight: 700, flexShrink: 0 }}>
+      <button type="submit" disabled={submitting} style={{ padding: '14px 22px', background: 'var(--gold)', border: 'none', color: 'var(--bg)', fontFamily: 'var(--f-sans)', fontSize: 11, letterSpacing: '.2em', textTransform: 'uppercase', fontWeight: 700, flexShrink: 0, cursor: submitting ? 'wait' : 'pointer' }}>
         {t('newsletter_btn')}
       </button>
     </form>
@@ -4443,7 +4463,9 @@ function GiftCardsPage() {
   const [sender, setSender] = useState('')
   const [design, setDesign] = useState('classic')
   const [submitting, setSubmitting] = useState(false)
-  const [done, setDone] = useState(false)
+  // Nota: sem estado "pago com sucesso" local — o fluxo agora redireciona
+  // para o Stripe Checkout (handleBuy), pelo que o "done" nunca é necessário
+  // aqui; o utilizador só volta ao site via /?pagamento=sucesso (SuccessPage).
   const [error, setError] = useState('')
 
   const AMOUNTS = [25, 50, 100, 150, 250]
@@ -4458,8 +4480,8 @@ function GiftCardsPage() {
     if (!email.trim()) { setError(isEN ? 'Recipient email required' : 'Email do destinatário obrigatório'); return }
     setSubmitting(true); setError('')
     try {
+      const code = 'GC-' + Math.random().toString(36).slice(2, 6).toUpperCase() + '-' + Math.random().toString(36).slice(2, 6).toUpperCase()
       if (isSupabaseConfigured) {
-        const code = 'KN-' + Math.random().toString(36).slice(2, 6).toUpperCase() + '-' + Math.random().toString(36).slice(2, 6).toUpperCase()
         const { error: err } = await supabase.from('gift_cards').insert({
           code, initial_value_cents: amount * 100, remaining_value_cents: amount * 100,
           design, recipient_name: recipient || null, recipient_email: email,
@@ -4467,7 +4489,33 @@ function GiftCardsPage() {
         })
         if (err) throw err
       }
-      setDone(true)
+
+      // Paga o cartão-presente via Stripe Checkout, como qualquer outra compra.
+      // O webhook (checkout.session.completed) deteta metadata.gift_card_code
+      // e transita a linha correspondente 'pending' → 'active'.
+      const res = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items: [{
+            name: (isEN ? 'Karmic Node Gift Card — ' : 'Cartão-presente Karmic Node — ') + `€${amount}`,
+            description: isEN ? `Digital gift card for ${email}` : `Cartão-presente digital para ${email}`,
+            price: amount,
+            qty: 1,
+            sku: code,
+            category: 'gift-card',
+            giftCardCode: code,
+          }],
+          origin: window.location.origin,
+          locale: isEN ? 'en' : 'pt',
+        }),
+      })
+      const data = await res.json()
+      if (data.url) {
+        window.location.href = data.url
+        return
+      }
+      throw new Error(data.error || 'checkout failed')
     } catch {
       setError(isEN ? 'Something went wrong. Please contact us directly.' : 'Algo correu mal. Por favor contacta-nos diretamente.')
     } finally {
@@ -4475,19 +4523,7 @@ function GiftCardsPage() {
     }
   }
 
-  if (done) {
-    return (
-      <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 40, textAlign: 'center' }}>
-        <div>
-          <div style={{ fontSize: 48, marginBottom: 16, color: 'var(--gold)' }}>✦</div>
-          <h2 style={{ fontFamily: 'var(--f-display)', fontSize: 32, marginBottom: 12 }}>{isEN ? 'Gift card requested!' : 'Cartão-presente pedido!'}</h2>
-          <p style={{ color: 'var(--fg-mute)', maxWidth: 420, margin: '0 auto 24px', lineHeight: 1.6 }}>
-            {isEN ? "We'll process the payment and send it to your recipient's email shortly." : 'Vamos processar o pagamento e enviar para o email do destinatário em breve.'}
-          </p>
-        </div>
-      </div>
-    )
-  }
+
 
   return (
     <div style={{ padding: 'clamp(24px, 4vw, 60px)', maxWidth: 1100, margin: '0 auto' }}>
@@ -4725,6 +4761,7 @@ function PartnershipsPage({ setPage }: { setPage: (p: Page) => void }) {
         } catch { /* silencioso */ }
       }
 
+      awardKarma('partnership_apply')
       setSubmitted(true)
     } catch {
       setError(isEN ? 'Error submitting. Please try again or email us directly.' : 'Erro no envio. Tenta novamente ou envia email diretamente.')
@@ -5285,6 +5322,7 @@ export default function App() {
         supabase.from('wishlist').delete().eq('user_id', auth.user.id).eq('product_sku', sku).then(() => {}, () => {})
       } else {
         supabase.from('wishlist').insert({ user_id: auth.user.id, product_sku: sku, product_id_local: id }).then(() => {}, () => {})
+        awardKarma('wishlist_add')
       }
     }
   }, [auth.user, liveProducts, wishlist])
