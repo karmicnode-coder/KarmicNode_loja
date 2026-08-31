@@ -1232,6 +1232,51 @@ function Stars({ rating, size = 11 }: { rating: number; size?: number }) {
   )
 }
 
+// ─── Sustainability badges ─────────────────────────────────────────────────
+// O catálogo estático não tem tags de sustentabilidade próprias (o campo
+// `tags` guarda categorias, ex. ['tops','camisaria']). Mapeamos por vertical
+// + características conhecidas do produto, em vez de inventar dados falsos
+// por SKU: todos são feitos em Portugal; Atelier é feito à mão e por
+// encomenda; produtos customizáveis são "made to order".
+const SUSTAINABILITY_BADGES: Record<string, { icon: string; labelPt: string; labelEn: string; color: string }> = {
+  'made-in-portugal': { icon: '🇵🇹', labelPt: 'Feito em Portugal', labelEn: 'Made in Portugal', color: '#8B1E2D' },
+  'handmade': { icon: '✋', labelPt: 'Feito à Mão', labelEn: 'Handmade', color: '#B08D57' },
+  'made-to-order': { icon: '⏱', labelPt: 'Feito por Encomenda', labelEn: 'Made to Order', color: '#457B9D' },
+  'limited-edition': { icon: '✦', labelPt: 'Edição Limitada', labelEn: 'Limited Edition', color: '#B08D57' },
+  'organic-cotton': { icon: '🌱', labelPt: 'Algodão Orgânico', labelEn: 'Organic Cotton', color: '#4caf50' },
+}
+
+function sustainabilityTagsFor(p: Product): string[] {
+  const tags: string[] = ['made-in-portugal'] // toda a produção é feita em Portugal
+  if (p.vertical === 'atelier') tags.push('handmade', 'limited-edition')
+  if (p.customizable) tags.push('made-to-order')
+  if (p.tags?.includes('tops') || p.tags?.includes('camisaria')) tags.push('organic-cotton')
+  return Array.from(new Set(tags))
+}
+
+function SustainabilityBadges({ product, size = 'small' }: { product: Product; size?: 'small' | 'large' }) {
+  const { lang } = useLang()
+  const isEN = lang === 'en'
+  const tags = sustainabilityTagsFor(product)
+  if (!tags.length) return null
+  const fontSize = size === 'small' ? 9 : 11
+  const padding = size === 'small' ? '3px 8px' : '5px 12px'
+  return (
+    <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+      {tags.map(key => {
+        const b = SUSTAINABILITY_BADGES[key]
+        if (!b) return null
+        return (
+          <span key={key} title={isEN ? b.labelEn : b.labelPt}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding, background: b.color + '22', color: b.color, border: `1px solid ${b.color}55`, fontSize, letterSpacing: '.1em', textTransform: 'uppercase', fontWeight: 700 }}>
+            <span>{b.icon}</span><span>{isEN ? b.labelEn : b.labelPt}</span>
+          </span>
+        )
+      })}
+    </div>
+  )
+}
+
 function Eyebrow({ text }: { text: string }) {
   return (
     <div style={{ display: 'inline-flex', alignItems: 'center', gap: 12, fontFamily: 'var(--f-sans)', fontSize: 11, letterSpacing: '.28em', textTransform: 'uppercase', color: 'var(--gold)', fontWeight: 500 }}>
@@ -1343,6 +1388,7 @@ function ProductCard({ p, onAdd, onOpen, wishlist, toggleWish }: {
           <Stars rating={p.rating} />
           <span style={{ fontSize: 11, color: 'var(--fg-mute)' }}>({p.reviews})</span>
         </div>
+        <SustainabilityBadges product={p} size="small" />
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 4 }}>
           <span style={{ fontFamily: 'var(--f-display)', fontSize: 21, fontWeight: 600 }}>{fmt(p.price)}</span>
           {p.originalPrice && <span style={{ fontSize: 12, color: 'var(--fg-mute)', textDecoration: 'line-through' }}>{fmt(p.originalPrice)}</span>}
@@ -2685,6 +2731,9 @@ function ProductPage({ product, onAdd, onBack, wishlist, toggleWish, allProducts
                 <span style={{ fontSize: 12, color: product.stock > 5 ? '#4caf50' : 'var(--bordo-3)', marginLeft: 8, fontWeight: 500 }}>
                   {product.stock > 5 ? `✓ ${t('product_in_stock')} (${product.stock})` : product.stock > 0 ? `⚠ ${t('product_last_units').replace('{n}', String(product.stock))}` : `✗ ${t('product_out_of_stock')}`}
                 </span>
+              </div>
+              <div style={{ marginBottom: 16 }}>
+                <SustainabilityBadges product={product} size="large" />
               </div>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 14, marginBottom: 8 }}>
                 <span style={{ fontFamily: 'var(--f-display)', fontSize: 'clamp(32px,3.5vw,48px)', fontWeight: 600 }}>{fmt(product.price)}</span>
