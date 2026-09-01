@@ -2139,16 +2139,6 @@ function Header({ activePage, navigate, cartCount, openCart, lang, setLang, auth
             <ThemeToggle />
           </div>
           <div className="kn-header-desktop-only" style={{ display: 'flex' }}>
-            <IconBtn onClick={() => navigate('contact')}>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
-            </IconBtn>
-          </div>
-          {auth.user && (
-            <div className="kn-header-desktop-only" style={{ display: 'flex' }}>
-              <KarmaHeaderBadge userId={auth.user.id} onClick={() => navigate('account')} />
-            </div>
-          )}
-          <div className="kn-header-desktop-only" style={{ display: 'flex' }}>
             <IconBtn onClick={() => navigate(auth.user ? 'account' : 'login')}>
               {auth.user ? (
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" strokeWidth="1.8"><circle cx="12" cy="8" r="4" /><path d="M4 20c0-4 3.6-6 8-6s8 2 8 6" /></svg>
@@ -2156,6 +2146,24 @@ function Header({ activePage, navigate, cartCount, openCart, lang, setLang, auth
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="8" r="4" /><path d="M4 20c0-4 3.6-6 8-6s8 2 8 6" /></svg>
               )}
             </IconBtn>
+          </div>
+          {auth.user && (
+            <div className="kn-header-desktop-only" style={{ display: 'flex' }}>
+              <KarmaHeaderBadge userId={auth.user.id} onClick={() => navigate('account')} />
+            </div>
+          )}
+
+          {/* Admin quick-access — sempre visível; o AdminPanel redireciona não-admins */}
+          <div className="kn-header-desktop-only" style={{ display: 'flex' }}>
+            <button
+              onClick={() => navigate('admin')}
+              title={lang === 'en' ? 'Admin Panel' : 'Painel Admin'}
+              style={{
+                background: 'transparent', border: '1px solid var(--border)', width: 32, height: 32,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+                color: 'var(--gold)', fontSize: 14,
+              }}
+            >⚙</button>
           </div>
 
           <button onClick={openCart}
