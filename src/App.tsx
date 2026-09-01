@@ -3649,857 +3649,2117 @@ function BlogPage() {
     </div>
   )
 }
-// ─── CUSTOMIZER V2 ────────────────────────────────────────────────────────────
-// Configurador split-screen com live preview + kit builder + sparkles
+// ─── CUSTOMIZER PRO ───────────────────────────────────────────────────────────
+// Editor profissional de personalização de produtos: catálogo Printful real,
+// canvas com camadas (texto/imagem/clipart), undo/redo, 11 ferramentas,
+// filtros, efeitos (sombra/contorno/brilho), skins de cor, designs rápidos,
+// assistente IA (com fallback local), guardar/carregar via Supabase.
 
-// ─── Product catalog for customizer (independent of shop) ──────────────────
-type CustGroup = 'vestuario' | 'casa'
+// ── Data types ──────────────────────────────────────────────────────────────
+type CPCategory = 'vestuario' | 'tech' | 'casa'
 
-interface CustProduct {
+interface CPColor { id: string; name: string; hex: string }
+interface CPPrintArea { id: string; name: string; nameEn: string; w: number; h: number }
+interface CPPrintAreaStyle { top: string; left: string; width: string; height: string }
+
+interface PrintfulProduct {
   id: string
-  group: CustGroup
-  label: string
-  icon: string  // SVG path/content centered at 0,0 within viewBox -100..100
+  printful_id: number
+  category: CPCategory
+  type: string
+  name: string
+  nameEn: string
+  description: string
+  descriptionEn: string
   basePrice: number
-  hasSize?: boolean
-  hasFabric?: boolean
-  hasTechnique?: boolean
-  hasPosition?: boolean
-  hasModel?: boolean
-  hasMaterial?: boolean  // Casa: material do tecido
-  hasFinish?: boolean    // Casa: mate/brilhante
+  retailPrice: number
+  icon: string
+  mockupUrl: string
+  printAreaStyle: CPPrintAreaStyle
+  colors: CPColor[]
+  sizes: string[]
+  techniques: string[]
+  printAreas: CPPrintArea[]
 }
 
-const CUST_PRODUCTS: CustProduct[] = [
-  // Vestuário
-  { id: 'tshirt', group: 'vestuario', label: 'T-Shirt', basePrice: 12,
-    icon: 'M-70 -35 L-95 -10 L-70 20 L-50 10 L-50 65 L50 65 L50 10 L70 20 L95 -10 L70 -35 L45 -35 C45 -12 22 0 0 0 C-22 0 -45 -12 -45 -35 Z',
-    hasSize: true, hasFabric: true, hasTechnique: true, hasPosition: true },
-  { id: 'hoodie', group: 'vestuario', label: 'Hoodie', basePrice: 28,
-    icon: 'M-65 -30 L-95 5 L-75 35 L-55 25 L-55 75 L55 75 L55 25 L75 35 L95 5 L65 -30 C65 -60 -65 -60 -65 -30 Z M-30 -25 L-18 32 L18 32 L30 -25',
-    hasSize: true, hasFabric: true, hasTechnique: true, hasPosition: true },
-  { id: 'polo', group: 'vestuario', label: 'Polo', basePrice: 18,
-    icon: 'M-60 -35 L-90 -8 L-70 22 L-50 12 L-50 65 L50 65 L50 12 L70 22 L90 -8 L60 -35 L22 -35 L18 -18 L-18 -18 L-22 -35 Z M-18 -18 L-12 18 L12 18 L18 -18',
-    hasSize: true, hasFabric: true, hasTechnique: true, hasPosition: true },
-  { id: 'sweat', group: 'vestuario', label: 'Sweatshirt', basePrice: 22,
-    icon: 'M-65 -35 L-95 -5 L-75 25 L-55 15 L-55 70 L55 70 L55 15 L75 25 L95 -5 L65 -35 L45 -35 C45 -12 22 0 0 0 C-22 0 -45 -12 -45 -35 Z',
-    hasSize: true, hasFabric: true, hasTechnique: true, hasPosition: true },
-  { id: 'tracksuit', group: 'vestuario', label: 'Fato Treino', basePrice: 32,
-    icon: 'M-50 -25 L-65 25 L-50 35 L-45 80 L-12 80 L-12 12 L12 12 L12 80 L45 80 L50 35 L65 25 L50 -25 L22 -25 L0 -8 L-22 -25 Z',
-    hasSize: true, hasFabric: true, hasTechnique: true, hasPosition: true },
-  { id: 'cap', group: 'vestuario', label: 'Boné', basePrice: 9,
-    icon: 'M-50 20 L50 20 L50 -8 C50 -38 -50 -38 -50 -8 Z M-50 20 L65 25 L65 38 L-50 38 Z',
-    hasTechnique: true, hasPosition: true },
-  { id: 'tote', group: 'vestuario', label: 'Tote Bag', basePrice: 7,
-    icon: 'M-50 -12 L-50 68 L50 68 L50 -12 Z M-28 -12 C-28 -42 28 -42 28 -12',
-    hasTechnique: true, hasPosition: true },
-  { id: 'mousepad', group: 'vestuario', label: 'Tapete Rato XL', basePrice: 8,
-    icon: 'M-85 -35 L85 -35 L85 35 L-85 35 Z M-70 -20 L70 -20 M-70 0 L70 0 M-70 20 L70 20',
-    hasTechnique: true },
-  // Casa
-  { id: 'cushion', group: 'casa', label: 'Almofada', basePrice: 20,
-    icon: 'M-50 -40 L50 -40 L60 -30 L60 30 L50 40 L-50 40 L-60 30 L-60 -30 Z',
-    hasTechnique: true, hasPosition: true, hasMaterial: true },
-  { id: 'throw', group: 'casa', label: 'Manta', basePrice: 45,
-    icon: 'M-70 -50 L70 -50 L70 50 L-70 50 Z M-70 -30 L70 -30 M-70 -10 L70 -10 M-70 10 L70 10 M-70 30 L70 30',
-    hasTechnique: true, hasMaterial: true },
-  { id: 'towel', group: 'casa', label: 'Toalha', basePrice: 18,
-    icon: 'M-40 -60 L40 -60 L40 60 L-40 60 Z M-40 -45 L40 -45 M-40 45 L40 45',
-    hasTechnique: true, hasPosition: true },
-  { id: 'robe', group: 'casa', label: 'Roupão', basePrice: 55,
-    icon: 'M-45 -50 L-25 -55 L25 -55 L45 -50 L50 60 L-50 60 Z M0 -50 L0 60 M-30 -20 L-30 10 M30 -20 L30 10',
-    hasTechnique: true, hasPosition: true, hasSize: true },
-  { id: 'apron', group: 'casa', label: 'Avental', basePrice: 22,
-    icon: 'M-30 -50 L30 -50 L45 -30 L45 55 L-45 55 L-45 -30 Z M-25 -55 L25 -55 M0 -50 L0 -35',
-    hasTechnique: true, hasPosition: true },
-  { id: 'placemat', group: 'casa', label: 'Individual de Mesa', basePrice: 12,
-    icon: 'M-70 -35 L70 -35 L70 35 L-70 35 Z M-55 -20 L55 -20 M-55 20 L55 20',
-    hasTechnique: true, hasPosition: true },
+// 10 produtos personalizáveis baseados no catálogo real do Printful.
+const CP_PRINTFUL_PRODUCTS: PrintfulProduct[] = [
+  {
+    id: 'tshirt-bella-3001', printful_id: 71, category: 'vestuario', type: 'tshirt',
+    name: 'T-shirt Essencial', nameEn: 'Essential T-shirt',
+    description: '100% algodão penteado. Corte unissex. Toque suave.',
+    descriptionEn: '100% combed cotton. Unisex fit. Soft touch.',
+    basePrice: 12.66, retailPrice: 24.99, icon: '👕', mockupUrl: '/mockups/tshirt.png',
+    printAreaStyle: { top: '25%', left: '30%', width: '40%', height: '45%' },
+    colors: [
+      { id: 'black', name: 'Preto', hex: '#0B0B0C' },
+      { id: 'white', name: 'Branco', hex: '#F5F2ED' },
+      { id: 'heather-grey', name: 'Cinza Mesclado', hex: '#9a9a9a' },
+      { id: 'maroon', name: 'Bordeaux', hex: '#8B1E2D' },
+      { id: 'sand', name: 'Areia', hex: '#d4c4a8' },
+      { id: 'navy', name: 'Azul-marinho', hex: '#1e2a3d' },
+    ],
+    sizes: ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL'],
+    techniques: ['dtg', 'dtf'],
+    printAreas: [
+      { id: 'front', name: 'Frente', nameEn: 'Front', w: 300, h: 400 },
+      { id: 'back', name: 'Costas', nameEn: 'Back', w: 300, h: 400 },
+      { id: 'left-sleeve', name: 'Manga esquerda', nameEn: 'Left sleeve', w: 100, h: 100 },
+      { id: 'right-sleeve', name: 'Manga direita', nameEn: 'Right sleeve', w: 100, h: 100 },
+    ],
+  },
+  {
+    id: 'hoodie-heritage-m2580', printful_id: 380, category: 'vestuario', type: 'hoodie',
+    name: 'Hoodie Premium', nameEn: 'Premium Hoodie',
+    description: 'Hoodie pesado com capuz forrado. 100% algodão orgânico.',
+    descriptionEn: 'Heavy hoodie with lined hood. 100% organic cotton.',
+    basePrice: 26.23, retailPrice: 54.99, icon: '🧥', mockupUrl: '/mockups/hoodie.png',
+    printAreaStyle: { top: '28%', left: '30%', width: '40%', height: '38%' },
+    colors: [
+      { id: 'black', name: 'Preto', hex: '#0B0B0C' },
+      { id: 'white', name: 'Branco', hex: '#F5F2ED' },
+      { id: 'maroon', name: 'Bordeaux', hex: '#8B1E2D' },
+      { id: 'navy', name: 'Azul-marinho', hex: '#1e2a3d' },
+      { id: 'forest', name: 'Verde-floresta', hex: '#2c4a3d' },
+    ],
+    sizes: ['S', 'M', 'L', 'XL', '2XL', '3XL'],
+    techniques: ['dtg', 'embroidery'],
+    printAreas: [
+      { id: 'front', name: 'Frente', nameEn: 'Front', w: 280, h: 380 },
+      { id: 'back', name: 'Costas', nameEn: 'Back', w: 280, h: 380 },
+      { id: 'hood', name: 'Capuz', nameEn: 'Hood', w: 200, h: 100 },
+      { id: 'pocket', name: 'Bolso', nameEn: 'Pocket', w: 180, h: 100 },
+    ],
+  },
+  {
+    id: 'sweatshirt-heritage-m2480', printful_id: 381, category: 'vestuario', type: 'sweatshirt',
+    name: 'Sweatshirt Clássica', nameEn: 'Classic Sweatshirt',
+    description: 'Sweatshirt sem capuz. Corte relaxado. Ideal para o outono.',
+    descriptionEn: 'Sweatshirt without hood. Relaxed fit. Perfect for fall.',
+    basePrice: 25.66, retailPrice: 49.99, icon: '👔', mockupUrl: '/mockups/sweatshirt.png',
+    printAreaStyle: { top: '25%', left: '30%', width: '40%', height: '40%' },
+    colors: [
+      { id: 'black', name: 'Preto', hex: '#0B0B0C' },
+      { id: 'white', name: 'Branco', hex: '#F5F2ED' },
+      { id: 'maroon', name: 'Bordeaux', hex: '#8B1E2D' },
+      { id: 'heather-grey', name: 'Cinza Mesclado', hex: '#9a9a9a' },
+    ],
+    sizes: ['S', 'M', 'L', 'XL', '2XL', '3XL'],
+    techniques: ['dtg', 'embroidery'],
+    printAreas: [
+      { id: 'front', name: 'Frente', nameEn: 'Front', w: 280, h: 380 },
+      { id: 'back', name: 'Costas', nameEn: 'Back', w: 280, h: 380 },
+    ],
+  },
+  {
+    id: 'cap-flexfit', printful_id: 261, category: 'vestuario', type: 'cap',
+    name: 'Boné Ajustável', nameEn: 'Adjustable Cap',
+    description: 'Boné bordado, 6 painéis, ajustável.',
+    descriptionEn: 'Embroidered cap, 6 panels, adjustable.',
+    basePrice: 12.95, retailPrice: 27.99, icon: '🧢', mockupUrl: '/mockups/cap.png',
+    printAreaStyle: { top: '35%', left: '35%', width: '30%', height: '15%' },
+    colors: [
+      { id: 'black', name: 'Preto', hex: '#0B0B0C' },
+      { id: 'white', name: 'Branco', hex: '#F5F2ED' },
+      { id: 'maroon', name: 'Bordeaux', hex: '#8B1E2D' },
+      { id: 'navy', name: 'Azul-marinho', hex: '#1e2a3d' },
+      { id: 'khaki', name: 'Caqui', hex: '#c3b091' },
+    ],
+    sizes: ['One Size'],
+    techniques: ['embroidery', 'dtf'],
+    printAreas: [
+      { id: 'front', name: 'Frente', nameEn: 'Front', w: 180, h: 80 },
+      { id: 'left', name: 'Lado esquerdo', nameEn: 'Left side', w: 80, h: 60 },
+      { id: 'right', name: 'Lado direito', nameEn: 'Right side', w: 80, h: 60 },
+      { id: 'back', name: 'Traseira', nameEn: 'Back', w: 100, h: 40 },
+    ],
+  },
+  {
+    id: 'tote-eco', printful_id: 402, category: 'vestuario', type: 'tote',
+    name: 'Tote Bag Eco', nameEn: 'Eco Tote Bag',
+    description: 'Saco de compras em algodão orgânico. 38×42 cm.',
+    descriptionEn: 'Organic cotton shopping bag. 38×42 cm.',
+    basePrice: 9.50, retailPrice: 19.99, icon: '👜', mockupUrl: '/mockups/tote.png',
+    printAreaStyle: { top: '30%', left: '27%', width: '45%', height: '45%' },
+    colors: [
+      { id: 'natural', name: 'Natural', hex: '#e8dcc4' },
+      { id: 'black', name: 'Preto', hex: '#0B0B0C' },
+      { id: 'maroon', name: 'Bordeaux', hex: '#8B1E2D' },
+    ],
+    sizes: ['One Size'],
+    techniques: ['dtg', 'dtf'],
+    printAreas: [
+      { id: 'front', name: 'Frente', nameEn: 'Front', w: 250, h: 250 },
+      { id: 'back', name: 'Costas', nameEn: 'Back', w: 250, h: 250 },
+    ],
+  },
+  {
+    id: 'socks-premium', printful_id: 570, category: 'vestuario', type: 'socks',
+    name: 'Meias Premium', nameEn: 'Premium Socks',
+    description: 'Meias com padrão all-over. Poliéster reciclado.',
+    descriptionEn: 'Socks with all-over print. Recycled polyester.',
+    basePrice: 8.75, retailPrice: 17.99, icon: '🧦', mockupUrl: '/mockups/socks.png',
+    printAreaStyle: { top: '30%', left: '20%', width: '60%', height: '40%' },
+    colors: [{ id: 'white', name: 'Branco (base)', hex: '#F5F2ED' }],
+    sizes: ['S/M', 'L/XL'],
+    techniques: ['sublimation'],
+    printAreas: [{ id: 'wrap', name: 'All-over', nameEn: 'All-over', w: 400, h: 300 }],
+  },
+  {
+    id: 'phone-case-iphone', printful_id: 181, category: 'tech', type: 'phone-case',
+    name: 'Case iPhone', nameEn: 'iPhone Case',
+    description: 'Capa rígida com impressão UV. Para iPhone 12 até 15 Pro Max.',
+    descriptionEn: 'Hard case with UV print. For iPhone 12 to 15 Pro Max.',
+    basePrice: 11.95, retailPrice: 24.99, icon: '📱', mockupUrl: '/mockups/phone-case.png',
+    printAreaStyle: { top: '15%', left: '35%', width: '30%', height: '70%' },
+    colors: [
+      { id: 'clear', name: 'Transparente', hex: '#ffffff' },
+      { id: 'black', name: 'Preto', hex: '#0B0B0C' },
+      { id: 'white', name: 'Branco', hex: '#F5F2ED' },
+    ],
+    sizes: ['iPhone 12', 'iPhone 13', 'iPhone 14', 'iPhone 15', 'iPhone 15 Pro Max'],
+    techniques: ['uv-print'],
+    printAreas: [{ id: 'back', name: 'Traseira', nameEn: 'Back', w: 200, h: 400 }],
+  },
+  {
+    id: 'mousepad-large', printful_id: 522, category: 'tech', type: 'mousepad',
+    name: 'Mousepad Gaming', nameEn: 'Gaming Mousepad',
+    description: 'Mousepad grande com base antiderrapante. 36×18 cm.',
+    descriptionEn: 'Large mousepad with non-slip base. 36×18 cm.',
+    basePrice: 13.50, retailPrice: 27.99, icon: '🖱️', mockupUrl: '/mockups/mousepad.png',
+    printAreaStyle: { top: '20%', left: '15%', width: '70%', height: '60%' },
+    colors: [{ id: 'black', name: 'Base preta', hex: '#0B0B0C' }],
+    sizes: ['36×18cm'],
+    techniques: ['sublimation'],
+    printAreas: [{ id: 'top', name: 'Superfície', nameEn: 'Surface', w: 360, h: 180 }],
+  },
+  {
+    id: 'mug-ceramic', printful_id: 19, category: 'casa', type: 'mug',
+    name: 'Caneca Cerâmica', nameEn: 'Ceramic Mug',
+    description: 'Caneca de cerâmica 330ml. Lava-loiça friendly.',
+    descriptionEn: '330ml ceramic mug. Dishwasher friendly.',
+    basePrice: 6.95, retailPrice: 15.99, icon: '☕', mockupUrl: '/mockups/mug.png',
+    printAreaStyle: { top: '30%', left: '35%', width: '30%', height: '40%' },
+    colors: [
+      { id: 'white', name: 'Branco', hex: '#F5F2ED' },
+      { id: 'black', name: 'Preto', hex: '#0B0B0C' },
+    ],
+    sizes: ['11oz', '15oz'],
+    techniques: ['sublimation'],
+    printAreas: [{ id: 'wrap', name: 'Wrap', nameEn: 'Wrap', w: 200, h: 85 }],
+  },
+  {
+    id: 'poster-a3', printful_id: 1, category: 'casa', type: 'poster',
+    name: 'Poster Mate A3', nameEn: 'Matte Poster A3',
+    description: 'Poster premium em papel mate. Sem moldura.',
+    descriptionEn: 'Premium poster on matte paper. No frame.',
+    basePrice: 9.95, retailPrice: 22.99, icon: '🖼️', mockupUrl: '/mockups/poster.png',
+    printAreaStyle: { top: '10%', left: '20%', width: '60%', height: '80%' },
+    colors: [{ id: 'white', name: 'Fundo branco', hex: '#F5F2ED' }],
+    sizes: ['A4', 'A3', 'A2'],
+    techniques: ['giclee'],
+    printAreas: [{ id: 'front', name: 'Frente', nameEn: 'Front', w: 297, h: 420 }],
+  },
 ]
 
-// Cores base disponíveis
-const CUST_COLORS = [
-  { hex: '#F5F2ED', key: 'ivory', label: 'Marfim' },
-  { hex: '#0B0B0C', key: 'black', label: 'Preto' },
-  { hex: '#8B1E2D', key: 'bordo', label: 'Bordo' },
-  { hex: '#B08D57', key: 'gold', label: 'Gold' },
-  { hex: '#1a3a5c', key: 'navy', label: 'Navy' },
-  { hex: '#2d5a27', key: 'olive', label: 'Verde-oliva' },
-  { hex: '#5c3317', key: 'brown', label: 'Castanho' },
-  { hex: '#808080', key: 'gray', label: 'Cinzento' },
-  { hex: '#c94b2d', key: 'terracotta', label: 'Terracota' },
-  { hex: '#e8c84a', key: 'yellow', label: 'Amarelo' },
+// ── Layer model ──────────────────────────────────────────────────────────────
+interface DesignLayer {
+  id: string
+  type: 'text' | 'image' | 'shape'
+  x: number; y: number; w: number; h: number
+  rotation: number; opacity: number
+  flipX?: boolean; flipY?: boolean
+  filter?: string | null
+  shadow?: boolean; shadowBlur?: number; shadowColor?: string
+  outline?: boolean; outlineWidth?: number; outlineColor?: string
+  glow?: boolean; glowColor?: string
+  // text
+  text?: string; font?: string; fontSize?: number; color?: string
+  bold?: boolean; italic?: boolean; underline?: boolean; letterSpacing?: number
+  // image
+  url?: string; name?: string
+  // shape
+  svg?: string; fill?: string
+}
+type NewDesignLayer = Partial<DesignLayer> & { type: DesignLayer['type'] }
+type CPLayersByView = Record<string, DesignLayer[]>
+
+interface CPFont { id: string; name: string; family: string }
+interface CPClipartItem { cat: string; id: string; svg: string }
+interface CPQuickDesign { id: string; name: string; preview: string; layers: NewDesignLayer[] }
+interface CPFilterDef { id: string; name: string; css: string }
+
+const CP_FONTS: CPFont[] = [
+  { id: 'cormorant', name: 'Cormorant', family: "'Cormorant Garamond', serif" },
+  { id: 'playfair', name: 'Playfair', family: "'Playfair Display', serif" },
+  { id: 'inter', name: 'Inter', family: "'Inter', sans-serif" },
+  { id: 'oswald', name: 'Oswald', family: "'Oswald', sans-serif" },
+  { id: 'bebas', name: 'Bebas Neue', family: "'Bebas Neue', sans-serif" },
+  { id: 'anton', name: 'Anton', family: "'Anton', sans-serif" },
+  { id: 'monoton', name: 'Monoton', family: "'Monoton', display" },
+  { id: 'bungee', name: 'Bungee', family: "'Bungee', display" },
+  { id: 'permanent', name: 'Marker', family: "'Permanent Marker', cursive" },
+  { id: 'caveat', name: 'Caveat', family: "'Caveat', cursive" },
+  { id: 'dancing', name: 'Dancing', family: "'Dancing Script', cursive" },
+  { id: 'mono', name: 'Space Mono', family: "'Space Mono', monospace" },
+  { id: 'jetbrains', name: 'JetBrains', family: "'JetBrains Mono', monospace" },
+  { id: 'cinzel', name: 'Cinzel', family: "'Cinzel', display" },
+  { id: 'abril', name: 'Abril', family: "'Abril Fatface', display" },
+  { id: 'lora', name: 'Lora', family: "'Lora', serif" },
+  { id: 'merri', name: 'Merriweather', family: "'Merriweather', serif" },
+  { id: 'righteous', name: 'Righteous', family: "'Righteous', display" },
+  { id: 'unifrak', name: 'Gothic', family: "'UnifrakturCook', display" },
+  { id: 'shadows', name: 'Shadows', family: "'Shadows Into Light', cursive" },
 ]
 
-const CUST_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL']
-const CUST_FABRICS = [
-  { id: 'cotton', label: 'Algodão 100%', mult: 1, note: 'Respirável · Durável' },
-  { id: 'cotton_poly', label: 'Algodão/Poliéster', mult: 0.9, note: 'Anti-rugas · Económico' },
-  { id: 'organic', label: 'Algodão Orgânico', mult: 1.25, note: 'Sustentável · Certificado GOTS' },
-  { id: 'premium', label: 'Premium Pima', mult: 1.55, note: 'Suave · Luxo' },
+const CP_CLIPART: CPClipartItem[] = [
+  { cat: 'karmic', id: 'sparkle', svg: '<path d="M50 10 L55 45 L90 50 L55 55 L50 90 L45 55 L10 50 L45 45 Z"/>' },
+  { cat: 'karmic', id: 'sun', svg: '<circle cx="50" cy="50" r="15"/><g stroke="currentColor" stroke-width="3" stroke-linecap="round" fill="none"><line x1="50" y1="10" x2="50" y2="25"/><line x1="50" y1="75" x2="50" y2="90"/><line x1="10" y1="50" x2="25" y2="50"/><line x1="75" y1="50" x2="90" y2="50"/></g>' },
+  { cat: 'karmic', id: 'moon', svg: '<path d="M60 15 A35 35 0 1 0 60 85 A28 28 0 1 1 60 15"/>' },
+  { cat: 'karmic', id: 'infinity', svg: '<path d="M20 50 C 20 30, 40 30, 50 50 C 60 70, 80 70, 80 50 C 80 30, 60 30, 50 50 C 40 70, 20 70, 20 50" fill="none" stroke="currentColor" stroke-width="6"/>' },
+  { cat: 'karmic', id: 'crown', svg: '<path d="M15 70 L15 40 L30 55 L50 30 L70 55 L85 40 L85 70 Z"/>' },
+  { cat: 'karmic', id: 'diamond', svg: '<polygon points="50,15 75,45 50,85 25,45"/>' },
+  { cat: 'karmic', id: 'lotus', svg: '<path d="M50 90 C 20 70, 20 40, 50 20 C 80 40, 80 70, 50 90"/>' },
+  { cat: 'karmic', id: 'eye', svg: '<ellipse cx="50" cy="50" rx="40" ry="20"/><circle cx="50" cy="50" r="8" fill="#fff"/><circle cx="50" cy="50" r="3"/>' },
+  { cat: 'shapes', id: 'circle', svg: '<circle cx="50" cy="50" r="40"/>' },
+  { cat: 'shapes', id: 'square', svg: '<rect x="10" y="10" width="80" height="80"/>' },
+  { cat: 'shapes', id: 'triangle', svg: '<polygon points="50,10 90,90 10,90"/>' },
+  { cat: 'shapes', id: 'diamond-s', svg: '<polygon points="50,10 90,50 50,90 10,50"/>' },
+  { cat: 'shapes', id: 'hexagon', svg: '<polygon points="50,10 85,30 85,70 50,90 15,70 15,30"/>' },
+  { cat: 'shapes', id: 'pentagon', svg: '<polygon points="50,10 90,40 75,85 25,85 10,40"/>' },
+  { cat: 'shapes', id: 'arrow', svg: '<polygon points="10,40 60,40 60,20 90,50 60,80 60,60 10,60"/>' },
+  { cat: 'shapes', id: 'plus', svg: '<polygon points="40,10 60,10 60,40 90,40 90,60 60,60 60,90 40,90 40,60 10,60 10,40 40,40"/>' },
+  { cat: 'stars', id: 'star5', svg: '<polygon points="50,5 61,35 95,35 68,55 78,90 50,70 22,90 32,55 5,35 39,35"/>' },
+  { cat: 'stars', id: 'star6', svg: '<polygon points="50,10 62,42 95,42 68,60 78,90 50,72 22,90 32,60 5,42 38,42"/>' },
+  { cat: 'stars', id: 'burst', svg: '<polygon points="50,5 55,30 75,15 65,40 90,45 65,55 75,80 55,68 50,95 45,68 25,80 35,55 10,45 35,40 25,15 45,30"/>' },
+  { cat: 'symbols', id: 'heart', svg: '<path d="M50 85 C 15 60, 15 25, 35 25 C 45 25, 50 35, 50 40 C 50 35, 55 25, 65 25 C 85 25, 85 60, 50 85 Z"/>' },
+  { cat: 'symbols', id: 'peace', svg: '<circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" stroke-width="4"/><line x1="50" y1="10" x2="50" y2="90" stroke="currentColor" stroke-width="4"/><line x1="50" y1="50" x2="25" y2="75" stroke="currentColor" stroke-width="4"/><line x1="50" y1="50" x2="75" y2="75" stroke="currentColor" stroke-width="4"/>' },
+  { cat: 'symbols', id: 'lightning', svg: '<polygon points="55,10 30,50 45,50 40,90 70,45 55,45"/>' },
+  { cat: 'symbols', id: 'flame', svg: '<path d="M50 90 C 20 75, 20 55, 35 40 C 40 50, 45 45, 45 35 C 45 25, 50 15, 60 20 C 55 30, 65 30, 70 40 C 80 55, 80 75, 50 90 Z"/>' },
+  { cat: 'nature', id: 'leaf', svg: '<path d="M50 90 C 20 70, 15 30, 50 10 C 85 30, 80 70, 50 90 Z"/>' },
+  { cat: 'nature', id: 'tree', svg: '<rect x="45" y="60" width="10" height="30"/><circle cx="50" cy="45" r="30"/>' },
+  { cat: 'nature', id: 'mountain', svg: '<polygon points="10,85 35,40 50,60 65,30 90,85"/>' },
+  { cat: 'nature', id: 'flower', svg: '<circle cx="50" cy="30" r="12"/><circle cx="30" cy="50" r="12"/><circle cx="70" cy="50" r="12"/><circle cx="50" cy="70" r="12"/><circle cx="50" cy="50" r="10"/>' },
+  { cat: 'nature', id: 'cloud', svg: '<path d="M30 60 A 12 12 0 0 1 40 45 A 15 15 0 0 1 65 45 A 12 12 0 0 1 75 65 L 25 65 Z"/>' },
+  { cat: 'tech', id: 'circuit', svg: '<circle cx="50" cy="50" r="8" fill="none" stroke="currentColor" stroke-width="3"/><line x1="10" y1="50" x2="42" y2="50" stroke="currentColor" stroke-width="3"/><line x1="58" y1="50" x2="90" y2="50" stroke="currentColor" stroke-width="3"/><circle cx="10" cy="50" r="4"/><circle cx="90" cy="50" r="4"/>' },
+  { cat: 'tech', id: 'pixel', svg: '<rect x="20" y="30" width="10" height="10"/><rect x="30" y="20" width="10" height="10"/><rect x="40" y="30" width="10" height="10"/><rect x="50" y="30" width="10" height="10"/><rect x="60" y="20" width="10" height="10"/><rect x="70" y="30" width="10" height="10"/><rect x="10" y="40" width="80" height="10"/><rect x="20" y="50" width="60" height="10"/><rect x="30" y="60" width="40" height="10"/><rect x="40" y="70" width="20" height="10"/>' },
 ]
-const CUST_TECHNIQUES = [
-  { id: 'embroidery', label: 'Bordado', add: 6, note: 'Elegante · Alta durabilidade' },
-  { id: 'dtg', label: 'Impressão DTG', add: 4, note: 'Cores vivas · Foto-realismo' },
-  { id: 'screen', label: 'Serigrafia', add: 3, note: 'Ideal ≥ 20 unidades' },
-  { id: 'vinyl', label: 'Vinil Térmico', add: 5, note: 'Acabamento premium' },
-]
-const CUST_POSITIONS = [
-  { id: 'chest', label: 'Peito', x: 0, y: -8 },
-  { id: 'back', label: 'Costas', x: 0, y: 15 },
-  { id: 'sleeve', label: 'Manga', x: -60, y: 0 },
-  { id: 'center', label: 'Centro', x: 0, y: 5 },
-]
-const IT_MATERIALS = [
-  { id: 'linen', label: 'Linho Natural', mult: 1, note: 'Respirável · Textura orgânica' },
-  { id: 'cotton_home', label: 'Algodão Egípcio', mult: 1.2, note: 'Suave · Durável' },
-  { id: 'velvet', label: 'Veludo', mult: 1.5, note: 'Luxo · Toque aveludado' },
-  { id: 'wool_home', label: 'Lã Merino', mult: 1.7, note: 'Quente · Premium' },
-]
-const IT_FINISHES = [
-  { id: 'matte', label: 'Mate', mult: 1 },
-  { id: 'glossy', label: 'Brilhante', mult: 1.05 },
-]
-const IT_MODELS: string[] = [] // legado: nenhum CUST_PRODUCT usa hasModel após pivot Atelier/Casa
 
-// ─── Sparkles component ───────────────────────────────────────────────────
-function Sparkles({ trigger }: { trigger: number }) {
-  const [items, setItems] = useState<{ id: number; x: number; y: number; dx: number; dy: number; rot: number }[]>([])
-  useEffect(() => {
-    if (trigger === 0) return
-    const now = Date.now()
-    const arr: any[] = []
-    for (let i = 0; i < 12; i++) {
-      arr.push({
-        id: now + i,
-        x: 50 + (Math.random() - 0.5) * 20,
-        y: 50 + (Math.random() - 0.5) * 20,
-        dx: (Math.random() - 0.5) * 200,
-        dy: (Math.random() - 0.5) * 200 - 60,
-        rot: Math.random() * 720 - 360,
-      })
-    }
-    setItems(arr)
-    const t = setTimeout(() => setItems([]), 1100)
-    return () => clearTimeout(t)
-  }, [trigger])
+const CP_QUICK_DESIGNS: CPQuickDesign[] = [
+  { id: 'kn-signature', name: 'Karmic Signature', preview: '✦', layers: [
+    { type: 'text', text: 'KARMIC', font: "'Cormorant Garamond', serif", fontSize: 48, color: '#0B0B0C', x: 50, y: 45, w: 40, h: 10 },
+    { type: 'text', text: '· NODE ·', font: "'Inter', sans-serif", fontSize: 12, color: '#B08D57', x: 50, y: 55, w: 30, h: 5, letterSpacing: 6 },
+  ]},
+  { id: 'moda-alma', name: 'Moda com Alma', preview: '✧', layers: [
+    { type: 'text', text: 'MODA', font: "'Cormorant Garamond', serif", fontSize: 42, color: '#0B0B0C', x: 50, y: 45, w: 30, h: 8 },
+    { type: 'text', text: 'com alma', font: "'Cormorant Garamond', serif", fontSize: 32, color: '#8B1E2D', x: 50, y: 55, w: 35, h: 8, italic: true },
+  ]},
+  { id: 'estilo', name: 'Estilo Atemporal', preview: '❃', layers: [
+    { type: 'text', text: 'ESTILO', font: "'Playfair Display', serif", fontSize: 56, color: '#0B0B0C', x: 50, y: 45, w: 40, h: 12 },
+    { type: 'text', text: 'ATEMPORAL', font: "'Inter', sans-serif", fontSize: 14, color: '#B08D57', x: 50, y: 57, w: 40, h: 5, letterSpacing: 8 },
+  ]},
+  { id: 'sparkle-only', name: 'Sparkle', preview: '★', layers: [
+    { type: 'shape', svg: '<path d="M50 10 L55 45 L90 50 L55 55 L50 90 L45 55 L10 50 L45 45 Z"/>', fill: '#B08D57', x: 50, y: 50, w: 30, h: 30 },
+  ]},
+  { id: 'monogram', name: 'Monograma KN', preview: '◉', layers: [
+    { type: 'shape', svg: '<circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" stroke-width="4"/>', fill: '#0B0B0C', x: 50, y: 50, w: 40, h: 40 },
+    { type: 'text', text: 'KN', font: "'Cormorant Garamond', serif", fontSize: 42, color: '#0B0B0C', x: 50, y: 50, w: 15, h: 12, bold: true },
+  ]},
+  { id: 'crown-t', name: 'Coroa Real', preview: '♛', layers: [
+    { type: 'shape', svg: '<path d="M15 70 L15 40 L30 55 L50 30 L70 55 L85 40 L85 70 Z"/>', fill: '#B08D57', x: 50, y: 40, w: 20, h: 15 },
+    { type: 'text', text: 'KARMIC', font: "'UnifrakturCook', display", fontSize: 32, color: '#0B0B0C', x: 50, y: 60, w: 35, h: 10 },
+  ]},
+  { id: 'street', name: 'Street', preview: 'Aa', layers: [
+    { type: 'text', text: 'BUILT DIFFERENT', font: "'Bebas Neue', sans-serif", fontSize: 40, color: '#0B0B0C', x: 50, y: 45, w: 55, h: 10, letterSpacing: 4 },
+    { type: 'text', text: '✦ Karmic Node ✦', font: "'Inter', sans-serif", fontSize: 11, color: '#B08D57', x: 50, y: 55, w: 35, h: 4 },
+  ]},
+  { id: 'lotus-zen', name: 'Zen', preview: '❋', layers: [
+    { type: 'shape', svg: '<path d="M50 90 C 20 70, 20 40, 50 20 C 80 40, 80 70, 50 90"/>', fill: '#B08D57', x: 50, y: 45, w: 25, h: 25 },
+    { type: 'text', text: 'zen', font: "'Caveat', cursive", fontSize: 36, color: '#0B0B0C', x: 50, y: 65, w: 20, h: 8 },
+  ]},
+  { id: 'badge', name: 'Círculo Badge', preview: '◎', layers: [
+    { type: 'shape', svg: '<circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" stroke-width="3"/>', fill: '#B08D57', x: 50, y: 50, w: 40, h: 40 },
+    { type: 'text', text: 'EST · 2026', font: "'Inter', sans-serif", fontSize: 12, color: '#B08D57', x: 50, y: 50, w: 25, h: 5, letterSpacing: 4 },
+  ]},
+  { id: 'wave', name: 'Good Vibes', preview: '≈', layers: [
+    { type: 'text', text: 'good', font: "'Dancing Script', cursive", fontSize: 40, color: '#0B0B0C', x: 50, y: 42, w: 30, h: 10, italic: true },
+    { type: 'text', text: 'VIBES', font: "'Bebas Neue', sans-serif", fontSize: 60, color: '#8B1E2D', x: 50, y: 55, w: 45, h: 12, letterSpacing: 6 },
+  ]},
+]
+
+const CP_PALETTE: string[] = [
+  '#0B0B0C', '#F5F2ED', '#8B1E2D', '#B08D57',
+  '#FFFFFF', '#EEEEEE', '#CCCCCC', '#999999', '#666666', '#333333',
+  '#E63946', '#F1FAEE', '#A8DADC', '#457B9D', '#1D3557',
+  '#FFD166', '#06D6A0', '#118AB2', '#073B4C', '#EF476F',
+  '#8ECAE6', '#219EBC', '#023047', '#FFB703', '#FB8500',
+  '#2A9D8F', '#E9C46A', '#F4A261', '#E76F51', '#264653',
+]
+
+const CP_FILTERS: CPFilterDef[] = [
+  { id: 'none', name: 'Original', css: 'none' },
+  { id: 'bw', name: 'P&B', css: 'grayscale(1)' },
+  { id: 'sepia', name: 'Sépia', css: 'sepia(0.8)' },
+  { id: 'vintage', name: 'Vintage', css: 'sepia(0.5) contrast(1.1) brightness(0.9)' },
+  { id: 'invert', name: 'Invert', css: 'invert(1)' },
+  { id: 'high-c', name: 'Contraste', css: 'contrast(1.5) saturate(1.2)' },
+  { id: 'warm', name: 'Quente', css: 'sepia(0.2) saturate(1.3)' },
+  { id: 'cool', name: 'Frio', css: 'saturate(1.2) hue-rotate(15deg) brightness(1.02)' },
+  { id: 'sharp', name: 'Nítido', css: 'contrast(1.25) saturate(1.1)' },
+  { id: 'dreamy', name: 'Sonho', css: 'blur(0.5px) brightness(1.1) saturate(1.15)' },
+]
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+const cpUid = (): string => 'l-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5)
+const cpClamp = (v: number, min: number, max: number): number => Math.max(min, Math.min(max, v))
+const cpHexToHue = (hex: string): number => {
+  if (!hex || hex.length < 7) return 0
+  const r = parseInt(hex.slice(1, 3), 16) / 255
+  const g = parseInt(hex.slice(3, 5), 16) / 255
+  const b = parseInt(hex.slice(5, 7), 16) / 255
+  const max = Math.max(r, g, b), min = Math.min(r, g, b)
+  let hue = 0
+  if (max === min) hue = 0
+  else if (max === r) hue = ((g - b) / (max - min)) * 60
+  else if (max === g) hue = (2 + (b - r) / (max - min)) * 60
+  else hue = (4 + (r - g) / (max - min)) * 60
+  return hue < 0 ? hue + 360 : hue
+}
+const cpColorFilter = (hex: string): string => {
+  if (!hex) return 'none'
+  const light = ['#F5F2ED', '#FFFFFF', '#EEEEEE', '#e8dcc4', '#d4c4a8', '#F1FAEE']
+  if (light.includes(hex.toUpperCase()) || light.includes(hex)) return 'none'
+  const hue = cpHexToHue(hex)
+  return `brightness(0.9) hue-rotate(${hue}deg) saturate(1.4)`
+}
+
+// ── Reusable inline styles ───────────────────────────────────────────────────
+const cps = {
+  input: {
+    width: '100%', background: 'var(--bg-2)', border: '1px solid var(--border)',
+    color: 'var(--fg)', padding: '10px 12px', fontFamily: 'inherit', fontSize: 13, outline: 'none',
+  } as React.CSSProperties,
+  label: {
+    display: 'block', fontSize: 9, letterSpacing: '.22em', textTransform: 'uppercase',
+    color: 'var(--fg-mute)', marginBottom: 6, fontWeight: 600,
+  } as React.CSSProperties,
+  btnPrimary: {
+    padding: '12px 24px', background: 'var(--gold)', color: 'var(--bg)', border: 'none',
+    fontSize: 10, letterSpacing: '.22em', textTransform: 'uppercase', fontWeight: 700,
+    cursor: 'pointer', fontFamily: 'var(--f-sans)',
+  } as React.CSSProperties,
+  btnGhost: {
+    padding: '10px 20px', background: 'transparent', color: 'var(--fg-mute)',
+    border: '1px solid var(--border)', fontSize: 10, letterSpacing: '.22em', textTransform: 'uppercase',
+    fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--f-sans)',
+  } as React.CSSProperties,
+  sectionHeader: {
+    fontSize: 10, letterSpacing: '.28em', textTransform: 'uppercase', color: 'var(--gold)',
+    fontWeight: 700, marginBottom: 16, paddingBottom: 10, borderBottom: '1px solid var(--border)',
+  } as React.CSSProperties,
+}
+const cpIconMiniBtn: React.CSSProperties = { background: 'transparent', border: 'none', color: 'var(--fg-mute)', cursor: 'pointer', fontSize: 12, padding: 2 }
+// ── Top-level component ──────────────────────────────────────────────────────
+function CustomizerPro({ setPage: _cpSetPage, onAddToCart, auth }: {
+  setPage: (p: Page) => void; onAddToCart: (item: any) => void; auth: ReturnType<typeof useAuth>
+}) {
+  const { lang } = useLang()
+  const isEN = lang === 'en'
+  const [phase, setPhase] = useState<'catalog' | 'editor'>('catalog')
+  const [product, setProduct] = useState<PrintfulProduct | null>(null)
+
+  const selectProduct = useCallback((p: PrintfulProduct) => {
+    setProduct(p)
+    setPhase('editor')
+  }, [])
+
+  const backToCatalog = useCallback(() => {
+    setPhase('catalog')
+    setProduct(null)
+  }, [])
+
+  if (phase === 'catalog' || !product) {
+    return <Catalog products={CP_PRINTFUL_PRODUCTS} onSelect={selectProduct} isEN={isEN} />
+  }
+  return <CPEditor product={product} isEN={isEN} auth={auth} onAddToCart={onAddToCart} backToCatalog={backToCatalog} />
+}
+
+// ── Catalog ───────────────────────────────────────────────────────────────────
+function Catalog({ products, onSelect, isEN }: { products: PrintfulProduct[]; onSelect: (p: PrintfulProduct) => void; isEN: boolean }) {
+  const [filter, setFilter] = useState<'all' | CPCategory>('all')
+  const cats: { id: 'all' | CPCategory; label: string }[] = [
+    { id: 'all', label: isEN ? 'All' : 'Todos' },
+    { id: 'vestuario', label: isEN ? 'Apparel' : 'Vestuário' },
+    { id: 'tech', label: isEN ? 'Tech' : 'Tecnologia' },
+    { id: 'casa', label: isEN ? 'Home' : 'Casa' },
+  ]
+  const filtered = filter === 'all' ? products : products.filter(p => p.category === filter)
+
   return (
-    <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'visible', zIndex: 20 }}>
-      {items.map(s => (
-        <div key={s.id} style={{
-          position: 'absolute', left: s.x + '%', top: s.y + '%',
-          width: 12, height: 12,
-          animation: 'kn-spark 1s cubic-bezier(.2,.7,.2,1) forwards',
-          ['--dx' as any]: s.dx + 'px', ['--dy' as any]: s.dy + 'px', ['--rot' as any]: s.rot + 'deg',
-        }}>
-          <svg viewBox="0 0 12 12" width="12" height="12">
-            <path d="M6 0 L7.5 4.5 L12 6 L7.5 7.5 L6 12 L4.5 7.5 L0 6 L4.5 4.5 Z" fill="#B08D57" />
-          </svg>
+    <div style={{ minHeight: '100vh', background: 'var(--bg)', padding: 'clamp(32px,4vw,64px) var(--pad-x)' }}>
+      <div style={{ maxWidth: 1400, margin: '0 auto' }}>
+        <div style={{ marginBottom: 40 }}>
+          <div style={{ fontSize: 10, letterSpacing: '.28em', textTransform: 'uppercase', color: 'var(--gold)', fontWeight: 700, marginBottom: 12 }}>✦ Karmic Node Atelier</div>
+          <h1 style={{ fontFamily: 'var(--f-display)', fontSize: 'clamp(34px,4.5vw,54px)', fontWeight: 500, margin: '0 0 16px', lineHeight: 1.05 }}>
+            {isEN ? 'Choose your ' : 'Escolha o seu '}
+            <em style={{ color: 'var(--gold)', fontStyle: 'italic' }}>canvas</em>.
+          </h1>
+          <p style={{ color: 'var(--fg-mute)', fontSize: 15, maxWidth: 560, lineHeight: 1.6 }}>
+            {isEN ? 'Pick a product to unlock the pro editor. Made-to-order, shipped worldwide.' : 'Escolha um produto para desbloquear o editor pro. Feito por encomenda, enviado para todo o mundo.'}
+          </p>
         </div>
+
+        <div style={{ display: 'flex', gap: 8, marginBottom: 28, flexWrap: 'wrap' }}>
+          {cats.map(c => (
+            <button key={c.id} onClick={() => setFilter(c.id)} style={{
+              background: filter === c.id ? 'var(--gold)' : 'transparent',
+              color: filter === c.id ? 'var(--bg)' : 'var(--fg-mute)',
+              border: '1px solid ' + (filter === c.id ? 'var(--gold)' : 'var(--border)'),
+              padding: '11px 22px', fontSize: 10, letterSpacing: '.22em', textTransform: 'uppercase',
+              fontWeight: 700, cursor: 'pointer', fontFamily: 'var(--f-sans)',
+            }}>{c.label}</button>
+          ))}
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 18 }}>
+          {filtered.map(p => (
+            <button key={p.id} onClick={() => onSelect(p)} style={{
+              background: 'var(--bg-1)', border: '1px solid var(--border)', padding: 0, cursor: 'pointer',
+              display: 'flex', flexDirection: 'column', textAlign: 'left', overflow: 'hidden',
+              transition: 'all .25s var(--ease)', fontFamily: 'inherit',
+            }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--gold)'; e.currentTarget.style.transform = 'translateY(-4px)' }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.transform = 'none' }}>
+              <div style={{ aspectRatio: '1', background: '#efe6d5', position: 'relative', overflow: 'hidden' }}>
+                {p.mockupUrl && <img src={p.mockupUrl} alt={p.name} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
+                <div style={{ position: 'absolute', top: 12, left: 12, padding: '4px 10px', background: 'rgba(176,141,87,.95)', fontSize: 8, letterSpacing: '.22em', textTransform: 'uppercase', color: '#0B0B0C', fontWeight: 700 }}>
+                  {(p.techniques || []).join(' · ').toUpperCase()}
+                </div>
+              </div>
+              <div style={{ padding: 18 }}>
+                <div style={{ fontSize: 9, letterSpacing: '.22em', textTransform: 'uppercase', color: 'var(--fg-mute)', marginBottom: 6 }}>
+                  {p.category === 'vestuario' ? (isEN ? 'Apparel' : 'Vestuário') : p.category === 'tech' ? (isEN ? 'Tech' : 'Tecnologia') : (isEN ? 'Home' : 'Casa')}
+                </div>
+                <div style={{ fontFamily: 'var(--f-display)', fontSize: 19, fontWeight: 500, marginBottom: 8, color: 'var(--fg)' }}>
+                  {isEN ? (p.nameEn || p.name) : p.name}
+                </div>
+                <div style={{ fontSize: 12, color: 'var(--fg-mute)', marginBottom: 14, lineHeight: 1.5, minHeight: 36 }}>
+                  {((isEN ? p.descriptionEn : p.description) || '').slice(0, 65)}…
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                  <span style={{ fontSize: 10, letterSpacing: '.2em', textTransform: 'uppercase', color: 'var(--fg-mute)' }}>{isEN ? 'From' : 'Desde'}</span>
+                  <span style={{ fontFamily: 'var(--f-display)', fontSize: 24, fontWeight: 600, color: 'var(--gold)' }}>{p.retailPrice.toFixed(2)} €</span>
+                </div>
+                <div style={{ fontSize: 10, color: 'var(--fg-mute)', marginTop: 10 }}>
+                  {(p.colors || []).length} {isEN ? 'colors' : 'cores'} · {(p.sizes || []).length} {isEN ? 'sizes' : 'tamanhos'}
+                </div>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Editor (main state owner) ────────────────────────────────────────────────
+function CPEditor({ product, isEN, auth, onAddToCart, backToCatalog }: {
+  product: PrintfulProduct; isEN: boolean; auth: ReturnType<typeof useAuth>
+  onAddToCart: (item: any) => void; backToCatalog: () => void
+}) {
+  const [color, setColor] = useState<CPColor>(product.colors[0])
+  const [size, setSize] = useState<string>(product.sizes[0])
+  const [technique, setTechnique] = useState<string>(product.techniques[0])
+
+  const [activeView, setActiveView] = useState<string>(product.printAreas?.[0]?.id || 'front')
+  const [layers, setLayers] = useState<CPLayersByView>({})
+
+  const [activeTool, setActiveTool] = useState('uploads')
+  const [selectedLayerId, setSelectedLayerId] = useState<string | null>(null)
+  const [viewMode, setViewMode] = useState<'design' | 'preview'>('design')
+  const [is360, setIs360] = useState(false)
+  const [rotation360, setRotation360] = useState(0)
+  const [showGuides, setShowGuides] = useState(true)
+  const [zoom, setZoom] = useState(1)
+  const [uploads, setUploads] = useState<{ id: string; url: string; name: string }[]>([])
+  const [toast, setToast] = useState('')
+
+  const [history, setHistory] = useState<CPLayersByView[]>([{}])
+  const [historyIdx, setHistoryIdx] = useState(0)
+
+  const showToast = useCallback((msg: string) => {
+    setToast(msg)
+    setTimeout(() => setToast(''), 2200)
+  }, [])
+
+  const currentLayers = layers[activeView] || []
+  const selectedLayer = currentLayers.find(l => l.id === selectedLayerId) || null
+
+  const commitHistory = useCallback((newLayers: CPLayersByView) => {
+    setHistory(h => {
+      const trimmed = h.slice(0, historyIdx + 1)
+      trimmed.push(JSON.parse(JSON.stringify(newLayers)))
+      return trimmed.slice(-30)
+    })
+    setHistoryIdx(i => Math.min(i + 1, 29))
+  }, [historyIdx])
+
+  const undo = () => {
+    if (historyIdx > 0) {
+      setLayers(JSON.parse(JSON.stringify(history[historyIdx - 1])))
+      setHistoryIdx(historyIdx - 1)
+    }
+  }
+  const redo = () => {
+    if (historyIdx < history.length - 1) {
+      setLayers(JSON.parse(JSON.stringify(history[historyIdx + 1])))
+      setHistoryIdx(historyIdx + 1)
+    }
+  }
+
+  const addLayer = useCallback((partial: NewDesignLayer) => {
+    const id = cpUid()
+    const layer: DesignLayer = {
+      id, x: 50, y: 50, w: 30, h: 30, rotation: 0, opacity: 1,
+      ...partial,
+    }
+    const newAll = { ...layers, [activeView]: [...(layers[activeView] || []), layer] }
+    setLayers(newAll)
+    commitHistory(newAll)
+    setSelectedLayerId(id)
+    showToast(isEN ? '✓ Added' : '✓ Adicionado')
+  }, [layers, activeView, commitHistory, isEN, showToast])
+
+  const updateLayer = useCallback((id: string, changes: Partial<DesignLayer>) => {
+    const newLayers = (layers[activeView] || []).map(l => l.id === id ? { ...l, ...changes } : l)
+    setLayers({ ...layers, [activeView]: newLayers })
+  }, [layers, activeView])
+
+  const commitLayer = useCallback(() => {
+    commitHistory(layers)
+  }, [layers, commitHistory])
+
+  const removeLayer = useCallback((id: string) => {
+    const newAll = { ...layers, [activeView]: (layers[activeView] || []).filter(l => l.id !== id) }
+    setLayers(newAll)
+    commitHistory(newAll)
+    if (selectedLayerId === id) setSelectedLayerId(null)
+  }, [layers, activeView, commitHistory, selectedLayerId])
+
+  const duplicateLayer = useCallback((id: string) => {
+    const orig = (layers[activeView] || []).find(l => l.id === id)
+    if (!orig) return
+    const dup: DesignLayer = { ...orig, id: cpUid(), x: cpClamp(orig.x + 5, 5, 95), y: cpClamp(orig.y + 5, 5, 95) }
+    const newAll = { ...layers, [activeView]: [...(layers[activeView] || []), dup] }
+    setLayers(newAll)
+    commitHistory(newAll)
+    setSelectedLayerId(dup.id)
+  }, [layers, activeView, commitHistory])
+
+  const moveLayer = useCallback((id: string, dir: 'up' | 'down' | 'top' | 'bottom') => {
+    const arr = [...(layers[activeView] || [])]
+    const idx = arr.findIndex(l => l.id === id)
+    if (idx < 0) return
+    if (dir === 'up' && idx < arr.length - 1) { const tmp = arr[idx]; arr[idx] = arr[idx + 1]; arr[idx + 1] = tmp }
+    else if (dir === 'down' && idx > 0) { const tmp = arr[idx]; arr[idx] = arr[idx - 1]; arr[idx - 1] = tmp }
+    else if (dir === 'top') arr.push(arr.splice(idx, 1)[0])
+    else if (dir === 'bottom') arr.unshift(arr.splice(idx, 1)[0])
+    const newAll = { ...layers, [activeView]: arr }
+    setLayers(newAll)
+    commitHistory(newAll)
+  }, [layers, activeView, commitHistory])
+
+  const totalLayers = Object.values(layers).reduce((s, a) => s + a.length, 0)
+  const estimatePrice = () => product.retailPrice + Math.max(0, totalLayers - 1) * 2
+
+  const handleAddToCart = () => {
+    if (totalLayers === 0) { showToast(isEN ? 'Add at least 1 element' : 'Adicione pelo menos 1 elemento'); return }
+    onAddToCart({
+      id: 'custom-' + Date.now(), sku: 'CUSTOM-' + product.id,
+      name: product.name + ' — ' + color.name, price: estimatePrice(), qty: 1,
+      icon: product.icon, image: product.mockupUrl || '',
+      _customization: { product_type: product.type, color: color.name, size, technique, layer_count: totalLayers },
+    })
+    showToast(isEN ? '✓ Added to cart' : '✓ Adicionado ao carrinho')
+  }
+
+  const saveDesign = async () => {
+    if (!auth?.user) { showToast(isEN ? 'Sign in first' : 'Faça login primeiro'); return }
+    if (totalLayers === 0) { showToast(isEN ? 'Add elements first' : 'Adicione elementos'); return }
+    if (!isSupabaseConfigured) { showToast('⚠ Supabase not ready'); return }
+    try {
+      const { error } = await supabase.from('custom_designs').insert({
+        user_id: auth.user.id,
+        name: product.name + ' — ' + new Date().toLocaleDateString(),
+        product_type: product.type,
+        product_printful_id: String(product.printful_id || product.id),
+        variant_color: color.id,
+        variant_size: size,
+        variant_technique: technique,
+        design_data: layers,
+        estimated_price_cents: Math.round(estimatePrice() * 100),
+        status: 'draft',
+      })
+      if (error) showToast('⚠ ' + error.message)
+      else showToast(isEN ? '✓ Saved' : '✓ Guardado')
+    } catch (e) {
+      showToast('⚠ ' + (e instanceof Error ? e.message : 'Error'))
+    }
+  }
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) { e.preventDefault(); undo() }
+      if ((e.ctrlKey || e.metaKey) && ((e.key === 'z' && e.shiftKey) || e.key === 'y')) { e.preventDefault(); redo() }
+      if (e.key === 'Delete' && selectedLayerId) { removeLayer(selectedLayerId) }
+      if (e.key === 'Escape') { setSelectedLayerId(null) }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedLayerId, historyIdx, history])
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, background: 'var(--bg)', color: 'var(--fg)',
+      zIndex: 100, fontFamily: 'var(--f-sans)',
+      display: 'grid',
+      gridTemplateColumns: '68px 300px 1fr 300px',
+      gridTemplateRows: 'auto 1fr auto',
+      gridTemplateAreas: '"top top top top" "leftnav toolpanel canvas rightpanel" "footer footer footer footer"',
+    }}>
+      {toast && (
+        <div style={{
+          position: 'fixed', top: 80, left: '50%', transform: 'translateX(-50%)',
+          background: 'var(--gold)', color: 'var(--bg)', padding: '10px 24px',
+          fontSize: 11, letterSpacing: '.2em', textTransform: 'uppercase', fontWeight: 700,
+          zIndex: 200, boxShadow: '0 8px 30px rgba(0,0,0,.3)',
+        }}>{toast}</div>
+      )}
+
+      <CPTopBar product={product} backToCatalog={backToCatalog} undo={undo} redo={redo} viewMode={viewMode} setViewMode={setViewMode} is360={is360} setIs360={setIs360} historyIdx={historyIdx} history={history} isEN={isEN} />
+
+      <CPLeftNav activeTool={activeTool} setActiveTool={setActiveTool} isEN={isEN} />
+
+      <CPToolPanel
+        activeTool={activeTool} product={product} color={color} setColor={setColor} size={size} setSize={setSize} technique={technique} setTechnique={setTechnique}
+        addLayer={addLayer} uploads={uploads} setUploads={setUploads} showToast={showToast} isEN={isEN} auth={auth}
+        currentLayers={currentLayers} selectedLayerId={selectedLayerId} setSelectedLayerId={setSelectedLayerId} removeLayer={removeLayer} duplicateLayer={duplicateLayer}
+        updateLayer={updateLayer} commitLayer={commitLayer}
+      />
+
+      <CPCanvas
+        product={product} color={color} activeView={activeView} currentLayers={currentLayers} selectedLayerId={selectedLayerId} setSelectedLayerId={setSelectedLayerId}
+        updateLayer={updateLayer} commitLayer={commitLayer} removeLayer={removeLayer} viewMode={viewMode} is360={is360} rotation360={rotation360} setRotation360={setRotation360}
+        showGuides={showGuides} setShowGuides={setShowGuides} zoom={zoom} setZoom={setZoom} isEN={isEN} setActiveView={setActiveView} layers={layers}
+      />
+
+      <CPRightPanel selectedLayer={selectedLayer} updateLayer={updateLayer} commitLayer={commitLayer} removeLayer={removeLayer} duplicateLayer={duplicateLayer} moveLayer={moveLayer} product={product} color={color} size={size} technique={technique} isEN={isEN} />
+
+      <CPEditorFooter product={product} color={color} size={size} technique={technique} totalLayers={totalLayers} estimatePrice={estimatePrice} saveDesign={saveDesign} handleAddToCart={handleAddToCart} auth={auth} isEN={isEN} />
+    </div>
+  )
+}
+
+// ── Top bar ───────────────────────────────────────────────────────────────────
+function CPTopBar({ product, backToCatalog, undo, redo, viewMode, setViewMode, is360, setIs360, historyIdx, history, isEN }: {
+  product: PrintfulProduct; backToCatalog: () => void; undo: () => void; redo: () => void
+  viewMode: 'design' | 'preview'; setViewMode: (m: 'design' | 'preview') => void
+  is360: boolean; setIs360: (v: boolean) => void; historyIdx: number; history: CPLayersByView[]; isEN: boolean
+}) {
+  const canUndo = historyIdx > 0
+  const canRedo = historyIdx < history.length - 1
+  return (
+    <div style={{ gridArea: 'top', background: 'var(--bg-1)', borderBottom: '1px solid var(--border)', padding: '0 16px', height: 54, display: 'flex', alignItems: 'center', gap: 14 }}>
+      <button onClick={backToCatalog} style={{ background: 'transparent', border: 'none', color: 'var(--fg-mute)', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>
+        ← {isEN ? 'Change product' : 'Mudar produto'}
+      </button>
+      <div style={{ width: 1, height: 22, background: 'var(--border)' }} />
+      <div style={{ fontFamily: 'var(--f-display)', fontSize: 15 }}>{isEN ? (product.nameEn || product.name) : product.name}</div>
+      <div style={{ flex: 1 }} />
+
+      <div style={{ display: 'flex', gap: 3 }}>
+        <CPIconBtn title="Undo (⌘Z)" disabled={!canUndo} onClick={undo}>↶</CPIconBtn>
+        <CPIconBtn title="Redo (⌘⇧Z)" disabled={!canRedo} onClick={redo}>↷</CPIconBtn>
+      </div>
+      <div style={{ width: 1, height: 22, background: 'var(--border)' }} />
+
+      <button onClick={() => setIs360(!is360)} style={{
+        padding: '5px 12px', background: is360 ? 'rgba(176,141,87,.15)' : 'transparent',
+        border: '1px solid ' + (is360 ? 'var(--gold-3)' : 'var(--border)'),
+        color: is360 ? 'var(--gold)' : 'var(--fg-mute)',
+        fontSize: 10, letterSpacing: '.18em', textTransform: 'uppercase', fontWeight: 600,
+        cursor: 'pointer', fontFamily: 'inherit',
+      }}>360°</button>
+
+      <div style={{ display: 'flex', border: '1px solid var(--border)' }}>
+        {(['design', 'preview'] as const).map(m => (
+          <button key={m} onClick={() => setViewMode(m)} style={{
+            padding: '6px 14px', background: viewMode === m ? 'var(--gold)' : 'transparent',
+            color: viewMode === m ? 'var(--bg)' : 'var(--fg-mute)', border: 'none',
+            fontSize: 10, letterSpacing: '.2em', textTransform: 'uppercase', fontWeight: 700,
+            cursor: 'pointer', fontFamily: 'inherit',
+          }}>{isEN ? (m === 'design' ? 'Design' : 'Preview') : (m === 'design' ? 'Design' : 'Pré-visualização')}</button>
+        ))}
+      </div>
+
+      <button onClick={() => { window.history.pushState({}, '', '/'); window.dispatchEvent(new PopStateEvent('popstate')) }}
+        style={{ width: 30, height: 30, background: 'transparent', border: '1px solid var(--border)', color: 'var(--fg-mute)', cursor: 'pointer' }}>✕</button>
+    </div>
+  )
+}
+
+function CPIconBtn({ title, disabled, onClick, children }: { title: string; disabled?: boolean; onClick: () => void; children: ReactNode }) {
+  return (
+    <button title={title} onClick={onClick} disabled={disabled} style={{
+      width: 30, height: 30, background: 'transparent', border: '1px solid var(--border)',
+      color: disabled ? 'var(--fg-mute)' : 'var(--fg)',
+      cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? 0.4 : 1,
+      display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14,
+    }}>{children}</button>
+  )
+}
+
+// ── Left nav ──────────────────────────────────────────────────────────────────
+function CPLeftNav({ activeTool, setActiveTool, isEN }: { activeTool: string; setActiveTool: (t: string) => void; isEN: boolean }) {
+  const tools = [
+    { id: 'product', icon: '📦', label: isEN ? 'Product' : 'Produto' },
+    { id: 'ai', icon: '✨', label: isEN ? 'AI' : 'IA' },
+    { id: 'uploads', icon: '⬆', label: 'Uploads' },
+    { id: 'text', icon: 'T', label: isEN ? 'Text' : 'Texto' },
+    { id: 'clipart', icon: '✦', label: 'Clipart' },
+    { id: 'quick', icon: '⚡', label: isEN ? 'Quick' : 'Rápidos' },
+    { id: 'saved', icon: '💾', label: isEN ? 'Saved' : 'Guardados' },
+    { id: 'layers', icon: '☰', label: isEN ? 'Layers' : 'Camadas' },
+    { id: 'skins', icon: '🎨', label: 'Skins' },
+    { id: 'filters', icon: '🔮', label: isEN ? 'Filters' : 'Filtros' },
+    { id: 'effects', icon: '💫', label: isEN ? 'Effects' : 'Efeitos' },
+  ]
+  return (
+    <div style={{ gridArea: 'leftnav', background: 'var(--bg-1)', borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '10px 0', gap: 2, overflowY: 'auto' }}>
+      {tools.map(t => (
+        <button key={t.id} onClick={() => setActiveTool(t.id)} title={t.label} style={{
+          width: 60, height: 60, background: activeTool === t.id ? 'var(--gold)' : 'transparent',
+          border: 'none', color: activeTool === t.id ? 'var(--bg)' : 'var(--fg-mute)',
+          cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center',
+          justifyContent: 'center', gap: 3,
+          borderLeft: activeTool === t.id ? '2px solid var(--gold)' : '2px solid transparent',
+        }}>
+          <span style={{ fontSize: 18 }}>{t.icon}</span>
+          <span style={{ fontSize: 8, letterSpacing: '.08em', fontWeight: 600 }}>{t.label}</span>
+        </button>
       ))}
     </div>
   )
 }
+// ─── TOOL PANEL — Router for each tool ────────────────────────────────────────
+interface CPToolPanelProps {
+  activeTool: string
+  product: PrintfulProduct
+  color: CPColor; setColor: (c: CPColor) => void
+  size: string; setSize: (s: string) => void
+  technique: string; setTechnique: (t: string) => void
+  addLayer: (l: NewDesignLayer) => void
+  uploads: { id: string; url: string; name: string }[]
+  setUploads: React.Dispatch<React.SetStateAction<{ id: string; url: string; name: string }[]>>
+  showToast: (msg: string) => void
+  isEN: boolean
+  auth: ReturnType<typeof useAuth>
+  currentLayers: DesignLayer[]
+  selectedLayerId: string | null
+  setSelectedLayerId: (id: string | null) => void
+  removeLayer: (id: string) => void
+  duplicateLayer: (id: string) => void
+  updateLayer: (id: string, changes: Partial<DesignLayer>) => void
+  commitLayer: () => void
+}
 
-// ─── Live Preview ─────────────────────────────────────────────────────────
-function LivePreview({ product, baseColor, uploadUrl, textOverlay, position, group, t }: {
-  product: CustProduct | null; baseColor: string; uploadUrl: string; textOverlay: string;
-  position: string; group: CustGroup; t: (k: TKey) => string
-}) {
-  const accent = group === 'casa' ? '#8B1E2D' : '#B08D57'
-  const pos = CUST_POSITIONS.find(p => p.id === position) || CUST_POSITIONS[0]
-
+function CPToolPanel(props: CPToolPanelProps) {
+  const { activeTool } = props
+  let Panel: (p: CPToolPanelProps) => React.ReactElement
+  switch (activeTool) {
+    case 'product': Panel = ProductPanel; break
+    case 'ai': Panel = AIPanel; break
+    case 'uploads': Panel = UploadsPanel; break
+    case 'text': Panel = TextPanel; break
+    case 'clipart': Panel = ClipartPanel; break
+    case 'quick': Panel = QuickPanel; break
+    case 'saved': Panel = SavedPanel; break
+    case 'layers': Panel = LayersPanel; break
+    case 'skins': Panel = SkinsPanel; break
+    case 'filters': Panel = FiltersPanel; break
+    case 'effects': Panel = EffectsPanel; break
+    default: Panel = UploadsPanel
+  }
   return (
-    <div style={{ position: 'sticky', top: 100 }}>
-      {product ? (
-        <Product360Viewer
-          iconPath={product.icon}
-          color={baseColor}
-          accent={accent}
-          overlayImage={uploadUrl || undefined}
-          overlayText={textOverlay || undefined}
-          overlayX={product.hasPosition ? pos.x : 0}
-          overlayY={product.hasPosition ? pos.y : 0}
-          size="large"
-          showPresets={true}
-          showHint={true}
-          productLabel={t(('cust_prod_' + product.id.replace('-', '_')) as TKey)}
-        />
-      ) : (
-        <div style={{
-          minHeight: 480, display: 'flex', alignItems: 'center', justifyContent: 'center',
-          background: `radial-gradient(600px 400px at 50% 40%, ${accent}22, transparent 70%), var(--bg-2)`,
-          border: '1px solid var(--border)', borderRadius: 4,
-          textAlign: 'center', color: 'var(--fg-mute)', padding: 40,
-        }}>
-          <div>
-            <div style={{ fontFamily: 'var(--f-display)', fontSize: 22, marginBottom: 8, color: accent, opacity: .7 }}>{t('cust_preview_title')}</div>
-            <div style={{ fontSize: 13 }}>{t('cust_preview_sub')}</div>
-          </div>
-        </div>
-      )}
+    <div style={{ gridArea: 'toolpanel', background: 'var(--bg-1)', borderRight: '1px solid var(--border)', overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
+      <Panel {...props} />
     </div>
   )
 }
 
-// ─── Kit Card ─────────────────────────────────────────────────────────────
-function KitCard({ n, title, subtitle, done, active, onToggle, children, accent }: {
-  n: number; title: string; subtitle?: string; done: boolean; active: boolean; onToggle: () => void; children: ReactNode; accent: string
-}) {
-  return (
-    <div style={{
-      border: `1px solid ${done ? accent : 'var(--border)'}`,
-      background: active ? 'rgba(176,141,87,.05)' : 'var(--bg-1)',
-      transition: 'all .3s var(--ease)',
-      transform: active ? 'translateX(-4px)' : 'none',
-      position: 'relative',
-    }}>
-      <button onClick={onToggle} style={{
-        width: '100%', padding: '16px 18px', background: 'transparent', border: 'none', cursor: 'pointer',
-        display: 'flex', alignItems: 'center', gap: 14, textAlign: 'left',
-      }}>
-        <span style={{
-          width: 28, height: 28, borderRadius: '50%',
-          background: done ? accent : 'var(--bg-3)',
-          border: done ? 'none' : `1px solid var(--border-2)`,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 12, fontWeight: 700, color: done ? '#0B0B0C' : 'var(--fg-mute)', flexShrink: 0,
-        }}>
-          {done ? '✓' : n}
-        </span>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontFamily: 'var(--f-display)', fontSize: 16, fontWeight: 500, color: active || done ? 'var(--fg)' : 'var(--fg-dim)' }}>{title}</div>
-          {subtitle && <div style={{ fontSize: 11, color: done ? accent : 'var(--fg-mute)', marginTop: 2, letterSpacing: '.06em' }}>{subtitle}</div>}
-        </div>
-        <svg width="12" height="8" viewBox="0 0 12 8" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ color: 'var(--fg-mute)', transition: 'transform .3s', transform: active ? 'rotate(180deg)' : 'none' }}>
-          <path d="M1 1.5l5 5 5-5" />
-        </svg>
-      </button>
-      {active && (
-        <div style={{ padding: '0 18px 18px', animation: 'kn-fadeUp .3s var(--ease) both' }}>{children}</div>
-      )}
-    </div>
-  )
+function CPSectionHeader({ title }: { title: string }) {
+  return <div style={cps.sectionHeader}>{title}</div>
 }
 
-// ─── Estimativa Sticky ────────────────────────────────────────────────────
-function EstimativaSticky({ total, unit, qty, hint, accent, t }: { total: number; unit: number; qty: number; hint: string; accent: string; t: (k: TKey) => string }) {
-  const [pulse, setPulse] = useState(0)
-  useEffect(() => { setPulse(p => p + 1) }, [total])
+// ── PRODUCT PANEL ──
+function ProductPanel({ product, color, setColor, size, setSize, technique, setTechnique, isEN }: CPToolPanelProps) {
   return (
-    <div style={{
-      position: 'sticky', top: 100, marginTop: 20,
-      padding: '20px 22px', border: `1px solid ${accent}55`, background: 'var(--overlay-heavy)', backdropFilter: 'blur(12px)',
-      borderRadius: 4,
-    }}>
-      <div style={{ fontSize: 10, letterSpacing: '.28em', textTransform: 'uppercase', color: accent, fontWeight: 600, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
-        <span style={{ width: 6, height: 6, borderRadius: '50%', background: accent, boxShadow: `0 0 10px ${accent}` }} />
-        {t('cust_estimate_label')}
+    <div style={{ padding: 20 }}>
+      <CPSectionHeader title={isEN ? 'Product' : 'Produto'} />
+      <img src={product.mockupUrl} alt={product.name} style={{ width: '100%', aspectRatio: '1', objectFit: 'cover', background: '#efe6d5', marginBottom: 16 }} />
+      <div style={{ fontFamily: 'var(--f-display)', fontSize: 18, marginBottom: 6 }}>{isEN ? (product.nameEn || product.name) : product.name}</div>
+      <div style={{ fontSize: 11, color: 'var(--fg-mute)', marginBottom: 20, lineHeight: 1.5 }}>{isEN ? product.descriptionEn : product.description}</div>
+
+      <div style={cps.label}>{isEN ? 'Color' : 'Cor'}</div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 6, marginBottom: 18 }}>
+        {product.colors.map(c => (
+          <button key={c.id} onClick={() => setColor(c)} title={c.name} style={{
+            aspectRatio: '1', background: c.hex, border: '2px solid ' + (color.id === c.id ? 'var(--gold)' : 'transparent'),
+            outline: '1px solid var(--border)', cursor: 'pointer',
+          }} />
+        ))}
       </div>
-      {total > 0 ? (
-        <>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 6 }}>
-            <span style={{ fontSize: 12, color: 'var(--fg-mute)' }}>{t('cust_price_unit')}</span>
-            <span style={{ fontSize: 15, color: 'var(--fg)' }}>{unit.toFixed(2)} €</span>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 12 }}>
-            <span style={{ fontSize: 12, color: 'var(--fg-mute)' }}>{t('cust_price_qty')}</span>
-            <span style={{ fontSize: 15, color: 'var(--fg)' }}>× {qty}</span>
-          </div>
-          <div style={{ height: 1, background: 'var(--border)', marginBottom: 12 }} />
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-            <span style={{ fontSize: 11, letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--fg-mute)' }}>{t('cust_price_total')}</span>
-            <span key={pulse} style={{
-              fontFamily: 'var(--f-display)', fontSize: 32, fontWeight: 500, color: accent,
-              animation: 'kn-priceFlash .35s ease-out',
-            }}>{total.toFixed(2)} €</span>
-          </div>
-          {hint && <div style={{ marginTop: 10, padding: '6px 10px', background: `${accent}11`, border: `1px solid ${accent}44`, fontSize: 10, letterSpacing: '.06em', color: accent, textAlign: 'center' }}>✓ {hint}</div>}
-        </>
-      ) : (
-        <div style={{ fontSize: 12, color: 'var(--fg-mute)', textAlign: 'center', padding: '8px 0' }}>
-          {t('cust_price_empty')}
-        </div>
-      )}
+      <div style={{ fontSize: 11, color: 'var(--fg-mute)', marginBottom: 18 }}>{color.name}</div>
+
+      <div style={cps.label}>{isEN ? 'Size' : 'Tamanho'}</div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 4, marginBottom: 18 }}>
+        {product.sizes.map(sz => (
+          <button key={sz} onClick={() => setSize(sz)} style={{
+            padding: '10px 6px', background: size === sz ? 'var(--gold)' : 'var(--bg-2)',
+            color: size === sz ? 'var(--bg)' : 'var(--fg)', border: '1px solid var(--border)',
+            fontSize: 11, letterSpacing: '.1em', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+          }}>{sz}</button>
+        ))}
+      </div>
+
+      <div style={cps.label}>{isEN ? 'Technique' : 'Técnica'}</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+        {product.techniques.map(t => (
+          <button key={t} onClick={() => setTechnique(t)} style={{
+            padding: 10, background: technique === t ? 'rgba(176,141,87,.15)' : 'var(--bg-2)',
+            color: technique === t ? 'var(--gold)' : 'var(--fg)',
+            border: '1px solid ' + (technique === t ? 'var(--gold-3)' : 'var(--border)'),
+            fontSize: 11, letterSpacing: '.15em', textTransform: 'uppercase', fontWeight: 600,
+            cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left',
+          }}>{t.toUpperCase()}</button>
+        ))}
+      </div>
     </div>
   )
 }
 
-// ─── Customizer V2 Main ───────────────────────────────────────────────────
-function CustomizerV2({ setPage, onAddToCart }: { setPage: (p: Page) => void; onAddToCart: (item: any) => void }) {
-  const { t } = useLang()
-  const [step, setStep] = useState<0 | 1 | 2 | 3>(0)
-  const [group, setGroup] = useState<CustGroup>('vestuario')
-  const [product, setProduct] = useState<CustProduct | null>(null)
-  const [color, setColor] = useState('#F5F2ED')
-  const [size, setSize] = useState('M')
-  const [fabric, setFabric] = useState('cotton')
-  const [technique, setTechnique] = useState('dtg')
-  const [material, setMaterial] = useState('silicone')
-  const [finish, setFinish] = useState('matte')
-  const [model, setModel] = useState('iPhone 15 Pro')
-  const [position, setPosition] = useState('chest')
-  const [textOverlay, setTextOverlay] = useState('')
-  const [uploadUrl, setUploadUrl] = useState('')
-  const [qty, setQty] = useState(1)
-  const [notes, setNotes] = useState('')
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
-  const [phone, setPhone] = useState('')
-  const [activeCard, setActiveCard] = useState<string | null>('color')
-  const [sparkleTick, setSparkleTick] = useState(0)
-  const [sent, setSent] = useState<'quote' | 'cart' | null>(null)
+// ── AI DESIGN ASSISTANT PANEL ──
+interface CPAISuggestion { explanation: string; layers: NewDesignLayer[] }
+
+function generateFallbackDesign(prompt: string, isEN: boolean): CPAISuggestion {
+  const p = prompt.toLowerCase()
+  let font = "'Cormorant Garamond', serif"
+  let mainColor = '#0B0B0C'
+  let accentColor = '#B08D57'
+  let text1 = 'KARMIC'
+  const text2 = 'NODE'
+
+  if (p.includes('street') || p.includes('urban')) {
+    font = "'Bebas Neue', sans-serif"; mainColor = '#0B0B0C'; accentColor = '#8B1E2D'
+  } else if (p.includes('vintage') || p.includes('retro')) {
+    font = "'Abril Fatface', display"; mainColor = '#8B1E2D'; accentColor = '#B08D57'
+  } else if (p.includes('minimalist') || p.includes('minimalista')) {
+    font = "'Inter', sans-serif"; mainColor = '#0B0B0C'; accentColor = '#666666'
+  } else if (p.includes('elegant') || p.includes('elegante') || p.includes('sofist')) {
+    font = "'Playfair Display', serif"; mainColor = '#0B0B0C'; accentColor = '#B08D57'
+  } else if (p.includes('gothic') || p.includes('gótico') || p.includes('místico')) {
+    font = "'UnifrakturCook', display"; mainColor = '#0B0B0C'; accentColor = '#8B1E2D'
+  } else if (p.includes('handwritten') || p.includes('cursiv') || p.includes('caligr')) {
+    font = "'Dancing Script', cursive"; mainColor = '#8B1E2D'
+  }
+
+  const quotedMatch = prompt.match(/["'“](.+?)["'”]/)
+  if (quotedMatch) text1 = quotedMatch[1].toUpperCase()
+
+  return {
+    explanation: isEN
+      ? `Style based on: "${prompt.slice(0, 40)}${prompt.length > 40 ? '...' : ''}"`
+      : `Estilo baseado em: "${prompt.slice(0, 40)}${prompt.length > 40 ? '...' : ''}"`,
+    layers: [
+      { type: 'text', text: text1, font, fontSize: 48, color: mainColor, x: 50, y: 45, w: 40, h: 12 },
+      { type: 'text', text: text2, font: "'Inter', sans-serif", fontSize: 12, color: accentColor, x: 50, y: 55, w: 30, h: 5, letterSpacing: 6 },
+    ],
+  }
+}
+
+function AIPanel({ product, addLayer, showToast, isEN }: CPToolPanelProps) {
+  const [prompt, setPrompt] = useState('')
   const [loading, setLoading] = useState(false)
-  const [err, setErr] = useState('')
+  const [suggestions, setSuggestions] = useState<CPAISuggestion[]>([])
 
-  const accent = group === 'casa' ? '#8B1E2D' : '#B08D57'
+  const EXAMPLES_PT = [
+    'Design minimalista com uma frase inspiracional em português',
+    'Estilo streetwear urbano com tipografia forte',
+    'Vintage retrô anos 80 com cores vibrantes',
+    'Elegante e sofisticado, apenas texto',
+    'Bordô e dourado, com símbolo místico',
+    'Meu nome estilizado com sparkle',
+  ]
+  const EXAMPLES_EN = [
+    'Minimalist design with an inspirational quote',
+    'Urban streetwear with strong typography',
+    'Vintage 80s retro with vibrant colors',
+    'Elegant and sophisticated, text only',
+    'Bordeaux and gold with a mystical symbol',
+    'My name stylized with sparkle',
+  ]
+  const examples = isEN ? EXAMPLES_EN : EXAMPLES_PT
 
-  // Estimativa
-  const estimate = (() => {
-    if (!product) return { unit: 0, total: 0, hint: '' }
-    let unit = product.basePrice
-    if (product.hasFabric) unit *= (CUST_FABRICS.find(f => f.id === fabric)?.mult || 1)
-    if (product.hasMaterial) unit *= (IT_MATERIALS.find(m => m.id === material)?.mult || 1)
-    if (product.hasFinish) unit *= (IT_FINISHES.find(f => f.id === finish)?.mult || 1)
-    if (product.hasTechnique) unit += (CUST_TECHNIQUES.find(t => t.id === technique)?.add || 0)
-    if (uploadUrl) unit += 3
-    // Desconto por quantidade
-    let discountMult = 1; let hint = ''
-    if (qty >= 100) { discountMult = 0.75; hint = 'Desconto 25% (100+ un.)' }
-    else if (qty >= 50) { discountMult = 0.82; hint = 'Desconto 18% (50+ un.)' }
-    else if (qty >= 20) { discountMult = 0.9; hint = 'Desconto 10% (20+ un.)' }
-    else if (qty >= 10) { discountMult = 0.95; hint = 'Desconto 5% (10+ un.)' }
-    unit = +(unit * discountMult).toFixed(2)
-    return { unit, total: +(unit * qty).toFixed(2), hint }
-  })()
-
-  // Helpers de tradução para labels de dados
-  const colorLabel = (hex: string): string => {
-    const c = CUST_COLORS.find(cc => cc.hex === hex)
-    return c ? t(('cust_color_' + c.key) as TKey) : hex
-  }
-  const fabricLabel = (id: string): string => {
-    const f = CUST_FABRICS.find(ff => ff.id === id); if (!f) return id
-    return t(('cust_fabric_' + f.id) as TKey)
-  }
-  const materialLabel = (id: string): string => {
-    const m = IT_MATERIALS.find(mm => mm.id === id); if (!m) return id
-    return t(('cust_material_' + m.id) as TKey)
-  }
-  const finishLabel = (id: string): string => t(('cust_finish_' + id) as TKey)
-  const techniqueLabel = (id: string): string => {
-    const tk = CUST_TECHNIQUES.find(tt => tt.id === id); if (!tk) return id
-    return t(('cust_tech_' + tk.id) as TKey)
-  }
-  const positionLabel = (id: string): string => t(('cust_position_' + id) as TKey)
-  const productLabel = (p: CustProduct): string => t(('cust_prod_' + p.id.replace('-', '_')) as TKey)
-
-  // Sub-etapa 2: cartas
-  const cards: { id: string; title: string; sub?: string; when: () => boolean }[] = []
-  if (product) {
-    cards.push({ id: 'color', title: t('cust_card_color'), sub: colorLabel(color), when: () => true })
-    if (product.hasModel) cards.push({ id: 'model', title: t('cust_card_model'), sub: model, when: () => true })
-    if (product.hasSize) cards.push({ id: 'size', title: t('cust_card_size'), sub: size, when: () => true })
-    if (product.hasFabric) cards.push({ id: 'fabric', title: t('cust_card_fabric'), sub: fabricLabel(fabric), when: () => true })
-    if (product.hasMaterial) cards.push({ id: 'material', title: t('cust_card_material'), sub: materialLabel(material), when: () => true })
-    if (product.hasFinish) cards.push({ id: 'finish', title: t('cust_card_finish'), sub: finishLabel(finish), when: () => true })
-    if (product.hasTechnique) cards.push({ id: 'technique', title: t('cust_card_technique'), sub: techniqueLabel(technique), when: () => true })
-    cards.push({ id: 'design', title: t('cust_card_design'), sub: uploadUrl ? t('cust_image_loaded') : t('cust_none'), when: () => true })
-    if (product.hasPosition) cards.push({ id: 'position', title: t('cust_card_position'), sub: positionLabel(position), when: () => true })
-    cards.push({ id: 'text', title: t('cust_card_text'), sub: textOverlay || t('cust_none'), when: () => true })
-    cards.push({ id: 'qty', title: t('cust_card_qty'), sub: qty + ' ' + t('cust_units'), when: () => true })
-    cards.push({ id: 'notes', title: t('cust_card_notes'), sub: notes ? notes.slice(0, 30) + (notes.length > 30 ? '…' : '') : t('cust_none_f'), when: () => true })
-  }
-
-  function fireSparkle() { setSparkleTick(v => v + 1) }
-
-  function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const f = e.target.files?.[0]; if (!f) return
-    const reader = new FileReader()
-    reader.onload = ev => { setUploadUrl(String(ev.target?.result || '')); fireSparkle() }
-    reader.readAsDataURL(f)
-  }
-
-  async function handleSubmit(mode: 'quote' | 'cart') {
-    if (!name.trim() || !email.trim()) { setErr(t('cust_err_contacts')); return }
-    setErr(''); setLoading(true)
-    const payload = {
-      formulario: 'Personalização V2',
-      artigo: product ? productLabel(product) : '', vertical: group,
-      cor: colorLabel(color),
-      ...(product?.hasSize ? { tamanho: size } : {}),
-      ...(product?.hasFabric ? { material: fabricLabel(fabric) } : {}),
-      ...(product?.hasMaterial ? { material_capa: materialLabel(material) } : {}),
-      ...(product?.hasModel ? { modelo: model } : {}),
-      ...(product?.hasFinish ? { acabamento: finishLabel(finish) } : {}),
-      ...(product?.hasTechnique ? { tecnica: techniqueLabel(technique) } : {}),
-      ...(product?.hasPosition ? { posicao: positionLabel(position) } : {}),
-      texto: textOverlay || '—',
-      tem_upload: uploadUrl ? 'Sim' : 'Não',
-      quantidade: qty + ' ' + t('cust_units'),
-      estimativa_unit: estimate.unit + '€',
-      estimativa_total: estimate.total + '€',
-      notas: notes || '—',
-      nome: name, email, telefone: phone || '—',
-      metodo: mode === 'quote' ? 'Pedido de orçamento' : 'Pagamento direto (estimativa)',
-    }
+  const generate = async () => {
+    if (!prompt.trim()) return
+    setLoading(true)
+    setSuggestions([])
     try {
-      if (mode === 'quote') {
-        // Formspree
-        const fd = new FormData()
-        Object.entries(payload).forEach(([k, v]) => fd.append(k, String(v)))
-        await fetch('https://formspree.io/f/xeeyzlvb', { method: 'POST', headers: { Accept: 'application/json' }, body: fd })
-      } else {
-        // Adicionar ao carrinho
-        onAddToCart({
-          id: Date.now(),
-          name: `${product ? productLabel(product) : ''} ${t('cust_customized')}`,
-          category: t('cust_cat_personalization'),
-          price: estimate.unit,
-          image: '',
-          qty,
-          _customization: payload,
-        })
+      let result: { ok?: boolean; explanation?: string; layers?: NewDesignLayer[] } | null = null
+      const aiDesign = (window as any).aiDesign
+      if (aiDesign?.generateDesignFromPrompt) {
+        result = await Promise.race([
+          aiDesign.generateDesignFromPrompt(prompt, product.type, isEN),
+          new Promise<null>((_, rej) => setTimeout(() => rej(new Error('timeout')), 20000)),
+        ]).catch(() => null)
       }
-      setSent(mode); fireSparkle()
-    } catch { setErr(t('cust_err_network')) }
-    setLoading(false)
+      if (result?.ok && result.layers?.length) {
+        setSuggestions([{ explanation: result.explanation || '', layers: result.layers }])
+        showToast(isEN ? '✓ Design generated' : '✓ Design gerado')
+      } else {
+        const fallback = generateFallbackDesign(prompt, isEN)
+        setSuggestions([fallback])
+        showToast(isEN ? '💡 Suggestion ready' : '💡 Sugestão pronta')
+      }
+    } catch {
+      const fallback = generateFallbackDesign(prompt, isEN)
+      setSuggestions([fallback])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const applyDesign = (design: CPAISuggestion) => {
+    design.layers.forEach(l => addLayer(l))
+    showToast(isEN ? '✓ Applied to canvas' : '✓ Aplicado ao canvas')
   }
 
   return (
-    <div style={{ minHeight: '100vh', position: 'relative', background: `radial-gradient(1000px 500px at 20% -10%, ${accent}18, transparent 60%), radial-gradient(800px 400px at 80% 100%, ${accent}12, transparent 60%), var(--bg)` }}>
-      {/* Grão subtle */}
-      <svg style={{ position: 'fixed', inset: 0, width: '100%', height: '100%', opacity: 0.14, mixBlendMode: 'overlay', pointerEvents: 'none', zIndex: 0 }}>
-        <filter id="page-grain"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="3" /><feColorMatrix values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.3 0" /></filter>
-        <rect width="100%" height="100%" filter="url(#page-grain)" />
-      </svg>
+    <div style={{ padding: 20 }}>
+      <CPSectionHeader title={isEN ? 'AI Design Assistant' : 'Assistente IA'} />
 
-      <Sparkles trigger={sparkleTick} />
+      <div style={{ padding: 12, background: 'linear-gradient(135deg, rgba(176,141,87,.1), rgba(139,30,45,.1))', border: '1px solid var(--gold-3)', marginBottom: 14, fontSize: 11, color: 'var(--fg-dim)', lineHeight: 1.5 }}>
+        <div style={{ fontSize: 9, letterSpacing: '.22em', textTransform: 'uppercase', color: 'var(--gold)', fontWeight: 700, marginBottom: 6 }}>
+          ✨ {isEN ? 'Describe your design' : 'Descreve o teu design'}
+        </div>
+        {isEN ? 'Type an idea and AI creates layers for you.' : 'Escreve uma ideia e a IA cria camadas para ti.'}
+      </div>
 
-      <div style={{ position: 'relative', zIndex: 1 }}>
-        {/* HERO / progress */}
-        <div style={{ padding: 'clamp(48px,6vw,80px) var(--pad-x) 32px', borderBottom: '1px solid var(--border)' }}>
-          <div style={{ maxWidth: 'var(--maxw)', margin: '0 auto' }}>
-            <Eyebrow text={t('cust_eyebrow')} />
-            <h1 style={{ fontFamily: 'var(--f-display)', fontSize: 'clamp(40px,5vw,72px)', fontWeight: 500, margin: '18px 0 14px', lineHeight: 1.05 }}
-              dangerouslySetInnerHTML={{ __html: t('cust_title').replace('<em>', `<em style="color:${accent};font-style:italic">`) }} />
-            <p style={{ color: 'var(--fg-dim)', fontSize: 16, maxWidth: '54ch', lineHeight: 1.65, marginBottom: 32 }}>
-              {t('cust_desc')}
-            </p>
+      <textarea
+        value={prompt}
+        onChange={e => setPrompt(e.target.value)}
+        placeholder={isEN ? 'E.g. Elegant minimalist quote in gold' : 'Ex: Frase minimalista elegante em dourado'}
+        rows={3}
+        style={{ ...cps.input, resize: 'vertical', minHeight: 70, marginBottom: 10, fontFamily: 'inherit', fontSize: 13 }}
+      />
 
-            {/* Progress steps */}
-            <div style={{ display: 'flex', gap: 4, marginTop: 24, maxWidth: 640 }}>
-              {[t('cust_step_1'), t('cust_step_2'), t('cust_step_3'), t('cust_step_4')].map((label, i) => (
-                <div key={label} style={{ flex: 1, position: 'relative' }}>
-                  <div style={{
-                    height: 4, background: i <= step ? accent : 'var(--bg-3)',
-                    transition: 'background .4s ease', borderRadius: 2,
-                  }} />
-                  <div style={{ marginTop: 8, fontSize: 10, letterSpacing: '.22em', textTransform: 'uppercase', color: i === step ? accent : i < step ? 'var(--fg)' : 'var(--fg-mute)', fontWeight: i === step ? 600 : 400 }}>
-                    {i < step ? '✓ ' : ''}{i + 1}. {label}
-                  </div>
+      <button onClick={generate} disabled={loading || !prompt.trim()} style={{
+        ...cps.btnPrimary, width: '100%', marginBottom: 16,
+        opacity: (loading || !prompt.trim()) ? 0.5 : 1,
+        cursor: (loading || !prompt.trim()) ? 'not-allowed' : 'pointer',
+      }}>{loading ? (isEN ? '✨ Generating...' : '✨ A gerar...') : (isEN ? '✨ Generate Design' : '✨ Gerar Design')}</button>
+
+      {suggestions.length > 0 && (
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ fontSize: 9, letterSpacing: '.22em', textTransform: 'uppercase', color: 'var(--fg-mute)', fontWeight: 600, marginBottom: 8 }}>
+            {isEN ? 'Suggestions' : 'Sugestões'}
+          </div>
+          {suggestions.map((sug, i) => (
+            <div key={i} style={{ padding: 12, background: 'var(--bg-2)', border: '1px solid var(--gold-3)', marginBottom: 8 }}>
+              {sug.explanation && (
+                <div style={{ fontSize: 11, color: 'var(--fg-dim)', marginBottom: 8, lineHeight: 1.4, fontStyle: 'italic' }}>
+                  "{sug.explanation}"
                 </div>
-              ))}
+              )}
+              <div style={{ fontSize: 10, color: 'var(--fg-mute)', marginBottom: 10 }}>
+                {sug.layers.length} {isEN ? 'layers ready' : 'camadas prontas'}
+              </div>
+              <button onClick={() => applyDesign(sug)} style={{ ...cps.btnGhost, width: '100%', color: 'var(--gold)', borderColor: 'var(--gold-3)' }}>
+                {isEN ? '+ Apply to canvas' : '+ Aplicar ao canvas'}
+              </button>
             </div>
+          ))}
+        </div>
+      )}
+
+      <div style={{ fontSize: 9, letterSpacing: '.22em', textTransform: 'uppercase', color: 'var(--fg-mute)', fontWeight: 600, marginBottom: 8 }}>
+        {isEN ? 'Try these' : 'Experimenta'}
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+        {examples.map((ex, i) => (
+          <button key={i} onClick={() => setPrompt(ex)} style={{
+            padding: 9, background: 'var(--bg-2)', border: '1px solid var(--border)',
+            color: 'var(--fg-dim)', fontSize: 11, textAlign: 'left', cursor: 'pointer',
+            fontFamily: 'inherit', lineHeight: 1.4,
+          }}>"{ex}"</button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ── UPLOADS PANEL ──
+function UploadsPanel({ addLayer, uploads, setUploads, showToast, isEN }: CPToolPanelProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleFile = (file?: File | null) => {
+    if (!file) return
+    if (file.size > 10 * 1024 * 1024) { showToast(isEN ? 'Max 10MB' : 'Máx 10MB'); return }
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const url = String(e.target?.result || '')
+      const newUp = { id: cpUid(), url, name: file.name }
+      setUploads(prev => [newUp, ...prev])
+      addLayer({ type: 'image', url, name: file.name, w: 35, h: 35 })
+    }
+    reader.readAsDataURL(file)
+  }
+
+  return (
+    <div style={{ padding: 20 }}>
+      <CPSectionHeader title={isEN ? 'Uploads' : 'Ficheiros'} />
+
+      <div
+        onClick={() => fileInputRef.current?.click()}
+        onDragOver={e => { e.preventDefault(); e.currentTarget.style.borderColor = 'var(--gold)' }}
+        onDragLeave={e => { e.currentTarget.style.borderColor = 'var(--border-2)' }}
+        onDrop={e => { e.preventDefault(); e.currentTarget.style.borderColor = 'var(--border-2)'; handleFile(e.dataTransfer.files?.[0]) }}
+        style={{ padding: 24, textAlign: 'center', background: 'var(--bg-2)', border: '2px dashed var(--border-2)', cursor: 'pointer', marginBottom: 16 }}
+      >
+        <input type="file" ref={fileInputRef} accept="image/*" style={{ display: 'none' }} onChange={e => handleFile(e.target.files?.[0])} />
+        <div style={{ fontSize: 28, color: 'var(--gold)', marginBottom: 8 }}>⬆</div>
+        <div style={{ fontSize: 11, letterSpacing: '.14em', textTransform: 'uppercase', fontWeight: 600, color: 'var(--fg-dim)' }}>
+          {isEN ? 'Click or drop' : 'Clique ou arraste'}
+        </div>
+        <div style={{ fontSize: 9, color: 'var(--fg-mute)', marginTop: 4 }}>PNG · JPG · SVG · 10MB</div>
+      </div>
+
+      {uploads.length > 0 && (
+        <div>
+          <div style={{ fontSize: 9, letterSpacing: '.22em', textTransform: 'uppercase', color: 'var(--fg-mute)', fontWeight: 600, marginBottom: 8 }}>
+            {isEN ? `Your files (${uploads.length})` : `Ficheiros (${uploads.length})`}
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
+            {uploads.map(u => (
+              <button key={u.id} onClick={() => addLayer({ type: 'image', url: u.url, name: u.name, w: 35, h: 35 })} title={u.name}
+                style={{ aspectRatio: '1', background: 'var(--bg-2)', border: '1px solid var(--border)', cursor: 'pointer', padding: 4 }}>
+                <img src={u.url} alt={u.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+              </button>
+            ))}
           </div>
         </div>
+      )}
+    </div>
+  )
+}
 
-        {/* STEP CONTENT */}
-        <div style={{ maxWidth: 'var(--maxw)', margin: '0 auto', padding: 'clamp(40px,5vw,72px) var(--pad-x)' }}>
-          {/* STEP 0 - Categoria */}
-          {step === 0 && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 24, animation: 'kn-fadeUp .5s var(--ease) both' }}>
-              {([
-                { g: 'vestuario' as CustGroup, label: t('vert_vestuario'), desc: t('cust_step0_vestuario_desc'), acc: '#B08D57', icon: 'M-60 -25 L-90 0 L-70 30 L-50 20 L-50 65 L50 65 L50 20 L70 30 L90 0 L60 -25 L40 -25 C40 -5 20 5 0 5 C-20 5 -40 -5 -40 -25 Z' },
-                { g: 'casa' as CustGroup, label: t('vert_casa'), desc: t('cust_step0_casa_desc'), acc: '#8B1E2D', icon: 'M-70 -40 L70 -40 L70 30 L-70 30 Z M-90 30 L90 30 L82 42 L-82 42 Z' },
-              ]).map(opt => (
-                <button key={opt.g} onClick={() => { setGroup(opt.g); setStep(1); fireSparkle() }} style={{
-                  padding: '48px 32px', background: 'var(--overlay-medium)', border: `1px solid ${opt.acc}55`, cursor: 'pointer', textAlign: 'left',
-                  transition: 'all .3s var(--ease)', position: 'relative', overflow: 'hidden', minHeight: 320,
-                }}
-                  onMouseEnter={e => {
-                    const el = e.currentTarget as HTMLElement
-                    el.style.borderColor = opt.acc; el.style.transform = 'translateY(-6px)'
-                    el.style.boxShadow = `0 24px 60px ${opt.acc}30`
-                  }}
-                  onMouseLeave={e => {
-                    const el = e.currentTarget as HTMLElement
-                    el.style.borderColor = `${opt.acc}55`; el.style.transform = 'none'; el.style.boxShadow = 'none'
-                  }}>
-                  <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, transparent, ${opt.acc}, transparent)` }} />
-                  <svg viewBox="-100 -60 200 130" width="140" height="80" style={{ display: 'block', marginBottom: 20 }}>
-                    <path d={opt.icon} fill="none" stroke={opt.acc} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                  <div style={{ fontSize: 10, letterSpacing: '.28em', textTransform: 'uppercase', color: opt.acc, marginBottom: 12 }}>{t('cust_step0_vert_label')}</div>
-                  <h2 style={{ fontFamily: 'var(--f-display)', fontSize: 36, fontWeight: 500, margin: '0 0 12px' }}>{opt.label}</h2>
-                  <p style={{ color: 'var(--fg-dim)', fontSize: 14, lineHeight: 1.65, marginBottom: 24 }}>{opt.desc}</p>
-                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: opt.acc, fontSize: 11, letterSpacing: '.22em', textTransform: 'uppercase', fontWeight: 600 }}>
-                    {t('cust_choose')}
-                    <svg width="14" height="10" viewBox="0 0 14 10" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M1 5h12M9 1l4 4-4 4" /></svg>
-                  </div>
-                </button>
-              ))}
+// ── TEXT PANEL ──
+function TextPanel({ addLayer, isEN }: CPToolPanelProps) {
+  const [text, setText] = useState('KARMIC NODE')
+  const [font, setFont] = useState<CPFont>(CP_FONTS[0])
+  const [color, setColor] = useState('#0B0B0C')
+  const [fontSize, setFontSize] = useState(48)
+
+  const add = () => {
+    if (!text.trim()) return
+    addLayer({ type: 'text', text, font: font.family, fontSize, color, w: Math.max(20, text.length * 3), h: 12 })
+  }
+
+  return (
+    <div style={{ padding: 20 }}>
+      <CPSectionHeader title={isEN ? 'Add Text' : 'Adicionar Texto'} />
+
+      <div style={cps.label}>{isEN ? 'Text' : 'Texto'}</div>
+      <input type="text" value={text} onChange={e => setText(e.target.value)}
+        style={{ ...cps.input, fontFamily: font.family, fontSize: 16, marginBottom: 14 }} />
+
+      <div style={cps.label}>{(isEN ? 'Size' : 'Tamanho') + ': ' + fontSize + 'px'}</div>
+      <input type="range" min={12} max={120} value={fontSize} onChange={e => setFontSize(+e.target.value)} style={{ width: '100%', marginBottom: 14 }} />
+
+      <div style={cps.label}>{isEN ? 'Color' : 'Cor'}</div>
+      <input type="color" value={color} onChange={e => setColor(e.target.value)}
+        style={{ width: '100%', height: 36, background: 'transparent', border: '1px solid var(--border)', cursor: 'pointer', marginBottom: 14 }} />
+
+      <button onClick={add} style={{ ...cps.btnPrimary, width: '100%', marginBottom: 20 }}>
+        + {isEN ? 'Add to canvas' : 'Adicionar'}
+      </button>
+
+      <div style={{ ...cps.label, marginTop: 16 }}>{isEN ? 'Font' : 'Fonte'}</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+        {CP_FONTS.map(f => (
+          <button key={f.id} onClick={() => setFont(f)} style={{
+            padding: '10px 12px',
+            background: font.id === f.id ? 'rgba(176,141,87,.15)' : 'var(--bg-2)',
+            border: '1px solid ' + (font.id === f.id ? 'var(--gold-3)' : 'var(--border)'),
+            color: font.id === f.id ? 'var(--gold)' : 'var(--fg)',
+            cursor: 'pointer', fontFamily: f.family, textAlign: 'left', fontSize: 15,
+          }}>{f.name}</button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ── CLIPART PANEL ──
+function ClipartPanel({ addLayer, isEN }: CPToolPanelProps) {
+  const [cat, setCat] = useState('karmic')
+  const cats = [
+    { id: 'karmic', label: 'Karmic' },
+    { id: 'shapes', label: isEN ? 'Shapes' : 'Formas' },
+    { id: 'stars', label: 'Stars' },
+    { id: 'symbols', label: 'Symbols' },
+    { id: 'nature', label: isEN ? 'Nature' : 'Natureza' },
+    { id: 'tech', label: 'Tech' },
+  ]
+  const filtered = CP_CLIPART.filter(c => c.cat === cat)
+
+  return (
+    <div style={{ padding: 20 }}>
+      <CPSectionHeader title="Clipart" />
+      <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap', marginBottom: 12 }}>
+        {cats.map(c => (
+          <button key={c.id} onClick={() => setCat(c.id)} style={{
+            padding: '5px 10px', background: cat === c.id ? 'var(--gold)' : 'transparent',
+            color: cat === c.id ? 'var(--bg)' : 'var(--fg-mute)',
+            border: '1px solid ' + (cat === c.id ? 'var(--gold)' : 'var(--border)'),
+            fontSize: 9, letterSpacing: '.12em', textTransform: 'uppercase', fontWeight: 600,
+            cursor: 'pointer', fontFamily: 'inherit',
+          }}>{c.label}</button>
+        ))}
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
+        {filtered.map(item => (
+          <button key={item.id} onClick={() => addLayer({ type: 'shape', svg: item.svg, fill: '#0B0B0C', w: 25, h: 25 })} style={{
+            aspectRatio: '1', background: 'var(--bg-2)', border: '1px solid var(--border)',
+            cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <svg width={32} height={32} viewBox="0 0 100 100" fill="var(--fg)" dangerouslySetInnerHTML={{ __html: item.svg }} />
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ── QUICK DESIGNS ──
+function QuickPanel({ addLayer, isEN }: CPToolPanelProps) {
+  const apply = (d: CPQuickDesign) => d.layers.forEach(l => addLayer(l))
+  return (
+    <div style={{ padding: 20 }}>
+      <CPSectionHeader title={isEN ? 'Quick Designs' : 'Designs Rápidos'} />
+      <div style={{ fontSize: 11, color: 'var(--fg-mute)', marginBottom: 16, lineHeight: 1.5 }}>
+        {isEN ? 'Curated Karmic templates. Click to apply.' : 'Templates Karmic curados. Clique para aplicar.'}
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 6 }}>
+        {CP_QUICK_DESIGNS.map(d => (
+          <button key={d.id} onClick={() => apply(d)} style={{
+            padding: 12, background: 'var(--bg-2)', border: '1px solid var(--border)',
+            cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
+          }}>
+            <div style={{ fontSize: 28, color: 'var(--gold)' }}>{d.preview}</div>
+            <div style={{ fontSize: 9, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--fg-dim)', fontWeight: 600, textAlign: 'center' }}>{d.name}</div>
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ── SAVED DESIGNS ──
+interface CPSavedDesign { id: string; name: string; created_at: string }
+
+function SavedPanel({ auth, isEN }: CPToolPanelProps) {
+  const [designs, setDesigns] = useState<CPSavedDesign[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (!auth?.user || !isSupabaseConfigured) { setLoading(false); return }
+    supabase.from('custom_designs').select('*').eq('user_id', auth.user.id).order('created_at', { ascending: false })
+      .then(({ data }: { data: CPSavedDesign[] | null }) => { setDesigns(data || []); setLoading(false) })
+  }, [auth?.user])
+
+  if (!auth?.user) {
+    return (
+      <div style={{ padding: 20, textAlign: 'center', color: 'var(--fg-mute)' }}>
+        <div style={{ fontSize: 32, marginBottom: 10 }}>🔒</div>
+        <div style={{ fontSize: 12 }}>{isEN ? 'Sign in to save designs' : 'Faça login para guardar designs'}</div>
+      </div>
+    )
+  }
+
+  return (
+    <div style={{ padding: 20 }}>
+      <CPSectionHeader title={isEN ? 'Saved' : 'Guardados'} />
+      {loading ? (
+        <div style={{ fontSize: 11, color: 'var(--fg-mute)' }}>Loading...</div>
+      ) : designs.length === 0 ? (
+        <div style={{ fontSize: 11, color: 'var(--fg-mute)' }}>{isEN ? 'No saved designs yet.' : 'Sem designs guardados.'}</div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {designs.map(d => (
+            <div key={d.id} style={{ padding: 10, background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
+              <div style={{ fontFamily: 'var(--f-display)', fontSize: 13 }}>{d.name}</div>
+              <div style={{ fontSize: 9, color: 'var(--fg-mute)', marginTop: 3 }}>{new Date(d.created_at).toLocaleDateString()}</div>
             </div>
-          )}
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
 
-          {/* STEP 1 - Produto base */}
-          {step === 1 && (
-            <div style={{ animation: 'kn-fadeUp .5s var(--ease) both' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-                <button onClick={() => setStep(0)} style={{ background: 'transparent', border: 'none', color: 'var(--fg-mute)', fontSize: 12, letterSpacing: '.16em', textTransform: 'uppercase', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                  <svg width="12" height="10" viewBox="0 0 14 10" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M13 5H1M5 1L1 5l4 4" /></svg>
-                  {t('cust_back')}
-                </button>
-                <span style={{ color: 'var(--border-2)' }}>·</span>
-                <span style={{ fontSize: 11, letterSpacing: '.22em', textTransform: 'uppercase', color: accent }}>
-                  {group === 'vestuario' ? t('vert_vestuario') : t('vert_casa')}
-                </span>
-              </div>
-              <h2 style={{ fontFamily: 'var(--f-display)', fontSize: 32, fontWeight: 500, margin: '0 0 8px' }}>{t('cust_step1_title')}</h2>
-              <p style={{ color: 'var(--fg-mute)', fontSize: 14, marginBottom: 32 }}>{t('cust_step1_sub')}</p>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(180px,1fr))', gap: 14 }}>
-                {CUST_PRODUCTS.filter(p => p.group === group).map(p => (
-                  <button key={p.id} onClick={() => { setProduct(p); setStep(2); fireSparkle() }} style={{
-                    padding: '24px 16px', background: 'var(--overlay-medium)', border: `1px solid ${accent}33`, cursor: 'pointer',
-                    transition: 'all .25s var(--ease)', textAlign: 'center', position: 'relative', minHeight: 200,
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12,
-                  }}
-                    onMouseEnter={e => {
-                      const el = e.currentTarget as HTMLElement
-                      el.style.borderColor = accent; el.style.transform = 'translateY(-4px)'; el.style.background = 'var(--overlay-heavy)'
-                    }}
-                    onMouseLeave={e => {
-                      const el = e.currentTarget as HTMLElement
-                      el.style.borderColor = `${accent}33`; el.style.transform = 'none'; el.style.background = 'var(--overlay-medium)'
-                    }}>
-                    <svg viewBox="-100 -80 200 180" width="90" height="80">
-                      <path d={p.icon} fill="none" stroke={accent} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                    <div>
-                      <div style={{ fontFamily: 'var(--f-display)', fontSize: 15, fontWeight: 500 }}>{productLabel(p)}</div>
-                      <div style={{ fontSize: 11, color: accent, marginTop: 4, letterSpacing: '.08em' }}>{t('cust_from')} {p.basePrice}€</div>
-                    </div>
-                  </button>
-                ))}
-              </div>
+// ── LAYERS ──
+function LayersPanel({ currentLayers, selectedLayerId, setSelectedLayerId, removeLayer, duplicateLayer, isEN }: CPToolPanelProps) {
+  return (
+    <div style={{ padding: 20 }}>
+      <CPSectionHeader title={isEN ? 'Layers' : 'Camadas'} />
+      {currentLayers.length === 0 ? (
+        <div style={{ fontSize: 11, color: 'var(--fg-mute)', textAlign: 'center', padding: 20 }}>
+          {isEN ? 'No layers. Add elements from tools.' : 'Sem camadas. Adicione via ferramentas.'}
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          {[...currentLayers].reverse().map(layer => (
+            <div key={layer.id} onClick={() => setSelectedLayerId(layer.id)} style={{
+              display: 'flex', alignItems: 'center', gap: 6, padding: '8px 10px',
+              background: selectedLayerId === layer.id ? 'rgba(176,141,87,.15)' : 'var(--bg-2)',
+              border: '1px solid ' + (selectedLayerId === layer.id ? 'var(--gold-3)' : 'var(--border)'),
+              cursor: 'pointer', fontSize: 12,
+            }}>
+              <span style={{ fontSize: 14 }}>{layer.type === 'text' ? '✍' : layer.type === 'image' ? '🖼' : '⬚'}</span>
+              <span style={{ flex: 1, color: 'var(--fg-dim)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 11 }}>
+                {layer.type === 'text' ? (layer.text || 'Text').slice(0, 12) : layer.type === 'image' ? (layer.name || 'Image').slice(0, 12) : 'Shape'}
+              </span>
+              <button onClick={e => { e.stopPropagation(); duplicateLayer(layer.id) }} title="Duplicate" style={cpIconMiniBtn}>⧉</button>
+              <button onClick={e => { e.stopPropagation(); removeLayer(layer.id) }} title="Delete" style={{ ...cpIconMiniBtn, color: 'var(--bordo-3)' }}>×</button>
             </div>
-          )}
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
 
-          {/* STEP 2 - Kit builder + preview */}
-          {step === 2 && product && (
-            <div style={{ animation: 'kn-fadeUp .5s var(--ease) both' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
-                <button onClick={() => setStep(1)} style={{ background: 'transparent', border: 'none', color: 'var(--fg-mute)', fontSize: 12, letterSpacing: '.16em', textTransform: 'uppercase', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                  <svg width="12" height="10" viewBox="0 0 14 10" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M13 5H1M5 1L1 5l4 4" /></svg>
-                  {t('cust_change_product')}
-                </button>
-                <span style={{ color: 'var(--border-2)' }}>·</span>
-                <span style={{ fontSize: 11, letterSpacing: '.22em', textTransform: 'uppercase', color: accent }}>{productLabel(product)}</span>
-              </div>
-
-              <div className="kn-cust-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 420px', gap: 32, alignItems: 'start' }}>
-                {/* PREVIEW */}
-                <LivePreview product={product} baseColor={color} uploadUrl={uploadUrl} textOverlay={textOverlay} position={position} group={group} t={t} />
-
-                {/* KIT BUILDER */}
-                <div>
-                  <h2 style={{ fontFamily: 'var(--f-display)', fontSize: 24, fontWeight: 500, margin: '0 0 4px' }}>{t('cust_kit_builder')}</h2>
-                  <p style={{ color: 'var(--fg-mute)', fontSize: 12, marginBottom: 20, letterSpacing: '.06em' }}>{t('cust_kit_builder_sub')}</p>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                    {cards.map((c, i) => (
-                      <KitCard key={c.id} n={i + 1} title={c.title} subtitle={c.sub} done={!!c.sub && c.sub !== t('cust_none') && c.sub !== t('cust_none_f') && c.sub !== '—'} active={activeCard === c.id} onToggle={() => setActiveCard(activeCard === c.id ? null : c.id)} accent={accent}>
-                        {c.id === 'color' && (
-                          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                            {CUST_COLORS.map(cc => (
-                              <button key={cc.hex} onClick={() => { setColor(cc.hex); fireSparkle() }} title={colorLabel(cc.hex)} style={{
-                                width: 36, height: 36, borderRadius: '50%', background: cc.hex,
-                                border: color === cc.hex ? `3px solid ${accent}` : `2px solid ${cc.hex === '#F5F2ED' ? 'var(--border)' : 'transparent'}`,
-                                cursor: 'pointer', transition: 'transform .15s', outline: 'none',
-                                transform: color === cc.hex ? 'scale(1.15)' : 'scale(1)',
-                              }} />
-                            ))}
-                          </div>
-                        )}
-                        {c.id === 'model' && (
-                          <select value={model} onChange={e => setModel(e.target.value)} style={{ width: '100%', padding: '10px 12px', background: 'var(--bg-2)', border: '1px solid var(--border)', color: 'var(--fg)', fontFamily: 'var(--f-sans)', fontSize: 14 }}>
-                            {IT_MODELS.map(m => <option key={m}>{m}</option>)}
-                          </select>
-                        )}
-                        {c.id === 'size' && (
-                          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                            {CUST_SIZES.map(s => (
-                              <button key={s} onClick={() => setSize(s)} style={{
-                                minWidth: 46, height: 40, background: size === s ? accent : 'transparent',
-                                border: `1px solid ${size === s ? accent : 'var(--border)'}`,
-                                color: size === s ? '#0B0B0C' : 'var(--fg)', fontSize: 13, fontWeight: 600, cursor: 'pointer', transition: 'all .15s',
-                              }}>{s}</button>
-                            ))}
-                          </div>
-                        )}
-                        {c.id === 'fabric' && (
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                            {CUST_FABRICS.map(f => (
-                              <button key={f.id} onClick={() => setFabric(f.id)} style={{
-                                padding: '12px 14px', background: fabric === f.id ? `${accent}18` : 'transparent',
-                                border: `1px solid ${fabric === f.id ? accent : 'var(--border)'}`,
-                                textAlign: 'left', cursor: 'pointer', transition: 'all .15s',
-                              }}>
-                                <div style={{ fontSize: 13, color: fabric === f.id ? accent : 'var(--fg)', fontWeight: 500 }}>{fabricLabel(f.id)}</div>
-                                <div style={{ fontSize: 11, color: 'var(--fg-mute)', marginTop: 2 }}>{t(('cust_fabric_' + f.id + '_note') as TKey)}</div>
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                        {c.id === 'material' && (
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                            {IT_MATERIALS.map(m => (
-                              <button key={m.id} onClick={() => setMaterial(m.id)} style={{
-                                padding: '12px 14px', background: material === m.id ? `${accent}18` : 'transparent',
-                                border: `1px solid ${material === m.id ? accent : 'var(--border)'}`,
-                                textAlign: 'left', cursor: 'pointer', transition: 'all .15s',
-                              }}>
-                                <div style={{ fontSize: 13, color: material === m.id ? accent : 'var(--fg)', fontWeight: 500 }}>{materialLabel(m.id)}</div>
-                                <div style={{ fontSize: 11, color: 'var(--fg-mute)', marginTop: 2 }}>{t(('cust_material_' + m.id + '_note') as TKey)}</div>
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                        {c.id === 'finish' && (
-                          <div style={{ display: 'flex', gap: 6 }}>
-                            {IT_FINISHES.map(f => (
-                              <button key={f.id} onClick={() => setFinish(f.id)} style={{
-                                flex: 1, padding: '10px', background: finish === f.id ? accent : 'transparent',
-                                border: `1px solid ${finish === f.id ? accent : 'var(--border)'}`,
-                                color: finish === f.id ? '#0B0B0C' : 'var(--fg)', fontSize: 13, fontWeight: 500, cursor: 'pointer',
-                              }}>{finishLabel(f.id)}</button>
-                            ))}
-                          </div>
-                        )}
-                        {c.id === 'technique' && (
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
-                            {CUST_TECHNIQUES.map(tk => (
-                              <button key={tk.id} onClick={() => setTechnique(tk.id)} style={{
-                                padding: '12px', background: technique === tk.id ? `${accent}18` : 'transparent',
-                                border: `1px solid ${technique === tk.id ? accent : 'var(--border)'}`,
-                                textAlign: 'left', cursor: 'pointer', transition: 'all .15s',
-                              }}>
-                                <div style={{ fontSize: 12, color: technique === tk.id ? accent : 'var(--fg)', fontWeight: 600 }}>{techniqueLabel(tk.id)}</div>
-                                <div style={{ fontSize: 10, color: 'var(--fg-mute)', marginTop: 2 }}>+{tk.add}€</div>
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                        {c.id === 'design' && (
-                          <div>
-                            <label style={{
-                              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                              padding: '14px', border: `1px dashed ${uploadUrl ? accent : 'var(--border-2)'}`,
-                              background: uploadUrl ? `${accent}08` : 'transparent',
-                              cursor: 'pointer', transition: 'all .2s',
-                            }}>
-                              <input type="file" accept="image/*" onChange={handleUpload} style={{ display: 'none' }} />
-                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={uploadUrl ? accent : 'var(--fg-mute)'} strokeWidth="1.5">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" />
-                              </svg>
-                              <span style={{ fontSize: 12, color: uploadUrl ? accent : 'var(--fg-mute)', letterSpacing: '.14em', textTransform: 'uppercase', fontWeight: 500 }}>
-                                {uploadUrl ? t('cust_image_loaded_check') : t('cust_upload_hint')}
-                              </span>
-                            </label>
-                            {uploadUrl && (
-                              <button onClick={() => setUploadUrl('')} style={{ marginTop: 8, background: 'transparent', border: 'none', color: 'var(--fg-mute)', fontSize: 11, cursor: 'pointer', textDecoration: 'underline' }}>
-                                {t('cust_remove')}
-                              </button>
-                            )}
-                          </div>
-                        )}
-                        {c.id === 'position' && (
-                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 6 }}>
-                            {CUST_POSITIONS.map(p => (
-                              <button key={p.id} onClick={() => setPosition(p.id)} style={{
-                                padding: '10px', background: position === p.id ? accent : 'transparent',
-                                border: `1px solid ${position === p.id ? accent : 'var(--border)'}`,
-                                color: position === p.id ? '#0B0B0C' : 'var(--fg)', fontSize: 12, cursor: 'pointer',
-                              }}>{positionLabel(p.id)}</button>
-                            ))}
-                          </div>
-                        )}
-                        {c.id === 'text' && (
-                          <input type="text" value={textOverlay} onChange={e => setTextOverlay(e.target.value)} placeholder={t('cust_text_placeholder')} maxLength={30} style={{
-                            width: '100%', padding: '10px 12px', background: 'var(--bg-2)', border: '1px solid var(--border)', color: 'var(--fg)', fontSize: 14, boxSizing: 'border-box',
-                          }} />
-                        )}
-                        {c.id === 'qty' && (
-                          <div>
-                            <input type="range" min={1} max={500} value={qty} onChange={e => setQty(+e.target.value)} style={{ width: '100%', accentColor: accent }} />
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--fg-mute)', marginTop: 4 }}>
-                              <span>1 un.</span>
-                              <span style={{ color: accent, fontWeight: 600 }}>{qty} un.</span>
-                              <span>500 un.</span>
-                            </div>
-                            <div style={{ display: 'flex', gap: 6, marginTop: 10, flexWrap: 'wrap' }}>
-                              {[1, 10, 25, 50, 100, 250].map(n => (
-                                <button key={n} onClick={() => setQty(n)} style={{
-                                  padding: '5px 12px', fontSize: 11,
-                                  border: `1px solid ${qty === n ? accent : 'var(--border)'}`,
-                                  background: qty === n ? `${accent}18` : 'transparent',
-                                  color: qty === n ? accent : 'var(--fg-mute)', cursor: 'pointer',
-                                }}>{n}</button>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                        {c.id === 'notes' && (
-                          <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder={t('cust_notes_placeholder')} rows={3} style={{
-                            width: '100%', padding: '10px 12px', background: 'var(--bg-2)', border: '1px solid var(--border)', color: 'var(--fg)', fontSize: 13, boxSizing: 'border-box', resize: 'vertical', fontFamily: 'var(--f-sans)',
-                          }} />
-                        )}
-                      </KitCard>
-                    ))}
-                  </div>
-
-                  {/* Estimativa sticky (inline aqui abaixo do kit) */}
-                  <EstimativaSticky total={estimate.total} unit={estimate.unit} qty={qty} hint={estimate.hint} accent={accent} t={t} />
-
-                  {/* Next */}
-                  <button onClick={() => { setStep(3); fireSparkle() }} style={{
-                    marginTop: 20, width: '100%', padding: '18px', background: accent, border: 'none', color: 'var(--bg)',
-                    fontFamily: 'var(--f-sans)', fontSize: 12, letterSpacing: '.24em', textTransform: 'uppercase', fontWeight: 700,
-                    cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, transition: 'transform .2s',
-                  }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)' }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = 'none' }}>
-                    {t('cust_continue')}
-                    <svg width="14" height="10" viewBox="0 0 14 10" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 5h12M9 1l4 4-4 4" /></svg>
-                  </button>
-                </div>
-              </div>
+// ── SKINS (color variants preview) ──
+function SkinsPanel({ product, color, setColor, isEN }: CPToolPanelProps) {
+  return (
+    <div style={{ padding: 20 }}>
+      <CPSectionHeader title="Skins" />
+      <div style={{ fontSize: 11, color: 'var(--fg-mute)', marginBottom: 16, lineHeight: 1.5 }}>
+        {isEN ? 'Preview the product in all available colors.' : 'Veja o produto em todas as cores disponíveis.'}
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
+        {product.colors.map(c => (
+          <button key={c.id} onClick={() => setColor(c)} style={{
+            padding: 8, background: 'var(--bg-2)', border: '2px solid ' + (color.id === c.id ? 'var(--gold)' : 'var(--border)'),
+            cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
+          }}>
+            <div style={{ width: '100%', aspectRatio: '1', background: '#efe6d5', position: 'relative', overflow: 'hidden' }}>
+              <img src={product.mockupUrl} alt={c.name} style={{ width: '100%', height: '100%', objectFit: 'cover', filter: cpColorFilter(c.hex) }} />
             </div>
-          )}
+            <div style={{ fontSize: 10, letterSpacing: '.1em', color: color.id === c.id ? 'var(--gold)' : 'var(--fg)', fontWeight: 600 }}>{c.name}</div>
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
 
-          {/* STEP 3 - Enviar */}
-          {step === 3 && product && (
-            <div style={{ animation: 'kn-fadeUp .5s var(--ease) both', maxWidth: 780, margin: '0 auto' }}>
-              {sent ? (
-                <div style={{ textAlign: 'center', padding: '60px 40px', border: `1px solid ${accent}`, background: `${accent}0f` }}>
-                  <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="1.2" style={{ margin: '0 auto 24px' }}>
-                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" />
-                  </svg>
-                  <h2 style={{ fontFamily: 'var(--f-display)', fontSize: 36, margin: '0 0 12px' }}>
-                    {sent === 'quote' ? t('cust_sent_quote') : t('cust_sent_cart')}
-                  </h2>
-                  <p style={{ color: 'var(--fg-dim)', fontSize: 15, marginBottom: 32, maxWidth: '40ch', margin: '0 auto 32px' }}>
-                    {sent === 'quote' ? t('cust_sent_quote_desc') : t('cust_sent_cart_desc')}
-                  </p>
-                  <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-                    <button onClick={() => { setStep(0); setSent(null); setProduct(null); setUploadUrl(''); setTextOverlay(''); setNotes(''); setName(''); setEmail(''); setPhone('') }} style={{
-                      padding: '14px 28px', background: 'transparent', border: `1px solid ${accent}`, color: accent,
-                      fontSize: 11, letterSpacing: '.22em', textTransform: 'uppercase', fontWeight: 600, cursor: 'pointer',
-                    }}>{t('cust_new_piece')}</button>
-                    <button onClick={() => setPage('home')} style={{
-                      padding: '14px 28px', background: accent, border: 'none', color: 'var(--bg)',
-                      fontSize: 11, letterSpacing: '.22em', textTransform: 'uppercase', fontWeight: 700, cursor: 'pointer',
-                    }}>{t('cust_back_shop')}</button>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-                    <button onClick={() => setStep(2)} style={{ background: 'transparent', border: 'none', color: 'var(--fg-mute)', fontSize: 12, letterSpacing: '.16em', textTransform: 'uppercase', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                      <svg width="12" height="10" viewBox="0 0 14 10" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M13 5H1M5 1L1 5l4 4" /></svg>
-                      {t('cust_edit_config')}
-                    </button>
-                  </div>
+// ── FILTERS ──
+function FiltersPanel({ selectedLayerId, currentLayers, updateLayer, commitLayer, isEN }: CPToolPanelProps) {
+  const selected = currentLayers.find(l => l.id === selectedLayerId)
+  if (!selected) {
+    return (
+      <div style={{ padding: 20 }}>
+        <CPSectionHeader title={isEN ? 'Filters' : 'Filtros'} />
+        <div style={{ fontSize: 11, color: 'var(--fg-mute)', textAlign: 'center', padding: 20 }}>
+          {isEN ? 'Select an element to apply filters.' : 'Selecione um elemento para aplicar filtros.'}
+        </div>
+      </div>
+    )
+  }
+  return (
+    <div style={{ padding: 20 }}>
+      <CPSectionHeader title={isEN ? 'Filters' : 'Filtros'} />
+      <div style={{ fontSize: 11, color: 'var(--fg-mute)', marginBottom: 12 }}>
+        {isEN ? `Applied to: ${selected.type}` : `Aplicar a: ${selected.type}`}
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 6 }}>
+        {CP_FILTERS.map(f => (
+          <button key={f.id} onClick={() => { updateLayer(selectedLayerId!, { filter: f.id === 'none' ? null : f.css }); commitLayer() }} style={{
+            padding: 10, background: (selected.filter === f.css || (f.id === 'none' && !selected.filter)) ? 'rgba(176,141,87,.15)' : 'var(--bg-2)',
+            border: '1px solid ' + ((selected.filter === f.css || (f.id === 'none' && !selected.filter)) ? 'var(--gold-3)' : 'var(--border)'),
+            color: 'var(--fg)', cursor: 'pointer', fontSize: 10, letterSpacing: '.12em',
+            textTransform: 'uppercase', fontWeight: 600, fontFamily: 'inherit',
+          }}>{f.name}</button>
+        ))}
+      </div>
+    </div>
+  )
+}
 
-                  <h2 style={{ fontFamily: 'var(--f-display)', fontSize: 36, fontWeight: 500, margin: '0 0 8px' }}>{t('cust_step4_title')}</h2>
-                  <p style={{ color: 'var(--fg-mute)', fontSize: 14, marginBottom: 32 }}>{t('cust_step4_sub')}</p>
+// ── EFFECTS (shadow, outline, glow) ──
+function EffectsPanel({ selectedLayerId, currentLayers, updateLayer, commitLayer, isEN }: CPToolPanelProps) {
+  const selected = currentLayers.find(l => l.id === selectedLayerId)
+  if (!selected) {
+    return (
+      <div style={{ padding: 20 }}>
+        <CPSectionHeader title={isEN ? 'Effects' : 'Efeitos'} />
+        <div style={{ fontSize: 11, color: 'var(--fg-mute)', textAlign: 'center', padding: 20 }}>
+          {isEN ? 'Select an element to apply effects.' : 'Selecione um elemento para aplicar efeitos.'}
+        </div>
+      </div>
+    )
+  }
+  const setEffect = (key: keyof DesignLayer, val: any) => updateLayer(selectedLayerId!, { [key]: val })
+  const commit = () => commitLayer()
+  return (
+    <div style={{ padding: 20 }}>
+      <CPSectionHeader title={isEN ? 'Effects' : 'Efeitos'} />
+      <div style={{ fontSize: 11, color: 'var(--fg-mute)', marginBottom: 16 }}>
+        {isEN ? 'Add depth, glow, and outline effects.' : 'Adicione profundidade, brilho, contorno.'}
+      </div>
 
-                  {/* Resumo */}
-                  <div style={{ background: 'var(--bg-1)', border: `1px solid ${accent}44`, padding: 24, marginBottom: 24 }}>
-                    <div style={{ fontSize: 10, letterSpacing: '.28em', textTransform: 'uppercase', color: accent, marginBottom: 16, fontWeight: 600 }}>{t('cust_summary')}</div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px 24px', marginBottom: 16 }}>
-                      {[
-                        [t('cust_col_article'), productLabel(product)],
-                        [t('cust_col_color'), colorLabel(color)],
-                        ...(product.hasModel ? [[t('cust_card_model'), model]] : []),
-                        ...(product.hasSize ? [[t('cust_card_size'), size]] : []),
-                        ...(product.hasFabric ? [[t('cust_card_fabric'), fabricLabel(fabric)]] : []),
-                        ...(product.hasMaterial ? [[t('cust_card_material'), materialLabel(material)]] : []),
-                        ...(product.hasFinish ? [[t('cust_card_finish'), finishLabel(finish)]] : []),
-                        ...(product.hasTechnique ? [[t('cust_card_technique'), techniqueLabel(technique)]] : []),
-                        ...(product.hasPosition ? [[t('cust_card_position'), positionLabel(position)]] : []),
-                        [t('cust_col_design'), uploadUrl ? t('cust_image_loaded') : '—'],
-                        [t('cust_col_text'), textOverlay || '—'],
-                        [t('cust_card_qty'), qty + ' ' + t('cust_units')],
-                      ].map(([k, v]) => (
-                        <div key={k as string} style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: 6, borderBottom: '1px solid var(--border)' }}>
-                          <span style={{ fontSize: 11, letterSpacing: '.08em', color: 'var(--fg-mute)', textTransform: 'uppercase' }}>{k}</span>
-                          <span style={{ fontSize: 13, color: 'var(--fg)', fontWeight: 500 }}>{v as string}</span>
-                        </div>
-                      ))}
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', paddingTop: 12, borderTop: `1px solid ${accent}55` }}>
-                      <span style={{ fontSize: 11, letterSpacing: '.24em', textTransform: 'uppercase', color: 'var(--fg-mute)' }}>{t('cust_estimate_total')}</span>
-                      <span style={{ fontFamily: 'var(--f-display)', fontSize: 36, fontWeight: 500, color: accent }}>{estimate.total.toFixed(2)} €</span>
-                    </div>
-                    {estimate.hint && <div style={{ marginTop: 8, fontSize: 11, color: accent, textAlign: 'right' }}>✓ {estimate.hint}</div>}
-                  </div>
+      <div style={{ marginBottom: 20 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+          <input type="checkbox" checked={!!selected.shadow} onChange={e => { setEffect('shadow', e.target.checked); commit() }} />
+          <span style={{ fontSize: 12, fontWeight: 600 }}>{isEN ? 'Shadow' : 'Sombra'}</span>
+        </div>
+        {selected.shadow && (
+          <div>
+            <div style={cps.label}>{(isEN ? 'Blur' : 'Desfoque') + ': ' + (selected.shadowBlur || 8) + 'px'}</div>
+            <input type="range" min={0} max={40} value={selected.shadowBlur || 8} onChange={e => setEffect('shadowBlur', +e.target.value)} onMouseUp={commit} style={{ width: '100%', marginBottom: 8 }} />
+            <div style={cps.label}>{isEN ? 'Color' : 'Cor'}</div>
+            <input type="color" value={selected.shadowColor || '#000000'} onChange={e => { setEffect('shadowColor', e.target.value); commit() }} style={{ width: '100%', height: 32, background: 'transparent', border: '1px solid var(--border)', cursor: 'pointer' }} />
+          </div>
+        )}
+      </div>
 
-                  {/* Contactos */}
-                  <div style={{ marginBottom: 24 }}>
-                    <div style={{ fontSize: 11, letterSpacing: '.24em', textTransform: 'uppercase', color: accent, marginBottom: 14, fontWeight: 600 }}>{t('cust_contact_title')}</div>
-                    <div style={{ display: 'grid', gap: 14 }}>
-                      <input type="text" placeholder={t('cust_name_ph')} value={name} onChange={e => setName(e.target.value)} style={{ padding: '13px 14px', background: 'var(--bg-2)', border: '1px solid var(--border)', color: 'var(--fg)', fontSize: 14, boxSizing: 'border-box' }} />
-                      <input type="email" placeholder={t('cust_email_ph')} value={email} onChange={e => setEmail(e.target.value)} style={{ padding: '13px 14px', background: 'var(--bg-2)', border: '1px solid var(--border)', color: 'var(--fg)', fontSize: 14, boxSizing: 'border-box' }} />
-                      <input type="tel" placeholder={t('cust_phone_ph')} value={phone} onChange={e => setPhone(e.target.value)} style={{ padding: '13px 14px', background: 'var(--bg-2)', border: '1px solid var(--border)', color: 'var(--fg)', fontSize: 14, boxSizing: 'border-box' }} />
-                    </div>
-                  </div>
+      <div style={{ marginBottom: 20 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+          <input type="checkbox" checked={!!selected.outline} onChange={e => { setEffect('outline', e.target.checked); commit() }} />
+          <span style={{ fontSize: 12, fontWeight: 600 }}>{isEN ? 'Outline' : 'Contorno'}</span>
+        </div>
+        {selected.outline && (
+          <div>
+            <div style={cps.label}>{(isEN ? 'Width' : 'Espessura') + ': ' + (selected.outlineWidth || 2) + 'px'}</div>
+            <input type="range" min={1} max={10} value={selected.outlineWidth || 2} onChange={e => setEffect('outlineWidth', +e.target.value)} onMouseUp={commit} style={{ width: '100%', marginBottom: 8 }} />
+            <div style={cps.label}>{isEN ? 'Color' : 'Cor'}</div>
+            <input type="color" value={selected.outlineColor || '#ffffff'} onChange={e => { setEffect('outlineColor', e.target.value); commit() }} style={{ width: '100%', height: 32, background: 'transparent', border: '1px solid var(--border)', cursor: 'pointer' }} />
+          </div>
+        )}
+      </div>
 
-                  {err && <div style={{ marginBottom: 16, padding: 12, background: 'rgba(139,30,45,.12)', border: '1px solid rgba(139,30,45,.3)', fontSize: 13, color: '#e06070' }}>⚠ {err}</div>}
+      <div style={{ marginBottom: 20 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+          <input type="checkbox" checked={!!selected.glow} onChange={e => { setEffect('glow', e.target.checked); commit() }} />
+          <span style={{ fontSize: 12, fontWeight: 600 }}>{isEN ? 'Glow' : 'Brilho'}</span>
+        </div>
+        {selected.glow && (
+          <div>
+            <div style={cps.label}>{isEN ? 'Color' : 'Cor'}</div>
+            <input type="color" value={selected.glowColor || '#B08D57'} onChange={e => { setEffect('glowColor', e.target.value); commit() }} style={{ width: '100%', height: 32, background: 'transparent', border: '1px solid var(--border)', cursor: 'pointer' }} />
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+// ═════════════════════════════════════════════════════════════════════════════
+// CANVAS
+// ═════════════════════════════════════════════════════════════════════════════
 
-                  {/* Dupla CTA */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                    <button onClick={() => handleSubmit('quote')} disabled={loading} style={{
-                      padding: '20px', background: 'transparent', border: `1px solid ${accent}`, color: accent,
-                      fontFamily: 'var(--f-sans)', fontSize: 12, letterSpacing: '.22em', textTransform: 'uppercase', fontWeight: 600,
-                      cursor: loading ? 'wait' : 'pointer', transition: 'all .2s', display: 'flex', flexDirection: 'column', gap: 6,
-                    }}>
-                      <span style={{ fontSize: 20 }}>🧾</span>
-                      {t('cust_cta_quote')}
-                      <span style={{ fontSize: 10, opacity: .7, letterSpacing: '.06em', textTransform: 'none' }}>{t('cust_cta_quote_sub')}</span>
-                    </button>
-                    <button onClick={() => handleSubmit('cart')} disabled={loading} style={{
-                      padding: '20px', background: accent, border: 'none', color: 'var(--bg)',
-                      fontFamily: 'var(--f-sans)', fontSize: 12, letterSpacing: '.22em', textTransform: 'uppercase', fontWeight: 700,
-                      cursor: loading ? 'wait' : 'pointer', transition: 'transform .2s', display: 'flex', flexDirection: 'column', gap: 6,
-                    }}
-                      onMouseEnter={e => !loading && ((e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)')}
-                      onMouseLeave={e => ((e.currentTarget as HTMLElement).style.transform = 'none')}>
-                      <span style={{ fontSize: 20 }}>💳</span>
-                      {t('cust_cta_pay')}
-                      <span style={{ fontSize: 10, opacity: .7, letterSpacing: '.06em', textTransform: 'none', fontWeight: 500 }}>{t('cust_cta_pay_sub')}</span>
-                    </button>
-                  </div>
-                </>
+interface CPDrag { id: string; mode: 'move' | 'resize' | 'rotate'; startX: number; startY: number; orig: DesignLayer }
+interface CPRot360Drag { startX: number; orig: number }
+
+function CPCanvas({ product, color, activeView, currentLayers, selectedLayerId, setSelectedLayerId, updateLayer, commitLayer, removeLayer, viewMode, is360, rotation360, setRotation360, showGuides, setShowGuides, zoom, setZoom, isEN, setActiveView, layers }: {
+  product: PrintfulProduct; color: CPColor; activeView: string; currentLayers: DesignLayer[]
+  selectedLayerId: string | null; setSelectedLayerId: (id: string | null) => void
+  updateLayer: (id: string, changes: Partial<DesignLayer>) => void; commitLayer: () => void; removeLayer: (id: string) => void
+  viewMode: 'design' | 'preview'; is360: boolean; rotation360: number; setRotation360: React.Dispatch<React.SetStateAction<number>>
+  showGuides: boolean; setShowGuides: (v: boolean) => void; zoom: number; setZoom: React.Dispatch<React.SetStateAction<number>>
+  isEN: boolean; setActiveView: (v: string) => void; layers: CPLayersByView
+}) {
+  const canvasRef = useRef<HTMLDivElement>(null)
+  const [drag, setDrag] = useState<CPDrag | null>(null)
+  const [rot360Drag, setRot360Drag] = useState<CPRot360Drag | null>(null)
+  const [autoRotate360, setAutoRotate360] = useState(false)
+
+  // Auto-rotate 360°
+  useEffect(() => {
+    if (!is360 || !autoRotate360) return
+    let raf: number
+    const tick = () => {
+      setRotation360(r => ((r + 0.6) % 360) - (r > 180 ? 360 : 0))
+      raf = requestAnimationFrame(tick)
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [is360, autoRotate360, setRotation360])
+
+  // Reset rotação quando desliga 360
+  useEffect(() => {
+    if (!is360) { setRotation360(0); setAutoRotate360(false) }
+  }, [is360, setRotation360])
+
+  const onLayerDown = (e: React.MouseEvent, id: string, mode: CPDrag['mode']) => {
+    e.stopPropagation()
+    e.preventDefault()
+    setSelectedLayerId(id)
+    const layer = currentLayers.find(l => l.id === id)
+    if (!layer) return
+    setDrag({ id, mode, startX: e.clientX, startY: e.clientY, orig: { ...layer } })
+  }
+
+  useEffect(() => {
+    if (!drag) return
+    const onMove = (e: MouseEvent) => {
+      const rect = canvasRef.current?.getBoundingClientRect()
+      if (!rect) return
+      const dx = ((e.clientX - drag.startX) / rect.width) * 100
+      const dy = ((e.clientY - drag.startY) / rect.height) * 100
+      if (drag.mode === 'move') {
+        updateLayer(drag.id, { x: cpClamp(drag.orig.x + dx, 5, 95), y: cpClamp(drag.orig.y + dy, 5, 95) })
+      } else if (drag.mode === 'resize') {
+        const scale = 1 + dx / 30
+        updateLayer(drag.id, { w: cpClamp(drag.orig.w * scale, 5, 100), h: cpClamp(drag.orig.h * scale, 5, 100) })
+      } else if (drag.mode === 'rotate') {
+        const el = document.querySelector(`[data-layer-id="${drag.id}"]`)
+        if (!el) return
+        const r = el.getBoundingClientRect()
+        const cx = r.left + r.width / 2, cy = r.top + r.height / 2
+        const angle = Math.atan2(e.clientY - cy, e.clientX - cx) * 180 / Math.PI
+        updateLayer(drag.id, { rotation: Math.round(angle + 90) })
+      }
+    }
+    const onUp = () => { commitLayer(); setDrag(null) }
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onUp)
+    return () => {
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseup', onUp)
+    }
+  }, [drag, updateLayer, commitLayer])
+
+  const on360Down = (e: React.MouseEvent) => {
+    if (!is360) return
+    e.preventDefault()
+    setRot360Drag({ startX: e.clientX, orig: rotation360 })
+  }
+
+  useEffect(() => {
+    if (!rot360Drag) return
+    const onMove = (e: MouseEvent) => {
+      const dx = e.clientX - rot360Drag.startX
+      setRotation360(rot360Drag.orig + dx * 0.8)
+    }
+    const onUp = () => setRot360Drag(null)
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onUp)
+    return () => {
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseup', onUp)
+    }
+  }, [rot360Drag, setRotation360])
+
+  const printAreas: CPPrintArea[] = product.printAreas?.length ? product.printAreas : [{ id: 'front', name: 'Frente', nameEn: 'Front', w: 300, h: 400 }]
+  const currentArea = printAreas.find(a => a.id === activeView)
+
+  return (
+    <div style={{ gridArea: 'canvas', background: viewMode === 'preview' ? '#F5F0E5' : '#efe6d5', display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
+      {/* View tabs */}
+      <div style={{ background: 'var(--bg-1)', borderBottom: '1px solid var(--border)', padding: '8px 16px', display: 'flex', gap: 3, alignItems: 'center', overflowX: 'auto' }}>
+        {printAreas.map(area => {
+          const layerCount = (layers[area.id] || []).length
+          const isActive = activeView === area.id
+          return (
+            <button key={area.id} onClick={() => setActiveView(area.id)} style={{
+              padding: '6px 12px', background: isActive ? 'var(--gold)' : 'transparent',
+              color: isActive ? 'var(--bg)' : (layerCount > 0 ? 'var(--gold)' : 'var(--fg-mute)'),
+              border: '1px solid ' + (isActive ? 'var(--gold)' : (layerCount > 0 ? 'var(--gold-3)' : 'transparent')),
+              fontSize: 9, letterSpacing: '.16em', textTransform: 'uppercase', fontWeight: 700,
+              cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap',
+              display: 'flex', alignItems: 'center', gap: 6,
+            }}>
+              {isEN ? (area.nameEn || area.name) : area.name}
+              {layerCount > 0 && (
+                <span style={{
+                  background: isActive ? 'rgba(11,11,12,.3)' : 'var(--gold)', color: 'var(--bg)',
+                  width: 16, height: 16, borderRadius: '50%',
+                  fontSize: 8, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700,
+                }}>{layerCount}</span>
               )}
+            </button>
+          )
+        })}
+        <div style={{ flex: 1 }} />
+        <button onClick={() => setShowGuides(!showGuides)} title={isEN ? 'Guides' : 'Guias'} style={{
+          width: 28, height: 28, background: showGuides ? 'rgba(176,141,87,.15)' : 'transparent',
+          border: '1px solid ' + (showGuides ? 'var(--gold-3)' : 'var(--border)'),
+          color: showGuides ? 'var(--gold)' : 'var(--fg-mute)', cursor: 'pointer',
+        }}>⊞</button>
+      </div>
+
+      {/* Canvas area */}
+      <div onMouseDown={on360Down} style={{
+        flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
+        overflow: 'hidden', position: 'relative',
+        cursor: is360 ? (rot360Drag ? 'grabbing' : 'grab') : 'default',
+      }}>
+        <div
+          ref={canvasRef}
+          onClick={e => {
+            const target = e.target as HTMLElement
+            const isCanvas = target === e.currentTarget
+            const isMockupImg = target.tagName === 'IMG' && target.getAttribute('alt') === product.name
+            const isViewWrapper = target.style && target.style.transformOrigin === 'center center'
+            if (isCanvas || isMockupImg || isViewWrapper) setSelectedLayerId(null)
+          }}
+          style={{
+            width: 'min(85vh, 700px)', aspectRatio: '1', position: 'relative',
+            transform: `scale(${zoom}) ${is360 ? `perspective(1500px) rotateY(${rotation360}deg)` : ''}`,
+            transformStyle: 'preserve-3d',
+            transition: is360 && !rot360Drag ? 'transform .35s cubic-bezier(.2,.9,.3,1)' : 'none',
+            boxShadow: is360
+              ? `${Math.sin(rotation360 * Math.PI / 180) * 30}px 40px 80px rgba(0,0,0,.25), 0 0 0 1px rgba(0,0,0,.05)`
+              : '0 20px 60px rgba(0,0,0,.12), 0 0 0 1px rgba(0,0,0,.05)',
+          }}
+        >
+          <div style={{
+            position: 'absolute', inset: 0,
+            transform: activeView === 'back' ? 'scaleX(-1)'
+              : activeView === 'left-sleeve' ? 'scale(1.8) translateX(-22%) translateY(8%)'
+              : activeView === 'right-sleeve' ? 'scale(1.8) translateX(22%) translateY(8%)'
+              : (activeView === 'inside-label' || activeView === 'outside-label') ? 'scale(3) translateY(-30%)'
+              : (activeView === 'left-wrist' || activeView === 'right-wrist') ? 'scale(2.5) translateY(20%)'
+              : 'none',
+            transition: 'transform .5s cubic-bezier(.2,.9,.3,1)',
+            transformOrigin: 'center center',
+          }}>
+            {product.mockupUrl && (
+              <img src={product.mockupUrl} alt={product.name} draggable={false} style={{
+                position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover',
+                filter: cpColorFilter(color.hex), pointerEvents: 'none', userSelect: 'none',
+              }} />
+            )}
+          </div>
+
+          {is360 && (
+            <div style={{
+              position: 'absolute', inset: 0,
+              background: `linear-gradient(${90 + rotation360 * 0.3}deg, rgba(255,255,255,${Math.max(0, 0.15 - Math.abs(rotation360) / 800)}) 0%, transparent 40%, transparent 60%, rgba(0,0,0,${Math.min(0.3, Math.abs(rotation360) / 400)}) 100%)`,
+              pointerEvents: 'none', zIndex: 2, transition: 'background .3s ease', mixBlendMode: 'overlay',
+            }} />
+          )}
+
+          <div style={{
+            position: 'absolute', top: 16, left: 16, zIndex: 4,
+            padding: '7px 14px', background: 'rgba(11,11,12,.9)', color: 'var(--gold)',
+            fontSize: 10, letterSpacing: '.24em', textTransform: 'uppercase', fontWeight: 700,
+            backdropFilter: 'blur(8px)', pointerEvents: 'none',
+            border: '1px solid rgba(176,141,87,.4)', boxShadow: '0 4px 12px rgba(0,0,0,.2)',
+            display: 'flex', alignItems: 'center', gap: 8,
+          }}>
+            <span style={{ fontSize: 12 }}>{activeView === 'back' ? '⤺' : activeView.includes('sleeve') ? '↔' : activeView.includes('wrist') ? '⌚' : activeView.includes('label') ? '🏷' : '⬇'}</span>
+            <span>{currentArea ? (isEN ? (currentArea.nameEn || currentArea.name) : currentArea.name) : (isEN ? 'Front' : 'Frente')}</span>
+          </div>
+
+          {showGuides && viewMode === 'design' && (
+            <div style={{
+              position: 'absolute',
+              top: product.printAreaStyle?.top || '25%', left: product.printAreaStyle?.left || '30%',
+              width: product.printAreaStyle?.width || '40%', height: product.printAreaStyle?.height || '45%',
+              border: '1px dashed rgba(139,30,45,.4)', pointerEvents: 'none', zIndex: 1,
+            }}>
+              <span style={{
+                position: 'absolute', top: -20, left: 0, fontSize: 8,
+                letterSpacing: '.2em', textTransform: 'uppercase', color: 'rgba(139,30,45,.8)',
+                fontWeight: 700, background: 'rgba(255,255,255,.9)', padding: '3px 8px',
+              }}>{isEN ? 'PRINT AREA' : 'ÁREA DE IMPRESSÃO'}</span>
             </div>
           )}
+
+          {currentLayers.map(layer => (
+            <LayerRender
+              key={layer.id} layer={layer} selected={selectedLayerId === layer.id}
+              onDown={(e, mode) => onLayerDown(e, layer.id, mode)}
+              onDelete={() => removeLayer(layer.id)}
+              previewMode={viewMode === 'preview'}
+            />
+          ))}
         </div>
       </div>
 
-      {/* Keyframes CSS */}
-      <style>{`
-        @keyframes kn-fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
-        @keyframes kn-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
-        @keyframes kn-priceFlash { 0% { transform: scale(1); filter: brightness(1); } 40% { transform: scale(1.1); filter: brightness(1.4); } 100% { transform: scale(1); filter: brightness(1); } }
-        @keyframes kn-spark {
-          0% { transform: translate(0, 0) rotate(0deg) scale(0); opacity: 0; }
-          20% { opacity: 1; transform: translate(calc(var(--dx) * .2), calc(var(--dy) * .2)) rotate(calc(var(--rot) * .2)) scale(1); }
-          100% { transform: translate(var(--dx), var(--dy)) rotate(var(--rot)) scale(0); opacity: 0; }
-        }
-        @media (max-width: 780px) {
-          .kn-cust-grid { grid-template-columns: 1fr !important; }
-        }
-      `}</style>
+      {/* Zoom controls */}
+      <div style={{ position: 'absolute', bottom: 20, right: 20, display: 'flex', gap: 3, alignItems: 'center', background: 'var(--bg-1)', border: '1px solid var(--border)', padding: 4 }}>
+        <button onClick={() => setZoom(z => Math.max(0.5, z - 0.1))} style={{ width: 26, height: 26, background: 'transparent', border: 'none', color: 'var(--fg)', cursor: 'pointer', fontSize: 16 }}>−</button>
+        <span style={{ fontSize: 10, color: 'var(--fg-mute)', minWidth: 36, textAlign: 'center' }}>{Math.round(zoom * 100)}%</span>
+        <button onClick={() => setZoom(z => Math.min(2.5, z + 0.1))} style={{ width: 26, height: 26, background: 'transparent', border: 'none', color: 'var(--fg)', cursor: 'pointer', fontSize: 16 }}>+</button>
+        <button onClick={() => setZoom(1)} style={{ padding: '0 8px', height: 26, background: 'transparent', border: 'none', color: 'var(--fg-mute)', cursor: 'pointer', fontSize: 8, letterSpacing: '.15em', textTransform: 'uppercase' }}>Fit</button>
+      </div>
+
+      {/* 360 control panel */}
+      {is360 && (
+        <div style={{
+          position: 'absolute', bottom: 20, left: '50%', transform: 'translateX(-50%)',
+          background: 'rgba(11,11,12,.92)', border: '1px solid var(--gold-3)', padding: '14px 20px',
+          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10,
+          backdropFilter: 'blur(10px)', boxShadow: '0 10px 40px rgba(0,0,0,.4)', minWidth: 320,
+        }}>
+          <div style={{ fontSize: 10, letterSpacing: '.28em', textTransform: 'uppercase', color: 'var(--gold)', fontWeight: 700 }}>
+            ↻ 360° Preview · {Math.round(rotation360)}°
+          </div>
+          <input type="range" min={-180} max={180} value={rotation360} onChange={e => setRotation360(+e.target.value)} style={{ width: '100%', cursor: 'pointer' }} />
+          <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
+            <button onClick={() => setAutoRotate360(!autoRotate360)} style={{
+              padding: '6px 12px', background: autoRotate360 ? 'var(--gold)' : 'transparent',
+              border: '1px solid ' + (autoRotate360 ? 'var(--gold)' : 'var(--gold-3)'),
+              color: autoRotate360 ? 'var(--bg)' : 'var(--gold)',
+              fontSize: 9, letterSpacing: '.18em', textTransform: 'uppercase', fontWeight: 700,
+              cursor: 'pointer', fontFamily: 'inherit',
+            }}>{autoRotate360 ? '⏸ ' + (isEN ? 'Pause' : 'Pausar') : '▶ ' + (isEN ? 'Auto' : 'Auto')}</button>
+            {[-90, 0, 90, 180].map(deg => (
+              <button key={deg} onClick={() => { setAutoRotate360(false); setRotation360(deg) }} style={{
+                padding: '6px 10px',
+                background: Math.round(rotation360) === deg ? 'var(--gold)' : 'transparent',
+                border: '1px solid ' + (Math.round(rotation360) === deg ? 'var(--gold)' : 'var(--border)'),
+                color: Math.round(rotation360) === deg ? 'var(--bg)' : 'var(--fg-mute)',
+                fontSize: 9, cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '.1em', fontWeight: 600,
+              }}>{deg}°</button>
+            ))}
+          </div>
+          <div style={{ fontSize: 9, color: 'var(--fg-mute)', letterSpacing: '.14em' }}>
+            {isEN ? '↔ Drag canvas to rotate' : '↔ Arraste o produto para rodar'}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Layer render ──────────────────────────────────────────────────────────────
+function LayerRender({ layer, selected, onDown, onDelete, previewMode }: {
+  layer: DesignLayer; selected: boolean
+  onDown: (e: React.MouseEvent, mode: CPDrag['mode']) => void
+  onDelete: () => void; previewMode: boolean
+}) {
+  const layerFilter = layer.filter || ''
+  const previewFilter = previewMode ? 'contrast(0.9) brightness(0.96)' : ''
+  const glowFilter = layer.glow ? `drop-shadow(0 0 14px ${layer.glowColor || '#B08D57'})` : ''
+  const combinedFilter = [layerFilter, previewFilter, glowFilter].filter(Boolean).join(' ') || 'none'
+
+  const textShadow = layer.shadow
+    ? `0 2px ${layer.shadowBlur || 8}px ${layer.shadowColor || 'rgba(0,0,0,.4)'}, 0 0 ${(layer.shadowBlur || 8) / 2}px ${layer.shadowColor || 'rgba(0,0,0,.3)'}`
+    : 'none'
+
+  const style: React.CSSProperties = {
+    position: 'absolute',
+    left: `${layer.x - layer.w / 2}%`,
+    top: `${layer.y - layer.h / 2}%`,
+    width: `${layer.w}%`,
+    height: `${layer.h}%`,
+    opacity: layer.opacity != null ? layer.opacity : 1,
+    transform: `rotate(${layer.rotation || 0}deg)${layer.flipX ? ' scaleX(-1)' : ''}${layer.flipY ? ' scaleY(-1)' : ''}`,
+    cursor: previewMode ? 'default' : 'move', zIndex: 5,
+    outline: selected && !previewMode ? '2px dashed var(--gold)' : 'none',
+    outlineOffset: 4,
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    pointerEvents: previewMode ? 'none' : 'auto',
+    mixBlendMode: previewMode ? 'multiply' : 'normal',
+    filter: combinedFilter,
+    transition: 'outline .15s ease',
+  }
+
+  let content: React.ReactNode = null
+  if (layer.type === 'text') {
+    content = (
+      <span style={{
+        fontFamily: layer.font || "'Inter', sans-serif",
+        fontSize: (layer.fontSize || 32) + 'px',
+        color: layer.color || '#000',
+        fontWeight: layer.bold ? 700 : 400,
+        fontStyle: layer.italic ? 'italic' : 'normal',
+        letterSpacing: layer.letterSpacing ? layer.letterSpacing + 'px' : 'normal',
+        textDecoration: layer.underline ? 'underline' : 'none',
+        whiteSpace: 'nowrap', textAlign: 'center', userSelect: 'none', lineHeight: 1,
+        textShadow,
+        WebkitTextStroke: layer.outline ? `${layer.outlineWidth || 2}px ${layer.outlineColor || '#fff'}` : 'none',
+        pointerEvents: 'none',
+      } as React.CSSProperties}>{layer.text || ''}</span>
+    )
+  } else if (layer.type === 'image') {
+    content = (
+      <img src={layer.url} alt="" draggable={false} style={{
+        width: '100%', height: '100%', objectFit: 'contain',
+        pointerEvents: 'none', userSelect: 'none',
+        boxShadow: layer.shadow ? `0 4px ${layer.shadowBlur || 8}px ${layer.shadowColor || 'rgba(0,0,0,.4)'}` : 'none',
+        border: layer.outline ? `${layer.outlineWidth || 2}px solid ${layer.outlineColor || '#fff'}` : 'none',
+      }} />
+    )
+  } else if (layer.type === 'shape') {
+    content = (
+      <svg width="100%" height="100%" viewBox="0 0 100 100"
+        fill={layer.fill || '#000'}
+        stroke={layer.outline ? (layer.outlineColor || '#fff') : 'none'}
+        strokeWidth={layer.outline ? (layer.outlineWidth || 2) : 0}
+        style={{
+          pointerEvents: 'none',
+          filter: layer.shadow ? `drop-shadow(0 4px ${layer.shadowBlur || 8}px ${layer.shadowColor || 'rgba(0,0,0,.4)'})` : 'none',
+          overflow: 'visible',
+        }}
+        dangerouslySetInnerHTML={{ __html: layer.svg || '' }}
+      />
+    )
+  }
+
+  return (
+    <div
+      data-layer-id={layer.id}
+      onClick={e => e.stopPropagation()}
+      onMouseDown={previewMode ? undefined : (e) => onDown(e, 'move')}
+      style={style}
+    >
+      {content}
+      {selected && !previewMode && (
+        <React.Fragment>
+          <div
+            onMouseDown={e => { e.stopPropagation(); onDown(e, 'resize') }}
+            onClick={e => e.stopPropagation()}
+            style={{
+              position: 'absolute', bottom: -7, right: -7, width: 14, height: 14,
+              background: 'var(--gold)', border: '2px solid #fff', cursor: 'nwse-resize',
+              zIndex: 10, boxShadow: '0 2px 6px rgba(0,0,0,.3)',
+            }}
+          />
+          <div
+            onMouseDown={e => { e.stopPropagation(); onDown(e, 'rotate') }}
+            onClick={e => e.stopPropagation()}
+            style={{
+              position: 'absolute', top: -32, left: '50%', transform: 'translateX(-50%)',
+              width: 22, height: 22, background: 'var(--gold)', borderRadius: '50%',
+              border: '2px solid #fff', cursor: 'grab', zIndex: 10,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: '#fff', fontSize: 12, fontWeight: 700,
+              boxShadow: '0 2px 6px rgba(0,0,0,.3)',
+            }}
+          >↻</div>
+          <button
+            onClick={e => { e.stopPropagation(); onDelete() }}
+            onMouseDown={e => e.stopPropagation()}
+            style={{
+              position: 'absolute', top: -32, right: -7, width: 22, height: 22,
+              background: 'var(--bordo)', color: '#fff', border: '2px solid #fff',
+              cursor: 'pointer', zIndex: 10, fontSize: 12, fontWeight: 700,
+              boxShadow: '0 2px 6px rgba(0,0,0,.3)',
+            }}
+          >×</button>
+        </React.Fragment>
+      )}
+    </div>
+  )
+}
+// ═════════════════════════════════════════════════════════════════════════════
+// RIGHT PANEL (Inspector)
+// ═════════════════════════════════════════════════════════════════════════════
+
+function CPRightPanel({ selectedLayer, updateLayer, commitLayer, removeLayer, duplicateLayer, moveLayer, product, color, size, technique, isEN }: {
+  selectedLayer: DesignLayer | null
+  updateLayer: (id: string, changes: Partial<DesignLayer>) => void; commitLayer: () => void
+  removeLayer: (id: string) => void; duplicateLayer: (id: string) => void
+  moveLayer: (id: string, dir: 'up' | 'down' | 'top' | 'bottom') => void
+  product: PrintfulProduct; color: CPColor; size: string; technique: string; isEN: boolean
+}) {
+  if (!selectedLayer) {
+    return (
+      <div style={{ gridArea: 'rightpanel', background: 'var(--bg-1)', borderLeft: '1px solid var(--border)', padding: 20, overflow: 'auto' }}>
+        <CPSectionHeader title={isEN ? 'Product Info' : 'Informação'} />
+        <div style={{ fontFamily: 'var(--f-display)', fontSize: 18, marginBottom: 14 }}>{isEN ? (product.nameEn || product.name) : product.name}</div>
+        <div style={{ fontSize: 12, color: 'var(--fg-mute)', lineHeight: 1.6, marginBottom: 16 }}>{isEN ? product.descriptionEn : product.description}</div>
+        <div style={{ fontSize: 11, color: 'var(--fg-mute)' }}>
+          <div style={{ padding: '6px 0', borderBottom: '1px solid var(--border)' }}>{(isEN ? 'Color: ' : 'Cor: ') + color.name}</div>
+          <div style={{ padding: '6px 0', borderBottom: '1px solid var(--border)' }}>{(isEN ? 'Size: ' : 'Tamanho: ') + size}</div>
+          <div style={{ padding: '6px 0' }}>{(isEN ? 'Technique: ' : 'Técnica: ') + technique.toUpperCase()}</div>
+        </div>
+        <div style={{ marginTop: 20, padding: 14, background: 'rgba(176,141,87,.08)', border: '1px solid var(--gold-3)' }}>
+          <div style={{ fontSize: 10, letterSpacing: '.22em', textTransform: 'uppercase', color: 'var(--gold)', fontWeight: 700, marginBottom: 6 }}>💡 {isEN ? 'Tip' : 'Dica'}</div>
+          <div style={{ fontSize: 11, color: 'var(--fg-dim)', lineHeight: 1.5 }}>
+            {isEN ? 'Click any element on canvas to edit its properties.' : 'Clique num elemento para editar propriedades.'}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <CPInspector layer={selectedLayer} updateLayer={updateLayer} commitLayer={commitLayer} removeLayer={removeLayer} duplicateLayer={duplicateLayer} moveLayer={moveLayer} isEN={isEN} />
+  )
+}
+
+function CPInspector({ layer, updateLayer, commitLayer, removeLayer, duplicateLayer, moveLayer, isEN }: {
+  layer: DesignLayer
+  updateLayer: (id: string, changes: Partial<DesignLayer>) => void; commitLayer: () => void
+  removeLayer: (id: string) => void; duplicateLayer: (id: string) => void
+  moveLayer: (id: string, dir: 'up' | 'down' | 'top' | 'bottom') => void
+  isEN: boolean
+}) {
+  const [tab, setTab] = useState<'style' | 'transform' | 'position'>('style')
+  const set = <K extends keyof DesignLayer>(key: K, val: DesignLayer[K]) => updateLayer(layer.id, { [key]: val } as Partial<DesignLayer>)
+  const commit = () => commitLayer()
+
+  return (
+    <div style={{ gridArea: 'rightpanel', background: 'var(--bg-1)', borderLeft: '1px solid var(--border)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border)' }}>
+        <div style={{ fontSize: 10, letterSpacing: '.28em', textTransform: 'uppercase', color: 'var(--gold)', fontWeight: 700, marginBottom: 5 }}>
+          {isEN ? 'Selected' : 'Selecionado'}
+        </div>
+        <div style={{ fontFamily: 'var(--f-display)', fontSize: 15 }}>
+          {layer.type === 'text' ? '✍ Text' : layer.type === 'image' ? '🖼 Image' : '⬚ Shape'}
+        </div>
+      </div>
+
+      <div style={{ padding: '8px 16px', borderBottom: '1px solid var(--border)', display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+        <CPQuickBtn onClick={() => duplicateLayer(layer.id)} title={isEN ? 'Duplicate' : 'Duplicar'}>⧉</CPQuickBtn>
+        <CPQuickBtn onClick={() => moveLayer(layer.id, 'top')} title={isEN ? 'Front' : 'Frente'}>↑↑</CPQuickBtn>
+        <CPQuickBtn onClick={() => moveLayer(layer.id, 'up')} title={isEN ? 'Up' : 'Cima'}>↑</CPQuickBtn>
+        <CPQuickBtn onClick={() => moveLayer(layer.id, 'down')} title={isEN ? 'Down' : 'Baixo'}>↓</CPQuickBtn>
+        <CPQuickBtn onClick={() => moveLayer(layer.id, 'bottom')} title={isEN ? 'Back' : 'Trás'}>↓↓</CPQuickBtn>
+        <CPQuickBtn onClick={() => removeLayer(layer.id)} title={isEN ? 'Delete' : 'Eliminar'} danger>×</CPQuickBtn>
+      </div>
+
+      <div style={{ display: 'flex', borderBottom: '1px solid var(--border)' }}>
+        {(['style', 'transform', 'position'] as const).map(t => (
+          <button key={t} onClick={() => setTab(t)} style={{
+            flex: 1, padding: 10, background: 'transparent', border: 'none',
+            borderBottom: '2px solid ' + (tab === t ? 'var(--gold)' : 'transparent'),
+            color: tab === t ? 'var(--gold)' : 'var(--fg-mute)',
+            fontSize: 9, letterSpacing: '.18em', textTransform: 'uppercase', fontWeight: 700,
+            cursor: 'pointer', fontFamily: 'inherit',
+          }}>{isEN ? t : (t === 'style' ? 'Estilo' : t === 'transform' ? 'Transf.' : 'Posição')}</button>
+        ))}
+      </div>
+
+      <div style={{ padding: 16, overflow: 'auto', flex: 1 }}>
+        {tab === 'style' && <CPStyleTab layer={layer} set={set} commit={commit} isEN={isEN} />}
+        {tab === 'transform' && <CPTransformTab layer={layer} set={set} commit={commit} isEN={isEN} />}
+        {tab === 'position' && <CPPositionTab layer={layer} set={set} commit={commit} isEN={isEN} />}
+      </div>
+    </div>
+  )
+}
+
+function CPQuickBtn({ onClick, title, danger, children }: { onClick: () => void; title: string; danger?: boolean; children: ReactNode }) {
+  return (
+    <button onClick={onClick} title={title} style={{
+      padding: '6px 10px', background: 'transparent',
+      border: '1px solid ' + (danger ? 'var(--bordo-3)' : 'var(--border)'),
+      color: danger ? 'var(--bordo-3)' : 'var(--fg-dim)',
+      fontSize: 12, cursor: 'pointer', fontFamily: 'inherit',
+    }}>{children}</button>
+  )
+}
+
+type CPSetFn = <K extends keyof DesignLayer>(key: K, val: DesignLayer[K]) => void
+
+function CPStyleTab({ layer, set, commit, isEN }: { layer: DesignLayer; set: CPSetFn; commit: () => void; isEN: boolean }) {
+  if (layer.type === 'text') {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <CPField label={isEN ? 'Text' : 'Texto'}>
+          <input type="text" value={layer.text || ''} onChange={e => set('text', e.target.value)} onBlur={commit} style={cps.input} />
+        </CPField>
+
+        <CPField label={isEN ? 'Font' : 'Fonte'}>
+          <select value={layer.font} onChange={e => { set('font', e.target.value); commit() }} style={{ ...cps.input, cursor: 'pointer', fontFamily: layer.font }}>
+            {CP_FONTS.map(f => <option key={f.id} value={f.family} style={{ fontFamily: f.family }}>{f.name}</option>)}
+          </select>
+        </CPField>
+
+        <CPSliderF label={(isEN ? 'Size' : 'Tamanho') + ': ' + (layer.fontSize || 32) + 'px'} min={8} max={200} value={layer.fontSize || 32} onChange={v => set('fontSize', v)} onCommit={commit} />
+        <CPSliderF label={(isEN ? 'Letter spacing' : 'Espaçamento') + ': ' + (layer.letterSpacing || 0) + 'px'} min={-5} max={20} value={layer.letterSpacing || 0} onChange={v => set('letterSpacing', v)} onCommit={commit} />
+
+        <CPField label={isEN ? 'Style' : 'Estilo'}>
+          <div style={{ display: 'flex', gap: 3 }}>
+            {(['bold', 'italic', 'underline'] as const).map(st => (
+              <button key={st} onClick={() => { set(st, !layer[st]); commit() }} style={{
+                flex: 1, padding: 8, background: layer[st] ? 'var(--gold)' : 'var(--bg-2)',
+                color: layer[st] ? 'var(--bg)' : 'var(--fg)', border: '1px solid var(--border)',
+                cursor: 'pointer', fontWeight: st === 'bold' ? 700 : 400,
+                fontStyle: st === 'italic' ? 'italic' : 'normal',
+                textDecoration: st === 'underline' ? 'underline' : 'none', fontSize: 13,
+              }}>{st === 'bold' ? 'B' : st === 'italic' ? 'I' : 'U'}</button>
+            ))}
+          </div>
+        </CPField>
+
+        <CPColorPicker label={isEN ? 'Color' : 'Cor'} value={layer.color || '#000'} onChange={c => set('color', c)} onCommit={commit} />
+        <CPSliderF label={(isEN ? 'Opacity' : 'Opacidade') + ': ' + Math.round((layer.opacity || 1) * 100) + '%'} min={10} max={100} value={(layer.opacity || 1) * 100} onChange={v => set('opacity', v / 100)} onCommit={commit} />
+      </div>
+    )
+  }
+  if (layer.type === 'shape') {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <CPColorPicker label={isEN ? 'Fill' : 'Preenchimento'} value={layer.fill || '#000'} onChange={c => set('fill', c)} onCommit={commit} />
+        <CPSliderF label={(isEN ? 'Opacity' : 'Opacidade') + ': ' + Math.round((layer.opacity || 1) * 100) + '%'} min={10} max={100} value={(layer.opacity || 1) * 100} onChange={v => set('opacity', v / 100)} onCommit={commit} />
+      </div>
+    )
+  }
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <CPField label={isEN ? 'Preview' : 'Preview'}>
+        <img src={layer.url} alt="" style={{ width: '100%', maxHeight: 100, objectFit: 'contain', background: 'var(--bg-2)', border: '1px solid var(--border)', padding: 6 }} />
+      </CPField>
+      <CPSliderF label={(isEN ? 'Opacity' : 'Opacidade') + ': ' + Math.round((layer.opacity || 1) * 100) + '%'} min={10} max={100} value={(layer.opacity || 1) * 100} onChange={v => set('opacity', v / 100)} onCommit={commit} />
+    </div>
+  )
+}
+
+function CPTransformTab({ layer, set, commit, isEN }: { layer: DesignLayer; set: CPSetFn; commit: () => void; isEN: boolean }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <CPSliderF label={(isEN ? 'Width' : 'Largura') + ': ' + Math.round(layer.w) + '%'} min={5} max={100} value={layer.w} onChange={v => set('w', v)} onCommit={commit} />
+      <CPSliderF label={(isEN ? 'Height' : 'Altura') + ': ' + Math.round(layer.h) + '%'} min={5} max={100} value={layer.h} onChange={v => set('h', v)} onCommit={commit} />
+      <CPSliderF label={(isEN ? 'Rotation' : 'Rotação') + ': ' + (layer.rotation || 0) + '°'} min={-180} max={180} value={layer.rotation || 0} onChange={v => set('rotation', v)} onCommit={commit} />
+
+      <CPField label={isEN ? 'Quick rotate' : 'Rotação rápida'}>
+        <div style={{ display: 'flex', gap: 3 }}>
+          {[-90, -45, 0, 45, 90].map(d => (
+            <button key={d} onClick={() => { set('rotation', d); commit() }} style={{
+              flex: 1, padding: 7, background: (layer.rotation === d) ? 'var(--gold)' : 'var(--bg-2)',
+              color: (layer.rotation === d) ? 'var(--bg)' : 'var(--fg)', border: '1px solid var(--border)',
+              cursor: 'pointer', fontSize: 10, fontFamily: 'inherit',
+            }}>{d}°</button>
+          ))}
+        </div>
+      </CPField>
+
+      <CPField label={isEN ? 'Flip' : 'Espelhar'}>
+        <div style={{ display: 'flex', gap: 3 }}>
+          <button onClick={() => { set('flipX', !layer.flipX); commit() }} style={{
+            flex: 1, padding: 8, background: layer.flipX ? 'var(--gold)' : 'var(--bg-2)',
+            color: layer.flipX ? 'var(--bg)' : 'var(--fg)', border: '1px solid var(--border)',
+            cursor: 'pointer', fontSize: 9, letterSpacing: '.16em', textTransform: 'uppercase', fontWeight: 600, fontFamily: 'inherit',
+          }}>{isEN ? 'Flip H' : 'Horizontal'}</button>
+          <button onClick={() => { set('flipY', !layer.flipY); commit() }} style={{
+            flex: 1, padding: 8, background: layer.flipY ? 'var(--gold)' : 'var(--bg-2)',
+            color: layer.flipY ? 'var(--bg)' : 'var(--fg)', border: '1px solid var(--border)',
+            cursor: 'pointer', fontSize: 9, letterSpacing: '.16em', textTransform: 'uppercase', fontWeight: 600, fontFamily: 'inherit',
+          }}>{isEN ? 'Flip V' : 'Vertical'}</button>
+        </div>
+      </CPField>
+    </div>
+  )
+}
+
+function CPPositionTab({ layer, set, commit }: { layer: DesignLayer; set: CPSetFn; commit: () => void; isEN: boolean }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <CPSliderF label={'X: ' + Math.round(layer.x) + '%'} min={0} max={100} value={layer.x} onChange={v => set('x', v)} onCommit={commit} />
+      <CPSliderF label={'Y: ' + Math.round(layer.y) + '%'} min={0} max={100} value={layer.y} onChange={v => set('y', v)} onCommit={commit} />
+
+      <CPField label="Alinhar">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 3 }}>
+          {[
+            { x: 20, y: 20, l: '↖' }, { x: 50, y: 20, l: '↑' }, { x: 80, y: 20, l: '↗' },
+            { x: 20, y: 50, l: '←' }, { x: 50, y: 50, l: '●' }, { x: 80, y: 50, l: '→' },
+            { x: 20, y: 80, l: '↙' }, { x: 50, y: 80, l: '↓' }, { x: 80, y: 80, l: '↘' },
+          ].map((p, i) => (
+            <button key={i} onClick={() => { set('x', p.x); set('y', p.y); commit() }} style={{
+              aspectRatio: '1', background: 'var(--bg-2)', border: '1px solid var(--border)',
+              cursor: 'pointer', color: 'var(--fg)', fontSize: 14, fontFamily: 'inherit',
+            }}>{p.l}</button>
+          ))}
+        </div>
+      </CPField>
+    </div>
+  )
+}
+
+function CPField({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div>
+      <div style={cps.label}>{label}</div>
+      {children}
+    </div>
+  )
+}
+
+function CPSliderF({ label, min, max, value, onChange, onCommit }: {
+  label: string; min: number; max: number; value: number; onChange: (v: number) => void; onCommit: () => void
+}) {
+  return (
+    <div>
+      <div style={cps.label}>{label}</div>
+      <input type="range" min={min} max={max} value={value} step={0.1}
+        onChange={e => onChange(+e.target.value)}
+        onMouseUp={onCommit} onTouchEnd={onCommit}
+        style={{ width: '100%' }} />
+    </div>
+  )
+}
+
+function CPColorPicker({ label, value, onChange, onCommit }: {
+  label: string; value: string; onChange: (c: string) => void; onCommit: () => void
+}) {
+  return (
+    <CPField label={label}>
+      <div>
+        <input type="color" value={value} onChange={e => onChange(e.target.value)} onBlur={onCommit}
+          style={{ width: '100%', height: 36, background: 'transparent', border: '1px solid var(--border)', cursor: 'pointer', marginBottom: 8 }} />
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8, 1fr)', gap: 2 }}>
+          {CP_PALETTE.slice(0, 24).map(c => (
+            <button key={c} onClick={() => { onChange(c); onCommit() }} style={{
+              aspectRatio: '1', background: c, cursor: 'pointer', padding: 0,
+              border: '1px solid ' + (value === c ? 'var(--gold)' : 'var(--border)'),
+            }} />
+          ))}
+        </div>
+      </div>
+    </CPField>
+  )
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// FOOTER
+// ═════════════════════════════════════════════════════════════════════════════
+
+function CPEditorFooter({ product, color, size, technique, totalLayers, estimatePrice, saveDesign, handleAddToCart, auth, isEN }: {
+  product: PrintfulProduct; color: CPColor; size: string; technique: string; totalLayers: number
+  estimatePrice: () => number; saveDesign: () => void; handleAddToCart: () => void
+  auth: ReturnType<typeof useAuth>; isEN: boolean
+}) {
+  return (
+    <div style={{ gridArea: 'footer', background: 'var(--bg-1)', borderTop: '1px solid var(--border)', padding: '0 20px', height: 62, display: 'flex', alignItems: 'center', gap: 16 }}>
+      <img src={product.mockupUrl} alt="" style={{ width: 40, height: 40, objectFit: 'cover', border: '1px solid var(--border)' }} />
+      <div>
+        <div style={{ fontFamily: 'var(--f-display)', fontSize: 13, fontWeight: 500 }}>{isEN ? (product.nameEn || product.name) : product.name}</div>
+        <div style={{ fontSize: 10, color: 'var(--fg-mute)' }}>{`${color.name} · ${size} · ${technique.toUpperCase()} · ${totalLayers} ${isEN ? 'layers' : 'camadas'}`}</div>
+      </div>
+      <div style={{ flex: 1 }} />
+      <div style={{ textAlign: 'right' }}>
+        <div style={{ fontSize: 9, letterSpacing: '.22em', textTransform: 'uppercase', color: 'var(--fg-mute)' }}>{isEN ? 'From' : 'A partir de'}</div>
+        <div style={{ fontFamily: 'var(--f-display)', fontSize: 22, fontWeight: 600, color: 'var(--gold)' }}>{estimatePrice().toFixed(2)} €</div>
+      </div>
+      <button onClick={saveDesign} disabled={!auth?.user} style={{
+        ...cps.btnGhost, opacity: auth?.user ? 1 : 0.5, cursor: auth?.user ? 'pointer' : 'not-allowed',
+        borderColor: 'var(--gold-3)', color: auth?.user ? 'var(--gold)' : 'var(--fg-mute)',
+      }}>💾 {isEN ? 'Save' : 'Guardar'}</button>
+      <button onClick={handleAddToCart} style={{
+        padding: '12px 22px', background: 'var(--bordo)', border: 'none', color: '#fff',
+        fontSize: 10, letterSpacing: '.22em', textTransform: 'uppercase', fontWeight: 700,
+        cursor: 'pointer', fontFamily: 'inherit',
+      }}>{isEN ? 'Add to cart →' : 'Adicionar ao carrinho →'}</button>
     </div>
   )
 }
@@ -7219,7 +8479,7 @@ export default function App() {
       {activePage === 'contact' && <ContactPage />}
       {activePage === 'about' && <AboutPage setPage={setPage} />}
       {activePage === 'blog' && <BlogPage />}
-      {activePage === 'custom' && <CustomizerV2 setPage={setPage} onAddToCart={(item) => { setCartItems(prev => [...prev, item]); setToast(item.name); if (toastTimer.current) clearTimeout(toastTimer.current); toastTimer.current = window.setTimeout(() => setToast(null), 2400); }} />}
+      {activePage === 'custom' && <CustomizerPro setPage={setPage} auth={auth} onAddToCart={(item) => { setCartItems(prev => [...prev, item]); setToast(item.name); if (toastTimer.current) clearTimeout(toastTimer.current); toastTimer.current = window.setTimeout(() => setToast(null), 2400); }} />}
       {activePage === 'success' && <SuccessPage sessionId={successSessionId} setPage={setPage} />}
       {activePage === 'login' && <LoginPage setPage={setPage} auth={auth} />}
       {activePage === 'account' && <AccountPage auth={auth} setPage={setPage} allProducts={liveProducts} onOpen={openProduct} />}
