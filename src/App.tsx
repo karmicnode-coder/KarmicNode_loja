@@ -1886,14 +1886,16 @@ function KinChatWidget({ userId }: { userId?: string }) {
     <>
       <button onClick={() => setOpen(v => !v)} aria-label="KIN"
         style={{
-          position: 'fixed', bottom: 20, right: 20, zIndex: 190, width: 54, height: 54, borderRadius: '50%',
-          background: 'var(--gold)', color: 'var(--bg)', border: 'none', cursor: 'pointer',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 24px rgba(0,0,0,.35)',
-          fontFamily: 'var(--f-display)', fontSize: 18, fontWeight: 600, transition: 'transform .2s ease',
+          position: 'fixed', bottom: 20, right: 20, zIndex: 190, width: 64, height: 64, borderRadius: '50%',
+          background: open ? 'var(--gold)' : 'transparent', color: 'var(--bg)', border: 'none', cursor: 'pointer',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          boxShadow: open ? '0 8px 24px rgba(0,0,0,.35)' : '0 8px 28px rgba(139,30,45,.45), 0 0 0 2px var(--gold-3)',
+          fontFamily: 'var(--f-display)', fontSize: 20, fontWeight: 600, transition: 'transform .2s ease, box-shadow .2s ease',
+          overflow: 'hidden', padding: 0,
         }}
-        onMouseEnter={e => (e.currentTarget.style.transform = 'scale(1.06)')}
-        onMouseLeave={e => (e.currentTarget.style.transform = 'none')}>
-        {open ? '×' : 'K'}
+        onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.08)'; if (!open) e.currentTarget.style.boxShadow = '0 10px 32px rgba(139,30,45,.6), 0 0 0 2px var(--gold)' }}
+        onMouseLeave={e => { e.currentTarget.style.transform = 'none'; if (!open) e.currentTarget.style.boxShadow = '0 8px 28px rgba(139,30,45,.45), 0 0 0 2px var(--gold-3)' }}>
+        {open ? '×' : <img src="/kin/kin-avatar-1024.png" alt="KIN" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />}
       </button>
 
       {open && (
@@ -1903,9 +1905,14 @@ function KinChatWidget({ userId }: { userId?: string }) {
           boxShadow: '0 20px 60px rgba(0,0,0,.45)', display: 'flex', flexDirection: 'column', overflow: 'hidden',
         }}>
           <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ width: 30, height: 30, borderRadius: '50%', background: 'var(--gold)', color: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--f-display)', fontWeight: 700, fontSize: 14 }}>K</div>
+            <div style={{ width: 34, height: 34, borderRadius: '50%', overflow: 'hidden', boxShadow: '0 0 0 2px var(--gold-3), 0 2px 10px rgba(139,30,45,.5)', flexShrink: 0 }}>
+              <img src="/kin/kin-avatar-512.png" alt="KIN" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            </div>
             <div>
-              <div style={{ fontWeight: 700, fontSize: 13 }}>KIN</div>
+              <div style={{ fontWeight: 700, fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}>
+                KIN
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#4ade80', display: 'inline-block', boxShadow: '0 0 0 2px rgba(74,222,128,.25)' }} />
+              </div>
               <div style={{ fontSize: 10, color: 'var(--fg-mute)', letterSpacing: '.06em' }}>Karmic Node</div>
             </div>
           </div>
@@ -7251,6 +7258,4 @@ export default function App() {
     </LangContext.Provider>
   )
 }
-
-
 
