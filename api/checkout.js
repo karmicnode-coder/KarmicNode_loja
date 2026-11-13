@@ -1,269 +1,205 @@
-// ─── STRIPE CHECKOUT SESSION ──────────────────────────────────────────────
-// Cria uma Checkout Session Stripe hospedada com:
-// - Cartões (Visa/MC/Amex), Multibanco, PayPal
-// - IVA 23% já INCLUÍDO nos preços da loja (tax_behavior: 'inclusive') — ver
-//   nota abaixo, antes isto estava a ser somado por cima (cliente pagava IVA
-//   a dobrar).
-// - Portes de envio (grátis > 150€, senão 4.99€ Continente / 9.99€ Ilhas / etc.)
-// - Códigos de desconto Stripe + cartões oferta
-// - Metadata de personalização (Customizer V2) por linha
-// - Envio para PT Continente, PT Ilhas, ES, resto da UE
-//
-// Env vars necessárias:
-//   STRIPE_SECRET_KEY  = sk_test_... (test) ou sk_live_... (produção)
-//   SITE_URL (opcional) = fallback para success/cancel URLs (ver nota abaixo)
-//
-import Stripe from 'stripe'
+// ═══════════════════════════════════════════════════════════════
+// KARMIC NODE — /api/checkout
+// ═══════════════════════════════════════════════════════════════
+// Cria Stripe Checkout Session multi-método (Card, MBWay, MB, PayPal, Apple, Google)
+// Aceita: line_items, delivery_address, promo_code, karma_points_to_redeem
+// ═══════════════════════════════════════════════════════════════
 
-const stripeKey = process.env.STRIPE_SECRET_KEY
-const stripe = stripeKey ? new Stripe(stripeKey, { apiVersion: '2024-06-20' }) : null
+import Stripe from 'stripe';
 
-// Países onde envias
-const ALLOWED_COUNTRIES = [
-  'PT',  // Portugal (Continental + Ilhas)
-  'ES',  // Espanha
-  'FR', 'DE', 'IT', 'NL', 'BE', 'LU', 'AT',  // UE central
-  'IE', 'DK', 'FI', 'SE',  // UE norte
-  'PL', 'CZ', 'SK', 'HU', 'SI', 'HR', 'RO', 'BG', 'EE', 'LV', 'LT', 'GR', 'CY', 'MT',  // resto da UE
-]
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2024-06-20' });
 
-// Envio: grátis acima de 150€ (subtotal antes de IVA)
-const SHIPPING_THRESHOLD_CENTS = 15000  // 150.00 €
-
-// Opções de envio (em cêntimos, incluem IVA na taxa)
+// Cálculo de portes por zona (PT usa os valores da loja — ver store/core.js CFG)
 const SHIPPING_RATES = {
-  pt_continental: {
-    display_name: 'Portugal Continental (CTT/DPD, 24-48h)',
-    fixed_amount: { amount: 499, currency: 'eur' },  // 4.99 €
-    delivery_estimate: {
-      minimum: { unit: 'business_day', value: 1 },
-      maximum: { unit: 'business_day', value: 2 },
-    },
-  },
-  pt_ilhas: {
-    display_name: 'Portugal Ilhas — Açores/Madeira (CTT, 3-5 dias)',
-    fixed_amount: { amount: 999, currency: 'eur' },  // 9.99 €
-    delivery_estimate: {
-      minimum: { unit: 'business_day', value: 3 },
-      maximum: { unit: 'business_day', value: 5 },
-    },
-  },
-  es_spain: {
-    display_name: 'Espanha (2-4 dias úteis)',
-    fixed_amount: { amount: 699, currency: 'eur' },  // 6.99 €
-    delivery_estimate: {
-      minimum: { unit: 'business_day', value: 2 },
-      maximum: { unit: 'business_day', value: 4 },
-    },
-  },
-  eu_standard: {
-    display_name: 'Resto da UE (4-7 dias úteis)',
-    fixed_amount: { amount: 1499, currency: 'eur' },  // 14.99 €
-    delivery_estimate: {
-      minimum: { unit: 'business_day', value: 4 },
-      maximum: { unit: 'business_day', value: 7 },
-    },
-  },
-  free: {
-    display_name: 'Envio grátis (encomenda > 150€)',
-    fixed_amount: { amount: 0, currency: 'eur' },
-    delivery_estimate: {
-      minimum: { unit: 'business_day', value: 1 },
-      maximum: { unit: 'business_day', value: 3 },
-    },
-  },
-}
+  'PT': { name: 'Portugal Continental', price_cents: 495, free_from_cents: 6000, days: '3-6' },
+  'PT-M': { name: 'Madeira', price_cents: 795, free_from_cents: 20000, days: '5-8' },
+  'PT-A': { name: 'Açores', price_cents: 895, free_from_cents: 20000, days: '5-8' },
+  'ES': { name: 'Espanha', price_cents: 695, free_from_cents: 18000, days: '4-7' },
+  'FR': { name: 'França', price_cents: 895, free_from_cents: 20000, days: '5-8' },
+  'DE': { name: 'Alemanha', price_cents: 995, free_from_cents: 20000, days: '5-9' },
+  'IT': { name: 'Itália', price_cents: 995, free_from_cents: 20000, days: '5-9' },
+  'GB': { name: 'Reino Unido', price_cents: 1195, free_from_cents: 25000, days: '6-10' },
+  'EU': { name: 'Europa (outros)', price_cents: 1295, free_from_cents: 22000, days: '5-10' },
+  'WORLD': { name: 'Resto do mundo', price_cents: 1895, free_from_cents: 30000, days: '10-15' },
+};
+
+const VAT_RATE = 0.23; // IVA Portugal — já incluído nos preços da loja (ver store/checkout.js "IVA incluído")
 
 export default async function handler(req, res) {
-  // CORS básico (só se o front estiver noutro domínio)
-  res.setHeader('Access-Control-Allow-Origin', '*')
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
-  if (req.method === 'OPTIONS') return res.status(200).end()
-
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' })
-  }
-
-  if (!stripe) {
-    return res.status(503).json({ error: 'Pagamentos indisponíveis de momento. Tente mais tarde.' })
-  }
+  // CORS
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  if (req.method === 'OPTIONS') return res.status(200).end();
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
-    const { items, origin, locale, promo_code } = req.body || {}
+    const {
+      items,              // [{ id, name, price, qty, image, customization? }]
+      customer_email,
+      country = 'PT',
+      promo_code,
+      user_id,
+      lang = 'pt',
+      success_url,
+      cancel_url,
+    } = req.body;
 
-    if (!items || !Array.isArray(items) || items.length === 0) {
-      return res.status(400).json({ error: 'Carrinho vazio' })
+    if (!items || !items.length) {
+      return res.status(400).json({ error: 'No items in cart' });
     }
 
-    // Construir line_items
-    // Estratégia híbrida:
-    //   - Se o item tiver stripeId (e não for personalizado) → usa o Price existente do Stripe
-    //   - Se não tiver → cria price_data dinâmico (personalizações, etc.)
-    //
-    // IMPORTANTE (fix IVA duplicado): os preços da loja (item.price) JÁ
-    // incluem IVA — é o que a UI mostra como "IVA incluído". `automatic_tax`
-    // fica ativo só para o Stripe calcular e discriminar o valor do IVA na
-    // fatura/registo, mas com `tax_behavior: 'inclusive'` o Stripe passa a
-    // tratar o unit_amount como já incluindo o imposto, em vez de o somar
-    // por cima (antes disto o cliente pagava IVA a dobrar).
-    const line_items = items.map((item) => {
-      const qty = Math.max(1, parseInt(item.qty) || 1)
+    // ── Cálculos ──
+    let subtotal_cents = 0;
+    items.forEach(item => {
+      subtotal_cents += Math.round(item.price * 100) * (item.qty || 1);
+    });
 
-      // Metadata para personalização (Customizer V2)
-      const metadata = {}
-      if (item._customization) {
-        const c = item._customization
-        Object.entries(c).forEach(([k, v]) => {
-          metadata[`custom_${k}`.slice(0, 40)] = String(v).slice(0, 490)
-        })
+    // Aplicar código promo (se válido)
+    let discount_cents = 0;
+    let promo_applied = null;
+    if (promo_code) {
+      const promo = await validatePromo(promo_code, subtotal_cents);
+      if (promo.valid) {
+        discount_cents = promo.discount_cents;
+        promo_applied = promo;
       }
-      if (item.sku) metadata.sku = String(item.sku)
-      if (item.category) metadata.category = String(item.category)
-      // Cartão-presente: o webhook usa este campo para ativar a linha em
-      // gift_cards (estado 'pending' → 'active') quando o pagamento é confirmado.
-      if (item.giftCardCode) metadata.gift_card_code = String(item.giftCardCode)
-      // Multivendor Printful: se o produto tiver uma variante Printful real
-      // associada (Product.printfulVariantId no catálogo), propaga-a como
-      // metadata para o webhook marcar este order_item como source='printful'
-      // e permitir depois disparar api/printful/order.js a partir do Admin Panel.
-      if (item.printfulVariantId) metadata.printful_variant_id = String(item.printfulVariantId)
+    }
 
-      // Nota: quando o item usa um Price Stripe já existente (stripeId), a
-      // metadata calculada acima (sku/category/printful_variant_id) NÃO é
-      // enviada — o Stripe Product associado a esse Price já tem a sua
-      // própria metadata definida no dashboard. Para produtos Printful,
-      // usar sempre o caminho price_data dinâmico (sem stripeId) para que
-      // printful_variant_id chegue ao webhook.
-      if (item.stripeId && !item._customization) {
-        return {
-          price: item.stripeId,
-          quantity: qty,
-        }
-      }
+    // Portes
+    const zone = SHIPPING_RATES[country] || SHIPPING_RATES.EU;
+    const subtotal_after_discount = subtotal_cents - discount_cents;
+    const shipping_cents = subtotal_after_discount >= zone.free_from_cents ? 0 : zone.price_cents;
 
-      const productName = item.name
-      const description = item._customization
-        ? `Personalizado — ${item.category || 'Karmic Node Atelier'}`
-        : (item.description || '').slice(0, 250) || undefined
+    // Os preços da loja já incluem IVA (23%) — não se soma por cima (problema #3 do pacote).
+    // Calculado só para registo/fatura: preço × 23/123.
+    const total_cents = subtotal_after_discount + shipping_cents;
+    const vat_cents = Math.round(total_cents * 23 / 123);
 
-      return {
+    // ── Line items Stripe ──
+    const line_items = items.map(item => ({
+      price_data: {
+        currency: 'eur',
+        product_data: {
+          name: item.name,
+          images: item.image ? [item.image] : [],
+          metadata: {
+            sku: item.sku || String(item.id),
+            customization: item.customization ? JSON.stringify(item.customization).slice(0, 500) : '',
+          },
+        },
+        unit_amount: Math.round(item.price * 100),
+      },
+      quantity: item.qty || 1,
+    }));
+
+    // Adicionar linha de portes (se aplicável)
+    if (shipping_cents > 0) {
+      line_items.push({
         price_data: {
           currency: 'eur',
-          product_data: {
-            name: productName,
-            description,
-            images: item.image && item.image.startsWith('http') ? [item.image] : [],
-            metadata,
-          },
-          unit_amount: Math.round(parseFloat(item.price) * 100),
-          // Fix IVA duplicado: o preço já inclui os 23% de IVA (é o que a
-          // loja mostra). Sem isto, automatic_tax soma mais 23% por cima.
-          tax_behavior: 'inclusive',
+          product_data: { name: `Portes — ${zone.name} (${zone.days} dias)` },
+          unit_amount: shipping_cents,
         },
-        quantity: qty,
-      }
-    })
-
-    // Origin fallback — SITE_URL é a variável correta (este projeto NÃO é
-    // Next.js; NEXT_PUBLIC_SITE_URL era copy-paste de um projeto Next.js
-    // anterior e nunca teve efeito real aqui, porque esta função corre no
-    // servidor Vercel — só variáveis com o prefixo VITE_ são expostas ao
-    // browser, e nenhuma delas precisa de o ser aqui).
-    const siteOrigin = origin || process.env.SITE_URL || 'https://karmicnode.com'
-
-    // Configurar shipping_options
-    const shipping_options = [
-      { shipping_rate_data: { type: 'fixed_amount', ...SHIPPING_RATES.pt_continental } },
-      { shipping_rate_data: { type: 'fixed_amount', ...SHIPPING_RATES.pt_ilhas } },
-      { shipping_rate_data: { type: 'fixed_amount', ...SHIPPING_RATES.es_spain } },
-      { shipping_rate_data: { type: 'fixed_amount', ...SHIPPING_RATES.eu_standard } },
-    ]
-
-    // Se o subtotal do carrinho já ultrapassa o threshold, adiciona também opção grátis
-    const subtotalCents = items.reduce((s, i) => s + Math.round(parseFloat(i.price) * 100) * (parseInt(i.qty) || 1), 0)
-    if (subtotalCents >= SHIPPING_THRESHOLD_CENTS) {
-      shipping_options.unshift({ shipping_rate_data: { type: 'fixed_amount', ...SHIPPING_RATES.free } })
+        quantity: 1,
+      });
     }
 
-    const sessionConfig = {
-      // Nota: MB WAY requer ativação manual no dashboard Stripe (Settings > Payment methods)
-      //       para uma conta portuguesa. Apple Pay/Google Pay são automáticos com 'card'
-      //       quando o domínio está verificado.
-      payment_method_types: [
-        'card',
-        'multibanco',
-        'paypal',
-      ],
+    // IVA incluído nos preços — sem linha extra (problema #3 do pacote).
 
+    // ── Métodos de pagamento ──
+    // Padrão: card, apple_pay, google_pay (via card)
+    const payment_method_types = ['card'];
+    // MBWay + Multibanco: só se cliente PT
+    if (country.startsWith('PT')) {
+      payment_method_types.push('multibanco');
+      // MBWay em breve nos payment_method_types quando GA
+    }
+    // PayPal, Klarna
+    payment_method_types.push('paypal', 'klarna');
+
+    // Discounts
+    const discounts = [];
+    if (discount_cents > 0 && promo_applied) {
+      // Criar coupon dinâmico
+      const coupon = await stripe.coupons.create({
+        amount_off: discount_cents,
+        currency: 'eur',
+        duration: 'once',
+        name: `Promo ${promo_code}`,
+      });
+      discounts.push({ coupon: coupon.id });
+    }
+
+    // ── Criar Session ──
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types,
       line_items,
       mode: 'payment',
-
-      // IVA 23% automático (precisa Stripe Tax ativado no dashboard)
-      automatic_tax: { enabled: true },
-
-      billing_address_collection: 'required',
+      customer_email,
+      success_url: success_url || `${req.headers.origin}/sucesso?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: cancel_url || `${req.headers.origin}/`,
       shipping_address_collection: {
-        allowed_countries: ALLOWED_COUNTRIES,
+        allowed_countries: ['PT', 'ES', 'FR', 'DE', 'IT', 'GB', 'BE', 'NL', 'LU', 'AT', 'IE', 'SE', 'DK', 'FI'],
       },
-      shipping_options,
-
-      phone_number_collection: { enabled: true },
-
-      consent_collection: {
-        promotions: 'auto',
-        terms_of_service: 'required',
-      },
-      custom_text: {
-        terms_of_service_acceptance: {
-          message: 'Ao pagar aceito os [Termos e Condições](' + siteOrigin + '/termos) e [Política de Privacidade](' + siteOrigin + '/privacidade) da Karmic Node.',
-        },
-      },
-
-      allow_promotion_codes: true,
-
-      locale: locale === 'en' ? 'en' : 'pt',
-
-      success_url: `${siteOrigin}/?pagamento=sucesso&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${siteOrigin}/?pagamento=cancelado`,
-
+      billing_address_collection: 'auto',
+      allow_promotion_codes: false, // usamos nossos próprios
+      discounts,
+      locale: lang === 'en' ? 'en' : 'pt-PT',
       metadata: {
-        source: 'karmic-node-loja',
-        items_count: String(items.length),
-        has_customization: String(items.some(i => i._customization)),
-        locale: locale || 'pt',
+        user_id: user_id || 'guest',
+        promo_code: promo_code || '',
+        item_count: String(items.length),
+        subtotal_cents: String(subtotal_cents),
+        discount_cents: String(discount_cents),
+        shipping_cents: String(shipping_cents),
+        vat_cents: String(vat_cents),
+        total_cents: String(total_cents),
       },
-
-      expires_at: Math.floor(Date.now() / 1000) + 30 * 60,
-    }
-
-    // Se veio um código promo direto do carrinho, aplica (e remove allow_promotion_codes,
-    // pois o Stripe não permite os dois em simultâneo)
-    if (promo_code) {
-      try {
-        const promoCodes = await stripe.promotionCodes.list({ code: promo_code, active: true, limit: 1 })
-        if (promoCodes.data.length) {
-          sessionConfig.discounts = [{ promotion_code: promoCodes.data[0].id }]
-          delete sessionConfig.allow_promotion_codes
-        }
-      } catch (e) {
-        console.error('[checkout] Erro ao aplicar promo_code:', e?.message || e)
-        // continua sem o desconto em vez de falhar o checkout todo
-      }
-    }
-
-    const session = await stripe.checkout.sessions.create(sessionConfig)
+      shipping_options: [
+        {
+          shipping_rate_data: {
+            type: 'fixed_amount',
+            fixed_amount: { amount: 0, currency: 'eur' }, // Já incluído nos line_items
+            display_name: `${zone.name} — ${zone.days} dias`,
+            delivery_estimate: {
+              minimum: { unit: 'business_day', value: parseInt(zone.days.split('-')[0]) },
+              maximum: { unit: 'business_day', value: parseInt(zone.days.split('-')[1]) },
+            },
+          },
+        },
+      ],
+    });
 
     return res.status(200).json({
+      id: session.id,
       url: session.url,
-      session_id: session.id,
-    })
-
-  } catch (err) {
-    console.error('[Stripe checkout] Erro:', err)
-    return res.status(500).json({
-      error: err.message || 'Erro ao criar sessão de pagamento',
-      code: err.code,
-    })
+      totals: {
+        subtotal_cents,
+        discount_cents,
+        shipping_cents,
+        vat_cents,
+        total_cents,
+      },
+    });
+  } catch (error) {
+    console.error('[Checkout Error]', error);
+    return res.status(500).json({ error: error.message });
   }
+}
+
+// ── Validação de promo (mock — em produção lê do Supabase) ──
+// Códigos alinhados com store/core.js PROMOS (problema #5 do pacote).
+async function validatePromo(code, subtotal_cents) {
+  const MOCK_PROMOS = {
+    'WELCOME10': { discount_percent: 10, min_cents: 3000 },
+    'KARMIC15': { discount_percent: 15, min_cents: 8000 },
+  };
+  const p = MOCK_PROMOS[code.toUpperCase()];
+  if (!p) return { valid: false };
+  if (p.min_cents && subtotal_cents < p.min_cents) return { valid: false, err: 'Valor mínimo não atingido' };
+  const discount = p.discount_percent
+    ? Math.round(subtotal_cents * p.discount_percent / 100)
+    : 0;
+  return { valid: true, discount_cents: discount, code, ...p };
 }
