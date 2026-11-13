@@ -1,7 +1,9 @@
 // ─── STRIPE CHECKOUT SESSION ──────────────────────────────────────────────
 // Cria uma Checkout Session Stripe hospedada com:
 // - Cartões (Visa/MC/Amex), Multibanco, PayPal
-// - IVA 23% adicionado no checkout
+// - IVA 23% já INCLUÍDO nos preços da loja (tax_behavior: 'inclusive') — ver
+//   nota abaixo, antes isto estava a ser somado por cima (cliente pagava IVA
+//   a dobrar).
 // - Portes de envio (grátis > 150€, senão 4.99€ Continente / 9.99€ Ilhas / etc.)
 // - Códigos de desconto Stripe + cartões oferta
 // - Metadata de personalização (Customizer V2) por linha
@@ -9,7 +11,7 @@
 //
 // Env vars necessárias:
 //   STRIPE_SECRET_KEY  = sk_test_... (test) ou sk_live_... (produção)
-//   NEXT_PUBLIC_SITE_URL (opcional) = fallback para success/cancel URLs
+//   SITE_URL (opcional) = fallback para success/cancel URLs (ver nota abaixo)
 //
 import Stripe from 'stripe'
 
@@ -98,7 +100,13 @@ export default async function handler(req, res) {
     // Estratégia híbrida:
     //   - Se o item tiver stripeId (e não for personalizado) → usa o Price existente do Stripe
     //   - Se não tiver → cria price_data dinâmico (personalizações, etc.)
-    // IVA 23% adicionado via automatic_tax
+    //
+    // IMPORTANTE (fix IVA duplicado): os preços da loja (item.price) JÁ
+    // incluem IVA — é o que a UI mostra como "IVA incluído". `automatic_tax`
+    // fica ativo só para o Stripe calcular e discriminar o valor do IVA na
+    // fatura/registo, mas com `tax_behavior: 'inclusive'` o Stripe passa a
+    // tratar o unit_amount como já incluindo o imposto, em vez de o somar
+    // por cima (antes disto o cliente pagava IVA a dobrar).
     const line_items = items.map((item) => {
       const qty = Math.max(1, parseInt(item.qty) || 1)
 
@@ -149,13 +157,20 @@ export default async function handler(req, res) {
             metadata,
           },
           unit_amount: Math.round(parseFloat(item.price) * 100),
+          // Fix IVA duplicado: o preço já inclui os 23% de IVA (é o que a
+          // loja mostra). Sem isto, automatic_tax soma mais 23% por cima.
+          tax_behavior: 'inclusive',
         },
         quantity: qty,
       }
     })
 
-    // Origin fallback
-    const siteOrigin = origin || process.env.NEXT_PUBLIC_SITE_URL || 'https://karmicnode.com'
+    // Origin fallback — SITE_URL é a variável correta (este projeto NÃO é
+    // Next.js; NEXT_PUBLIC_SITE_URL era copy-paste de um projeto Next.js
+    // anterior e nunca teve efeito real aqui, porque esta função corre no
+    // servidor Vercel — só variáveis com o prefixo VITE_ são expostas ao
+    // browser, e nenhuma delas precisa de o ser aqui).
+    const siteOrigin = origin || process.env.SITE_URL || 'https://karmicnode.com'
 
     // Configurar shipping_options
     const shipping_options = [
