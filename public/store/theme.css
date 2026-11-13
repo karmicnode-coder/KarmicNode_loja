@@ -1,0 +1,138 @@
+/* ═════════ Karmic Node — temas claro e escuro ═════════
+   Claro: branco pedra quente, tinta quase preta, bordô como acento.
+   Escuro: grafite profundo com subtom bordô, ouro do emblema como detalhe, bordô vivo. */
+
+:root,[data-theme="light"]{
+  color-scheme:light;
+  --bg:#FFFFFF; --surface:#FFFFFF; --soft:#F5F3EF; --soft2:#EAE6DF; --line:#E8E4DD; --line2:#D3CEC5;
+  --ink:#151312; --ink2:#4A4642; --ink3:#7E7973;
+  --accent:#8B1E2D; --accent-2:#6E1622; --accent-ink:#FFFFFF; --accent-soft:#F7ECEC;
+  --gold:#B08D57; --sale:#8B1E2D; --ok:#2E6B46; --warn:#9A5B00; --err:#B42318;
+  --glass:rgba(255,255,255,.94); --glass2:rgba(255,255,255,.65);
+  --btn:#151312; --btn-ink:#FFFFFF; --btn-hover:#8B1E2D;
+  --stage-a:#F7F6F3; --stage-b:#EEEBE5;
+  --shadow:0 18px 50px -24px rgba(21,19,18,.35);
+}
+
+[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0F0D0D; --surface:#171414; --soft:#1F1B1B; --soft2:#2A2424; --line:#2C2626; --line2:#3F3636;
+  --ink:#F3EEE7; --ink2:#C8C0B6; --ink3:#8F877D;
+  --accent:#C2384B; --accent-2:#A52C3D; --accent-ink:#FFFFFF; --accent-soft:#2A1519;
+  --gold:#D2AE74; --sale:#E0566A; --ok:#5DBB86; --warn:#E3A748; --err:#F07167;
+  --glass:rgba(18,15,15,.88); --glass2:rgba(23,20,20,.7);
+  --btn:#F3EEE7; --btn-ink:#120F0F; --btn-hover:#C2384B;
+  --stage-a:#1C1818; --stage-b:#121010;
+  --shadow:0 18px 50px -20px rgba(0,0,0,.8);
+}
+
+/* transição suave ao trocar de tema */
+html.theme-anim *,html.theme-anim *::before,html.theme-anim *::after{transition:background-color .35s ease,color .35s ease,border-color .35s ease,box-shadow .35s ease!important}
+
+body{background:var(--bg);color:var(--ink)}
+
+/* ── componentes base que usavam preto fixo ── */
+.btn{background:var(--btn);color:var(--btn-ink)}
+.btn:hover{background:var(--btn-hover);color:#fff}
+.btn.ghost{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 1px var(--line2)}
+.btn.ghost:hover{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.btn.light{background:#fff;color:#151312}
+.btn.light:hover{background:var(--accent);color:#fff}
+.chip{background:var(--surface);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line2)}
+.chip.on,.subtabs button.on,.sizes button.on,.fsizes button.on,.snav-a.on{background:var(--ink);color:var(--bg);box-shadow:none}
+.subtabs button.on span,.snav-a.on em{color:color-mix(in srgb,var(--bg) 60%,transparent)}
+.snav-a.on svg{color:var(--bg)}
+.subtabs button,.sizes button,.fsizes button{background:var(--surface);color:var(--ink)}
+.input,.st-in,.fld input,.fld select,.promo input,.select{background-color:var(--surface);color:var(--ink);border-color:var(--line2)}
+.select{box-shadow:inset 0 0 0 1px var(--line2)}
+[data-theme="dark"] .select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%23F3EEE7' stroke-width='2'%3E%3Cpath d='M2 4l4 4 4-4'/%3E%3C/svg%3E")}
+.st-in::placeholder,.input::placeholder,.ksearch input::placeholder{color:var(--ink3)}
+.dot{background:var(--accent);color:#fff}
+.tag{background:var(--surface);color:var(--ink)}
+.tag.sale{background:var(--accent);color:#fff}
+.heart{background:var(--glass);color:var(--ink)}
+.heart.on{color:var(--accent)}
+.toast{background:var(--ink);color:var(--bg)}
+.toast button{color:var(--bg)}
+.price .sale,.sale{color:var(--sale)}
+.stars svg{color:var(--gold)}
+.ann{background:#0B0909;color:#F3EEE7}
+[data-theme="dark"] .ann{background:linear-gradient(90deg,#3A0F17,#6E1622 50%,#3A0F17);color:#F7E9D8}
+.ksearch{background:var(--soft);color:var(--ink3)}
+.ksearch.on{background:var(--surface)}
+.ksearch kbd,.hdr-search kbd{background:var(--surface);border-color:var(--line);color:var(--ink3)}
+.ksearch-go{background:var(--btn);color:var(--btn-ink)}
+.ksearch-drop,.qv-box,.sheet-panel,.mega,.ksearch-drop{background:var(--surface);color:var(--ink)}
+.kcart{background:var(--btn);color:var(--btn-ink)}
+.kcart .dot{box-shadow:0 0 0 2px var(--btn)}
+.kcart:hover{background:var(--accent);color:#fff}
+.ktop{background:var(--glass)}
+.kside{background:var(--bg)}
+.pm{background:var(--soft)}
+.pm-flat{background:linear-gradient(180deg,var(--stage-a),var(--stage-b))}
+.collage{background:var(--soft)}
+.prodtile,.prodfeat,.lhero-p{background:var(--soft)!important}
+.prodtile::after,.prodfeat::after,.lhero-p::after{background:linear-gradient(180deg,transparent 55%,color-mix(in srgb,var(--soft) 95%,transparent))!important}
+.usp{background:var(--surface)}
+.review,.rv-sum,.st-sum,.co-side,.deliv,.steps3 div,.ship-bar,.feature,.rv-empty,.rv-form,.snav-promo,.card-box{background:var(--soft)}
+.ftr{background:var(--soft)}
+.news{background:var(--accent);color:#fff}
+.news .input{background:transparent;color:#fff;border-color:rgba(255,255,255,.4)}
+.news .btn{background:#fff;color:var(--accent)}
+.bf-hero,.bf-strip{background:#0B0909;color:#fff}
+[data-theme="dark"] .bf-hero{background:#080606}
+[data-theme="dark"] .bf-strip{background:linear-gradient(90deg,#1A0C0F,#2A1218);box-shadow:inset 0 0 0 1px #3F1A21}
+.radio label{background:var(--surface)}
+.radio label.on{box-shadow:inset 0 0 0 2px var(--ink)}
+.radio input,.flist input,.look input{accent-color:var(--accent)}
+.toggle input{background:var(--line2)}
+.toggle input:checked{background:var(--accent)}
+.prange .dual input::-webkit-slider-thumb{background:var(--surface);border-color:var(--ink)}
+.prange .track i{background:var(--ink)}
+.st-range{accent-color:var(--accent)}
+.sheet-bg,.qv-bg{background:rgba(8,6,6,.55)}
+.ok-ic{background:var(--accent)}
+.warn{background:color-mix(in srgb,var(--warn) 14%,var(--surface));color:var(--warn)}
+::selection{background:var(--accent);color:#fff}
+
+/* imagens de produto (mockups) em escuro: palco iluminado */
+[data-theme="dark"] .pm:not(.pm-flat){background:radial-gradient(ellipse at 50% 40%,#2A2424 0%,#1A1616 75%)}
+[data-theme="dark"] .card:hover .pm{background:radial-gradient(ellipse at 50% 40%,#332B2B 0%,#1E1919 75%)}
+[data-theme="dark"] .tile::after{background:linear-gradient(180deg,transparent 40%,rgba(0,0,0,.72))}
+[data-theme="dark"] .hero2-main::after{background:linear-gradient(90deg,rgba(8,6,6,.8) 0%,rgba(8,6,6,.4) 45%,transparent 75%),linear-gradient(180deg,transparent 50%,rgba(8,6,6,.6))}
+[data-theme="dark"] .kbrand img{filter:drop-shadow(0 0 14px rgba(194,56,75,.35))}
+[data-theme="dark"] .kbrand-t small{color:var(--gold)}
+[data-theme="dark"] .snav-promo b,[data-theme="dark"] .h2 em,[data-theme="dark"] .h1 em{color:var(--gold)}
+[data-theme="dark"] .hero2-copy .h1 em{color:#F7E1BC}
+[data-theme="dark"] .card:hover .card-name{color:var(--ink)}
+[data-theme="dark"] .mega-scrim{background:rgba(0,0,0,.5)}
+[data-theme="dark"] .snav-a.hot.on,[data-theme="dark"] .snav-badge{background:var(--accent);color:#fff}
+[data-theme="dark"] .kd-cats a,[data-theme="dark"] .chips-active button{background:var(--soft2);color:var(--ink)}
+
+/* botão de tema */
+.theme-tg{width:42px;height:42px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;color:var(--ink2);position:relative;overflow:hidden}
+.theme-tg:hover{background:var(--soft);color:var(--ink)}
+.theme-tg svg{position:absolute;transition:transform .45s cubic-bezier(.2,.7,.2,1),opacity .3s}
+.theme-tg .sun{transform:translateY(0) rotate(0);opacity:1}
+.theme-tg .moon{transform:translateY(24px) rotate(-60deg);opacity:0}
+[data-theme="dark"] .theme-tg .sun{transform:translateY(-24px) rotate(60deg);opacity:0}
+[data-theme="dark"] .theme-tg .moon{transform:translateY(0) rotate(0);opacity:1}
+.snav-theme{display:flex;align-items:center;gap:10px;padding:4px;margin:6px 0 4px;border-radius:12px;background:var(--soft)}
+.snav-theme button{flex:1;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;gap:6px;font-size:12px;font-weight:600;color:var(--ink3)}
+.snav-theme button.on{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.snav.mini .snav-theme,.kshell .snav .snav-theme{display:none}
+@media (min-width:1281px){.kshell:not(.mini) .snav .snav-theme{display:flex}}
+.sheet-panel .snav .snav-theme{display:flex}
+
+/* afinações do modo escuro */
+.sx-tabs button.on i{background:var(--ink);color:var(--bg)}
+.sx-tabs button i{background:var(--soft2);color:var(--ink2)}
+[data-theme="dark"] .sx-qcol button,[data-theme="dark"] .colors button,[data-theme="dark"] .fcolors button,[data-theme="dark"] .threads button,[data-theme="dark"] .sx-qc button,[data-theme="dark"] .sw i{box-shadow:inset 0 0 0 1px rgba(255,255,255,.28)}
+[data-theme="dark"] .pm-flat{background:radial-gradient(ellipse at 50% 42%,#3A3232 0%,#1E1A1A 72%)}
+[data-theme="dark"] .collage .pm-flat{background:transparent}
+[data-theme="dark"] .pm-flat .glyph svg{filter:drop-shadow(0 0 1px rgba(255,255,255,.35)) drop-shadow(0 12px 18px rgba(0,0,0,.6))!important}
+[data-theme="dark"] .snav-a.on{background:var(--ink);color:var(--bg)}
+[data-theme="dark"] .ksearch-go:hover,[data-theme="dark"] .btn:hover{color:#fff}
+
+.co-sec h2 i{background:var(--ink);color:var(--bg)}
+.subtabs button.on span{color:var(--bg);opacity:.7}

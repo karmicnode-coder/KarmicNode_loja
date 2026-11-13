@@ -1,19 +1,44 @@
 {
   "name": "Karmic Node — Moda com Alma",
   "short_name": "Karmic Node",
-  "description": "Moda com alma. Estilo atemporal. Peças únicas e personalizáveis, feitas em Portugal.",
+  "description": "Loja premium portuguesa: vestuário, tecnologia e personalização com identidade única.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#0B0B0C",
-  "theme_color": "#B08D57",
-  "lang": "pt",
   "orientation": "portrait-primary",
+  "background_color": "#0B0B0C",
+  "theme_color": "#8B1E2D",
+  "lang": "pt-PT",
+  "categories": ["shopping", "lifestyle", "fashion"],
   "icons": [
-    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
-    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    {
+      "src": "assets/logo-karmic-node.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/logo-karmic-node.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
   ],
-  "categories": ["shopping", "lifestyle"]
+  "shortcuts": [
+    {
+      "name": "Personalizar",
+      "short_name": "Customize",
+      "description": "Abre o Customizer Pro",
+      "url": "/personalizar",
+      "icons": [{ "src": "assets/logo-karmic-node.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Minha conta",
+      "short_name": "Account",
+      "description": "Ver perfil e Karma Points",
+      "url": "/conta",
+      "icons": [{ "src": "assets/logo-karmic-node.png", "sizes": "96x96" }]
+    }
+  ],
+  "prefer_related_applications": false
 }

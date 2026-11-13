@@ -1,12 +1,14 @@
 // ─── LISTA DE PRODUTOS STRIPE ─────────────────────────────────────────────
 // GET /api/products → lista todos os produtos ativos no Stripe (com preço + metadata)
 // Se STRIPE_SECRET_KEY não estiver definido ou não houver produtos, devolve array vazio
-// (o site cai no catálogo estático embutido em src/App.tsx — ALL_PRODUCTS).
+// (o site cai no catálogo embutido no App-loja.tsx).
 //
 import Stripe from 'stripe'
 
-const stripeKey = process.env.STRIPE_SECRET_KEY
-const stripe = stripeKey ? new Stripe(stripeKey, { apiVersion: '2024-06-20' }) : null
+let stripe = null
+if (process.env.STRIPE_SECRET_KEY) {
+  stripe = new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2024-06-20' })
+}
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
@@ -14,8 +16,7 @@ export default async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' })
 
   if (!stripe) {
-    // Modo dev / sem Stripe configurado — o frontend usa o catálogo estático de reserva.
-    res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate')
+    // Modo dev / sem Stripe configurado
     return res.status(200).json({ products: [], source: 'fallback' })
   }
 
