@@ -68,10 +68,14 @@ Vai a **Settings > Payment methods** e ativa:
 |---|---|---|
 | `STRIPE_SECRET_KEY` | `sk_test_...` | Preview + Development |
 | `STRIPE_SECRET_KEY` | `sk_live_...` | Production |
-| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | `pk_test_...` | Preview + Development |
-| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | `pk_live_...` | Production |
-| `NEXT_PUBLIC_SITE_URL` | `https://karmicnode.com` | Production |
-| `NEXT_PUBLIC_SITE_URL` | `https://karmicnode-preview.vercel.app` | Preview |
+| `SITE_URL` | `https://karmicnode.com` | Production |
+| `SITE_URL` | `https://karmicnode-preview.vercel.app` | Preview |
+
+> Nota: este projeto é Vite (não Next.js) e o checkout usa Stripe Checkout
+> hospedado (api/checkout.js devolve `url`, o browser só faz redirect) — não
+> há chave publicável do Stripe a usar no frontend neste momento, por isso
+> não existe `*_PUBLISHABLE_KEY` na lista acima. A variável correta para a
+> URL do site é `SITE_URL` (sem o prefixo `NEXT_PUBLIC_`).
 
 3. Faz **Redeploy** depois de adicionar as variáveis.
 
