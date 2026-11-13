@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "echo 'Site estático — serve public/ com qualquer servidor http (ex: npx serve public)'",
+    "build": "echo 'Site estático — nada a compilar, public/ já contém os ficheiros finais'",
     "check-env": "node scripts/check-env.js"
   },
   "dependencies": {
