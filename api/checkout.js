@@ -6,11 +6,22 @@
 // ═══════════════════════════════════════════════════════════════
 
 import Stripe from 'stripe';
+import { createClient } from '@supabase/supabase-js';
+import { priceItemCents } from './_lib/catalog.js';
+import { validatePromoCode } from './_lib/promos.js';
+import { uploadDesignThumb, uploadDesignJson } from './_lib/supabase-storage.js';
 
 // Instanciação defensiva: se faltar a env var, não rebenta o módulo inteiro
 // (o que dava 500 genérico em todas as rotas) — devolve erro claro ao cliente.
 const stripe = process.env.STRIPE_SECRET_KEY
   ? new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2024-06-20' })
+  : null;
+// Supabase é opcional aqui — só usado para subir o PNG/JSON do design do
+// Estúdio para o Storage antes de criar a sessão Stripe (problema #5 do
+// pacote: nunca enviar base64 ao Stripe). Sem Supabase configurado, as linhas
+// personalizadas vão para o Stripe sem imagem nenhuma (nunca base64).
+const supabase = (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_KEY)
+  ? createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
   : null;
 
 // Cálculo de portes por zona (PT usa os valores da loja — ver store/core.js CFG)
@@ -44,7 +55,7 @@ export default async function handler(req, res) {
 
   try {
     const {
-      items,              // [{ id, name, price, qty, image, customization? }]
+      items,              // [{ id, sku, name, price, qty, image, color, size, note, customization? }]
       customer_email,
       country = 'PT',
       promo_code,
@@ -58,17 +69,28 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'No items in cart' });
     }
 
-    // ── Cálculos ──
-    let subtotal_cents = 0;
-    items.forEach(item => {
-      subtotal_cents += Math.round(item.price * 100) * (item.qty || 1);
-    });
+    // ── Preço — SEMPRE recalculado no servidor (problema #2 do pacote) ──
+    // O `item.price` que vem do browser é IGNORADO por completo: cada linha é
+    // recalculada a partir do catálogo server-side (_lib/catalog.js) + da
+    // personalização enviada (`item.customization`). Um SKU desconhecido
+    // rejeita o pedido inteiro — nunca deixamos passar um preço arbitrário.
+    const priced = [];
+    for (const item of items) {
+      const unit_cents = priceItemCents(item);
+      if (unit_cents == null) {
+        return res.status(400).json({ error: `Produto desconhecido: ${item.sku || item.id}` });
+      }
+      priced.push({ ...item, unit_cents });
+    }
 
-    // Aplicar código promo (se válido)
+    let subtotal_cents = 0;
+    priced.forEach(item => { subtotal_cents += item.unit_cents * (item.qty || 1); });
+
+    // Aplicar código promo (se válido) — fonte única com api/promo-validate.js
     let discount_cents = 0;
     let promo_applied = null;
     if (promo_code) {
-      const promo = await validatePromo(promo_code, subtotal_cents);
+      const promo = validatePromoCode(promo_code, subtotal_cents);
       if (promo.valid) {
         discount_cents = promo.discount_cents;
         promo_applied = promo;
@@ -85,19 +107,42 @@ export default async function handler(req, res) {
     const total_cents = subtotal_after_discount + shipping_cents;
     const vat_cents = Math.round(total_cents * 23 / 123);
 
+    // ── Imagens/design — nunca base64 para o Stripe (problema #5 do pacote) ──
+    // Se o item tiver uma miniatura do Estúdio (`item.image`, um data: URL do
+    // canvas) e Supabase estiver configurado, sobe-se para o Storage ANTES de
+    // criar a sessão e usa-se só o URL público resultante. Sem Supabase (ou
+    // se o upload falhar), a linha segue para o Stripe SEM imagem nenhuma —
+    // nunca com o base64 em bruto. O JSON completo do design (camadas) sobe
+    // também, e o URL fica no metadata da linha para o webhook persistir em
+    // order_items.custom_design depois do pagamento.
+    const keyBase = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    for (let i = 0; i < priced.length; i++) {
+      const item = priced[i];
+      const isDataUrl = typeof item.image === 'string' && item.image.startsWith('data:');
+      const keyHint = `${keyBase}-${i}`;
+      item.image_url = isDataUrl && supabase ? await uploadDesignThumb(supabase, item.image, keyHint) : (isDataUrl ? null : item.image || null);
+      item.design_json_url = (item.customization && item.customization.views && supabase)
+        ? await uploadDesignJson(supabase, item.customization, keyHint)
+        : null;
+    }
+
     // ── Line items Stripe ──
-    const line_items = items.map(item => ({
+    const line_items = priced.map(item => ({
       price_data: {
         currency: 'eur',
         product_data: {
           name: item.name,
-          images: item.image ? [item.image] : [],
+          images: item.image_url ? [item.image_url] : [], // só URL público, nunca base64
           metadata: {
             sku: item.sku || String(item.id),
-            customization: item.customization ? JSON.stringify(item.customization).slice(0, 500) : '',
+            color: item.color || '',
+            size: item.size || '',
+            note: (item.note || '').slice(0, 480),
+            design_json_url: item.design_json_url || '',
+            design_png_url: item.image_url || '',
           },
         },
-        unit_amount: Math.round(item.price * 100),
+        unit_amount: item.unit_cents,
       },
       quantity: item.qty || 1,
     }));
@@ -124,8 +169,13 @@ export default async function handler(req, res) {
       payment_method_types.push('multibanco');
       // MBWay em breve nos payment_method_types quando GA
     }
-    // PayPal, Klarna
-    payment_method_types.push('paypal', 'klarna');
+    // PayPal, Klarna — só se ativados explicitamente via STRIPE_EXTRA_METHODS
+    // (problema #7 do pacote: antes estavam sempre ligados, mesmo sem a conta
+    // Stripe os ter ativado, o que rebentava a criação da sessão).
+    const ALLOWED_EXTRA = ['klarna', 'paypal'];
+    const extraMethods = (process.env.STRIPE_EXTRA_METHODS || '')
+      .split(',').map(s => s.trim().toLowerCase()).filter(s => ALLOWED_EXTRA.includes(s));
+    payment_method_types.push(...extraMethods);
 
     // Discounts
     const discounts = [];
@@ -195,20 +245,4 @@ export default async function handler(req, res) {
     console.error('[Checkout Error]', error);
     return res.status(500).json({ error: error.message });
   }
-}
-
-// ── Validação de promo (mock — em produção lê do Supabase) ──
-// Códigos alinhados com store/core.js PROMOS (problema #5 do pacote).
-async function validatePromo(code, subtotal_cents) {
-  const MOCK_PROMOS = {
-    'WELCOME10': { discount_percent: 10, min_cents: 3000 },
-    'KARMIC15': { discount_percent: 15, min_cents: 8000 },
-  };
-  const p = MOCK_PROMOS[code.toUpperCase()];
-  if (!p) return { valid: false };
-  if (p.min_cents && subtotal_cents < p.min_cents) return { valid: false, err: 'Valor mínimo não atingido' };
-  const discount = p.discount_percent
-    ? Math.round(subtotal_cents * p.discount_percent / 100)
-    : 0;
-  return { valid: true, discount_cents: discount, code, ...p };
 }

@@ -63,10 +63,10 @@ export default async function handler(req, res) {
         tax: (order.vat_cents / 100).toFixed(2),
       },
       packing_slip: {
-        email: 'karmicnode@gmail.com',
+        email: process.env.ADMIN_EMAIL || 'karmicnode@gmail.com',
         phone: '',
         message: 'Obrigado por escolheres a Karmic Node ✦',
-        logo_url: 'https://karmicnode.pt/assets/logo-karmic-node.png',
+        logo_url: `${process.env.SITE_URL || 'https://karmicnode.com'}/assets/logo-karmic-node.png`,
         store_name: 'Karmic Node',
       },
     };

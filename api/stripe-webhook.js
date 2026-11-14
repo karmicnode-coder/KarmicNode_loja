@@ -84,8 +84,13 @@ export default async function handler(req, res) {
 }
 
 async function handleCheckoutCompleted(session) {
-  // Ir buscar line items (com produtos)
-  const items = await stripe.checkout.sessions.listLineItems(session.id, { limit: 100 });
+  // Ir buscar line items COM metadata do produto (sku, cor, tamanho, nota,
+  // URLs do design) — sem o expand abaixo, `price.product` vem só como ID e
+  // perdíamos toda a informação que api/checkout.js guardou em product_data.metadata.
+  const items = await stripe.checkout.sessions.listLineItems(session.id, {
+    limit: 100,
+    expand: ['data.price.product'],
+  });
 
   const meta = session.metadata || {};
   const userId = meta.user_id !== 'guest' ? meta.user_id : null;
@@ -116,6 +121,48 @@ async function handleCheckoutCompleted(session) {
   }).select().single();
 
   if (orderErr) console.error('[Order insert error]', orderErr);
+
+  // 2. Encomenda completa: um order_items por linha, com cor, tamanho, nota e
+  // o design (JSON + PNG, já no Storage — nunca base64, ver api/checkout.js),
+  // e decremento de stock por SKU (problema #3 do pacote). A linha de portes
+  // não tem metadata.sku (é um custo, não um produto) — ignora-se aqui.
+  if (order && supabase) {
+    for (const li of items.data) {
+      const productMeta = (li.price?.product && typeof li.price.product === 'object') ? (li.price.product.metadata || {}) : {};
+      const sku = productMeta.sku;
+      if (!sku) continue; // linha de portes ou produto sem SKU — não é um artigo da encomenda
+
+      const variantParts = [productMeta.color, productMeta.size].filter(Boolean);
+      const { error: itemErr } = await supabase.from('order_items').insert({
+        order_id: order.id,
+        product_sku: sku,
+        product_name: li.description || sku,
+        product_image: productMeta.design_png_url || null,
+        variant: variantParts.join(' · ') || null,
+        quantity: li.quantity || 1,
+        unit_price_cents: li.price?.unit_amount || 0,
+        total_cents: (li.price?.unit_amount || 0) * (li.quantity || 1),
+        custom_design: {
+          color: productMeta.color || null,
+          size: productMeta.size || null,
+          note: productMeta.note || null,
+          design_json_url: productMeta.design_json_url || null,
+          design_png_url: productMeta.design_png_url || null,
+        },
+        source: 'manual',
+      });
+      if (itemErr) console.error('[order_items insert error]', sku, itemErr);
+
+      // Baixar stock — ignora em silêncio se a função RPC ou o SKU não existirem
+      // (mesmo padrão defensivo do resto do projeto: nunca rebenta a encomenda
+      // já paga por causa disto).
+      const { error: stockErr } = await supabase.rpc('decrement_product_stock', {
+        p_sku: sku,
+        p_qty: li.quantity || 1,
+      });
+      if (stockErr) console.warn('[decrement_product_stock indisponível, a ignorar]', sku, stockErr.message);
+    }
+  }
 
   // Karma Points: a loja não mostra karma na interface (problema #11 do pacote).
   // Só atribui pontos se a função RPC existir no Supabase; ignora em silêncio se não existir.

@@ -1226,6 +1226,25 @@ grant select on admin_dashboard to authenticated;
 -- ═══════════════════════════════════════════════════════════════════════
 -- ✅ FIM — SCHEMA CONSOLIDADO COMPLETO
 -- ═══════════════════════════════════════════════════════════════════════
+-- 16. STORAGE — bucket "designs" (PNG + JSON de personalizações)
+-- ═══════════════════════════════════════════════════════════════════════
+-- Usado por api/_lib/supabase-storage.js (chamado a partir de
+-- api/checkout.js, ANTES de criar a sessão Stripe) para subir a miniatura
+-- PNG e o JSON do design do Estúdio — nunca se envia base64 ao Stripe
+-- (ver api/checkout.js). Público para leitura (os URLs ficam no email de
+-- confirmação e em order_items.custom_design); só o service_role escreve.
+insert into storage.buckets (id, name, public)
+values ('designs', 'designs', true)
+on conflict (id) do nothing;
+
+drop policy if exists "designs_public_read" on storage.objects;
+create policy "designs_public_read" on storage.objects for select
+  using (bucket_id = 'designs');
+
+drop policy if exists "designs_service_write" on storage.objects;
+create policy "designs_service_write" on storage.objects for insert to service_role
+  with check (bucket_id = 'designs');
+
 select '✅ Karmic Node — schema consolidado aplicado com sucesso!' as resultado;
 select table_name from information_schema.tables
 where table_schema = 'public'

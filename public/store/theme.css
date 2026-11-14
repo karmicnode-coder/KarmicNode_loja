@@ -134,5 +134,10 @@ body{background:var(--bg);color:var(--ink)}
 [data-theme="dark"] .snav-a.on{background:var(--ink);color:var(--bg)}
 [data-theme="dark"] .ksearch-go:hover,[data-theme="dark"] .btn:hover{color:#fff}
 
-.co-sec h2 i{background:var(--ink);color:var(--bg)}
+.co-sec h2 i{background:var(--accent);color:#fff}
+.co-secure-badge svg,.secure svg{color:var(--accent)}
+.radio label.on{background:var(--accent-soft)}
+.promo-applied{background:var(--accent-soft);color:var(--accent)}
+.co-form-card{background:var(--surface)}
+.co-side{background:var(--soft)}
 .subtabs button.on span{color:var(--bg);opacity:.7}

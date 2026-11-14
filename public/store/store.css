@@ -534,3 +534,81 @@ body{background:var(--bg);letter-spacing:-.003em}
 }
 
 @media (max-width:900px){.st-cta{position:sticky;bottom:0;margin:0 calc(var(--pad)*-1);padding-left:var(--pad);padding-right:var(--pad);border-top:1px solid var(--line)}}
+
+/* ═════════ V8 — redesign do checkout e confirmação ═════════
+   Objetivo: dar ao momento de pagamento o mesmo cuidado editorial do resto
+   da loja (serifa nos títulos, acento bordô, cartões com respiração), sem
+   mudar nenhum comportamento — só visual, e sempre compatível com o tema
+   escuro (ver ajustes equivalentes em theme.css). */
+
+/* Cabeçalho da página de checkout */
+.co-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;padding:28px 0 6px;border-bottom:1px solid var(--line);margin-bottom:4px}
+.co-head h1{font-family:var(--serif);font-weight:500}
+.co-secure-badge{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;color:var(--ink3);background:var(--soft);padding:7px 13px;border-radius:999px}
+.co-secure-badge svg{color:var(--accent)}
+
+/* Grelha principal: mais ar, cartão para o formulário */
+.co{align-items:start;gap:clamp(24px,4vw,64px)}
+.co-form-card{background:var(--surface);border-radius:12px;box-shadow:0 1px 0 var(--line),0 24px 48px -36px rgba(20,16,14,.35);overflow:hidden}
+[data-theme="dark"] .co-form-card{box-shadow:0 1px 0 var(--line),0 24px 48px -30px rgba(0,0,0,.7)}
+.co-form-card .co-sec{padding:26px 28px}
+.co-form-card .co-sec:first-child{padding-top:24px}
+
+/* Secções numeradas: número vira selo bordô, título em serifa */
+.co-sec h2{font-family:var(--serif);font-size:19px;font-weight:600;letter-spacing:.01em}
+.co-sec h2 i{background:var(--accent);color:#fff;font-family:var(--f);font-weight:700}
+
+/* Pagamento expresso — cartão destacado acima do "ou" */
+.express-box{background:var(--soft);border-radius:10px;padding:18px 18px 16px;margin:0 28px 6px}
+.express button{border-radius:999px;transition:transform .12s,box-shadow .2s}
+.express button:hover{transform:translateY(-1px);box-shadow:0 8px 18px -10px rgba(0,0,0,.35)}
+.or{color:var(--ink3)}
+
+/* Campos de formulário — maior destaque de foco, cantos levemente suaves */
+.fld input,.fld select{border-radius:8px;transition:border-color .15s,box-shadow .15s}
+.fld input:focus,.fld select:focus{box-shadow:0 0 0 4px var(--accent-soft)}
+.fld.good input{box-shadow:0 0 0 3px color-mix(in srgb,var(--ok) 14%,transparent)}
+
+/* Métodos de entrega/pagamento — cartões com acento na seleção */
+.radio label{border-radius:10px;transition:box-shadow .15s,background .15s}
+.radio label.on{box-shadow:inset 0 0 0 2px var(--accent);background:var(--accent-soft)}
+.radio input{accent-color:var(--accent)}
+
+/* Resumo lateral (sticky) — mais destaque de "cartão" + selo de segurança */
+.co-side{border-radius:14px;box-shadow:inset 0 0 0 1px var(--line);background:var(--soft)}
+.co-side .h3{font-family:var(--serif);font-size:19px;font-weight:600}
+.co-line{padding:10px 0;border-bottom:1px solid var(--line)}
+.co-line:last-of-type{border-bottom:0}
+.co-mini{box-shadow:0 1px 0 var(--line)}
+.co-mini>button{border-radius:12px}
+
+/* Código promocional — mais visível quando aplicado */
+.promo input{border-radius:8px}
+.promo-applied{display:flex;justify-content:space-between;align-items:center;margin:14px 0;padding:11px 14px;background:var(--accent-soft);color:var(--accent);border-radius:8px;font-size:13px}
+.promo-applied b{color:inherit}
+
+.sum-row.tot{border-top:1px solid var(--line);margin-top:6px;padding-top:12px}
+.secure{padding:12px 4px 0;color:var(--ink3)}
+.secure svg{color:var(--accent)}
+
+/* Erro de pagamento — mais visível, com fundo suave */
+.co-sec .err-txt{background:color-mix(in srgb,var(--err) 10%,transparent);padding:10px 14px;border-radius:8px;margin-top:14px!important}
+
+/* ── Confirmação / sucesso ── */
+.ok-hero{position:relative;padding:60px 0 34px}
+.ok-ic{width:72px;height:72px;background:var(--accent);box-shadow:0 14px 32px -14px color-mix(in srgb,var(--accent) 60%,transparent)}
+.ok-hero h1{font-family:var(--serif)}
+.card-box{background:var(--surface);transition:box-shadow .2s}
+.card-box b{font-family:var(--f)}
+.timeline i{transition:background .25s,box-shadow .25s}
+.timeline .done i{background:var(--accent)}
+.timeline .done{color:var(--ink);font-weight:600}
+
+/* Loading / unpaid / error (Success()) — centraliza e dá alguma vida ao estado */
+main.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:50vh}
+main.empty .h3{font-family:var(--serif);font-size:24px}
+
+@media (max-width:820px){
+  .co-form-card .co-sec{padding:20px 18px}
+  .express-box{margin:0 18px 6px}
+}
