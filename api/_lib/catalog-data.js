@@ -12,11 +12,6 @@
 // FINAL já descontado para não cobrar a mais a quem compra com desconto.
 // Se a campanha mudar/acabar, atualiza também aqui (e idealmente substitui
 // este mecanismo por um campo "price" já final vindo de data/catalog.json).
-//
-// NOTA: inclui também os produtos da linha "Casa" (KN-CASA-001..005),
-// que existem em public/store/products.js mas não em data/catalog.json
-// (gerado só a partir dos 29 SKUs "principais"). Sem isto, o checkout
-// rejeitava qualquer compra de produtos da Casa com "Produto desconhecido".
 export const CATALOG_DATA = [
   {
     "sku": "KN-001",
@@ -220,40 +215,5 @@ export const CATALOG_DATA = [
     "price": 19.99,
     "customizable": false,
     "stock": 50
-  },
-  {
-    "sku": "KN-CASA-001",
-    "name": "Almofada em Linho Bordado",
-    "price": 49.99,
-    "customizable": true,
-    "stock": 40
-  },
-  {
-    "sku": "KN-CASA-002",
-    "name": "Manta em Lã Merino",
-    "price": 103.99,
-    "customizable": false,
-    "stock": 30
-  },
-  {
-    "sku": "KN-CASA-003",
-    "name": "Vela Aromática Ritual",
-    "price": 39.99,
-    "customizable": false,
-    "stock": 80
-  },
-  {
-    "sku": "KN-CASA-004",
-    "name": "Roupão Spa em Algodão Egípcio",
-    "price": 119,
-    "customizable": true,
-    "stock": 35
-  },
-  {
-    "sku": "KN-CASA-005",
-    "name": "Poster — Impressão Museológica",
-    "price": 34.99,
-    "customizable": true,
-    "stock": 60
   }
 ];
