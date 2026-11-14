@@ -7,11 +7,21 @@
 import { Resend } from 'resend';
 import { createClient } from '@supabase/supabase-js';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
+// Ambos opcionais: sem Resend não há email a enviar; sem Supabase não há
+// onde ir buscar a order. Em qualquer um dos casos devolvemos 503 claro
+// em vez de rebentar o módulo no arranque (e assim derrubar toda a função).
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+const supabase = (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_KEY)
+  ? createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
+  : null;
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
+
+  if (!resend || !supabase) {
+    console.warn('[Email] RESEND_API_KEY/SUPABASE não configurados — email de confirmação ignorado.');
+    return res.status(503).json({ ok: false, error: 'Email não configurado' });
+  }
 
   try {
     const { order_id, type = 'confirmation' } = req.body;

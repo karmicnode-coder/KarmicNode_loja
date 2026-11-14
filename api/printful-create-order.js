@@ -6,13 +6,21 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
+const supabase = (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_KEY)
+  ? createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
+  : null;
 const PRINTFUL_API = 'https://api.printful.com';
 const PRINTFUL_TOKEN = process.env.PRINTFUL_API_TOKEN;
 const PRINTFUL_STORE_ID = process.env.PRINTFUL_STORE_ID;
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
+
+  // Printful é opcional (só usado para produtos print-on-demand/personalizados).
+  // Sem Supabase ou sem credenciais Printful, não há nada a fazer aqui — a
+  // encomenda em si já ficou persistida/paga independentemente desta rota.
+  if (!supabase) return res.status(200).json({ ok: true, skipped: true, reason: 'Supabase não configurado' });
+  if (!PRINTFUL_TOKEN || !PRINTFUL_STORE_ID) return res.status(200).json({ ok: true, skipped: true, reason: 'Printful não configurado' });
 
   try {
     const { order_id } = req.body;

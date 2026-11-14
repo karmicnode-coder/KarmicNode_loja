@@ -7,7 +7,11 @@
 
 import Stripe from 'stripe';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2024-06-20' });
+// Instanciação defensiva: se faltar a env var, não rebenta o módulo inteiro
+// (o que dava 500 genérico em todas as rotas) — devolve erro claro ao cliente.
+const stripe = process.env.STRIPE_SECRET_KEY
+  ? new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2024-06-20' })
+  : null;
 
 // Cálculo de portes por zona (PT usa os valores da loja — ver store/core.js CFG)
 const SHIPPING_RATES = {
@@ -32,6 +36,11 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
+  if (!stripe) {
+    console.error('[Checkout] STRIPE_SECRET_KEY não configurada no Vercel.');
+    return res.status(503).json({ error: 'Pagamentos indisponíveis de momento. Tenta novamente mais tarde.' });
+  }
 
   try {
     const {

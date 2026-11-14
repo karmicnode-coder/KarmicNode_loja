@@ -58,6 +58,7 @@
     var nfS = useState(false), wantNif = nfS[0], setWantNif = nfS[1];
     var sbS = useState(false), sending = sbS[0], setSending = sbS[1];
     var mS = useState(false), mini = mS[0], setMini = mS[1];
+    var ceS = useState(''), checkoutErr = ceS[0], setCheckoutErr = ceS[1];
     useEffect(function () { if (!st.cart.length) go('/'); }, []);
     if (!st.cart.length) return null;
     var after = st.subtotal - st.discount;
@@ -70,12 +71,40 @@
     function blur(k) { return function () { setTouched(function (t) { var n = Object.assign({}, t); n[k] = true; return n; }); }; }
     function submit(e) {
       e.preventDefault();
+      setCheckoutErr('');
       var t = {}; keys.forEach(function (k) { t[k] = true; }); setTouched(t);
       var first = keys.find(function (k) { return errs[k]; });
       if (first) { var el = document.getElementById('f-' + first); if (el) { el.focus(); window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 120, behavior: 'smooth' }); } return; }
       setSending(true);
       try { localStorage.setItem('kn5-addr', JSON.stringify({ email: d.email, name: d.name, address: d.address, address2: d.address2, zip: d.zip, city: d.city, phone: d.phone })); } catch (x) {}
-      setTimeout(function () { var o = st.placeOrder(Object.assign({}, d, { shipping: ship, payment: pay })); go('/confirmacao/' + o.n); }, 900);
+      // Guarda os dados de entrega/contacto localmente para associar à encomenda
+      // quando o Stripe confirmar o pagamento (ver store/pages.js → página /sucesso).
+      try { localStorage.setItem('kn5-pending', JSON.stringify({ info: Object.assign({}, d, { shipping: ship, payment: pay }), lines: st.cart.map(function (l) { return { id: l.id, name: l.p.name, color: l.color, size: l.size, note: l.note, qty: l.qty, price: l.unit, thumb: l.thumb }; }), subtotal: st.subtotal, discount: st.discount, promo: st.promo, ship: shipCost, total: total })); } catch (x) {}
+      var country = wantNif || needAddr ? 'PT' : 'PT';
+      fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items: st.cart.map(function (l) { return { id: l.id, sku: l.p.sku || l.id, name: l.p.name + (l.color ? ' · ' + l.color : '') + (l.size && l.size !== 'Único' ? ' · ' + l.size : ''), price: l.unit, qty: l.qty, image: l.thumb || null }; }),
+          customer_email: d.email,
+          country: country,
+          promo_code: st.promo || undefined,
+          success_url: window.location.origin + '/#/sucesso?session_id={CHECKOUT_SESSION_ID}',
+          cancel_url: window.location.origin + '/#/checkout',
+        }),
+      }).then(function (r) { return r.json().then(function (data) { return { ok: r.ok, data: data }; }); })
+        .then(function (res) {
+          if (res.ok && res.data && res.data.url) {
+            window.location.href = res.data.url;
+          } else {
+            setSending(false);
+            setCheckoutErr((res.data && res.data.error) || 'Não foi possível iniciar o pagamento. Tenta novamente.');
+          }
+        })
+        .catch(function () {
+          setSending(false);
+          setCheckoutErr('Erro de ligação. Verifica a internet e tenta novamente.');
+        });
     }
     function express() { var el = document.getElementById('f-email'); if (el && !d.email) { el.focus(); setTouched({ email: true }); } }
     var F = function (k, label, extra) { return h(Field, Object.assign({ id: 'f-' + k, label: label, value: d[k], onChange: set(k), onBlur: blur(k), err: errs[k], touched: touched[k] }, extra || {})); };
@@ -125,16 +154,93 @@
                 return h('label', { key: o[0], className: pay === o[0] ? 'on' : '' }, h('input', { type: 'radio', name: 'pay', checked: pay === o[0], onChange: function () { setPay(o[0]); } }), h('span', { className: 'r-t' }, h('b', null, o[1]), h('span', null, o[2])));
               })),
             pay === 'mbway' ? h('p', { className: 'muted', style: { fontSize: 13, margin: '10px 2px 0' } }, 'Vamos enviar o pedido para ' + (d.phone || 'o teu telemóvel') + '.') : null,
-            h('button', { className: 'btn block', type: 'submit', disabled: sending, style: { height: 56, marginTop: 22, fontSize: 16 } }, sending ? 'A processar…' : h(R.Fragment, null, h(Icon, { n: 'lock', s: 17 }), 'Pagar ' + eur(total))),
+            checkoutErr ? h('div', { className: 'err-txt', role: 'alert', style: { marginTop: 14 } }, checkoutErr) : null,
+            h('button', { className: 'btn block', type: 'submit', disabled: sending, style: { height: 56, marginTop: 14, fontSize: 16 } }, sending ? 'A redirecionar para pagamento…' : h(R.Fragment, null, h(Icon, { n: 'lock', s: 17 }), 'Pagar ' + eur(total))),
             h('p', { className: 'muted', style: { fontSize: 12, textAlign: 'center', margin: '12px 0 0' } }, 'Ao pagar aceitas os ', h('a', { className: 'link', href: '#/ajuda' }, 'Termos'), ' e a ', h('a', { className: 'link', href: '#/ajuda' }, 'Política de Privacidade'), '. Devolução grátis em ' + K.CFG.returnDays + ' dias.'))),
         h('aside', { className: 'co-side', 'aria-label': 'Resumo da encomenda' }, h('div', { className: 'h3', style: { marginBottom: 10 } }, 'Resumo'), h(Summary, { ship: shipCost, total: total }),
           h('div', { className: 'secure' }, h(Icon, { n: 'lock', s: 13 }), 'Ligação encriptada · Dados nunca guardados por nós'))));
   }
 
+  // ───── Sucesso — confirma com o Stripe a sério antes de mostrar nada ─────
+  // Chamada depois do redirect de /api/checkout. Só regista a encomenda
+  // localmente (para aparecer em "A minha conta") DEPOIS de o Stripe confirmar
+  // payment_status === 'paid' — nunca antes, ao contrário do antigo placeOrder()
+  // que gravava a encomenda só com base no que o formulário continha.
+  function Success() {
+    var st = K.useStore();
+    var sessionId = (function () { var m = (location.hash || '').match(/[?&]session_id=([^&]+)/); return m ? decodeURIComponent(m[1]) : null; })();
+    var stS = useState('loading'), status = stS[0], setStatus = stS[1]; // loading | ok | error | unpaid
+    var orderS = useState(null), order = orderS[0], setOrder = orderS[1];
+    var errS = useState(''), err = errS[0], setErr = errS[1];
+    var doneRef = R.useRef(false);
+
+    useEffect(function () {
+      if (!sessionId) { setStatus('error'); setErr('Sessão de pagamento em falta.'); return; }
+      if (doneRef.current) return;
+      doneRef.current = true;
+      fetch('/api/checkout-session?session_id=' + encodeURIComponent(sessionId))
+        .then(function (r) { return r.json().then(function (data) { return { ok: r.ok, data: data }; }); })
+        .then(function (res) {
+          if (!res.ok) { setStatus('error'); setErr((res.data && res.data.error) || 'Não foi possível confirmar o pagamento.'); return; }
+          if (!res.data.paid) { setStatus('unpaid'); return; }
+          // Pagamento confirmado pelo Stripe — agora sim regista a encomenda.
+          var pending = (function () { try { return JSON.parse(localStorage.getItem('kn5-pending')); } catch (e) { return null; } })();
+          var n = 'KN' + sessionId.slice(-8).toUpperCase();
+          var already = st.orders.find(function (x) { return x.n === n; });
+          var o = already || {
+            n: n,
+            at: Date.now(),
+            lines: (pending && pending.lines) || [],
+            subtotal: (pending && pending.subtotal) || (res.data.amount_subtotal || 0) / 100,
+            discount: (pending && pending.discount) || 0,
+            ship: (pending && pending.ship) || 0,
+            total: (res.data.amount_total || 0) / 100,
+            info: Object.assign({}, pending && pending.info, {
+              email: res.data.customer_email || (pending && pending.info && pending.info.email) || '',
+              name: res.data.customer_name || (pending && pending.info && pending.info.name) || '',
+              payment: res.data.payment_method || (pending && pending.info && pending.info.payment) || 'card',
+            }),
+            eta: K.deliveryWindow((pending && pending.info && pending.info.shipping === 'exp') ? 'exp' : 'std'),
+            stripeSessionId: sessionId,
+          };
+          if (!already) st.recordOrder(o);
+          try { localStorage.removeItem('kn5-pending'); } catch (e) {}
+          setOrder(o);
+          setStatus('ok');
+        })
+        .catch(function () { setStatus('error'); setErr('Erro de ligação ao confirmar o pagamento.'); });
+    }, [sessionId]);
+
+    if (status === 'loading') {
+      return h('main', { className: 'wrap empty', style: { textAlign: 'center', paddingTop: 80 } },
+        h('p', { className: 'h3' }, 'A confirmar o teu pagamento…'),
+        h('p', { className: 'muted' }, 'Um momento, estamos a validar diretamente com o Stripe.'));
+    }
+    if (status === 'unpaid') {
+      return h('main', { className: 'wrap empty', style: { textAlign: 'center', paddingTop: 80 } },
+        h('p', { className: 'h3' }, 'Pagamento ainda não confirmado.'),
+        h('p', { className: 'muted' }, 'Se completaste o pagamento, aguarda uns segundos e atualiza a página. Caso contrário, a encomenda foi cancelada.'),
+        h('a', { className: 'btn', href: '#/checkout', style: { marginTop: 16 } }, 'Voltar ao checkout'));
+    }
+    if (status === 'error') {
+      return h('main', { className: 'wrap empty', style: { textAlign: 'center', paddingTop: 80 } },
+        h('p', { className: 'h3' }, 'Não foi possível confirmar a encomenda.'),
+        h('p', { className: 'err-txt' }, err),
+        h('p', { className: 'muted', style: { marginTop: 8 } }, 'Se o dinheiro saiu da conta, contacta-nos com o número da sessão: ', h('code', null, sessionId || '—'), '.'),
+        h('a', { className: 'btn', href: '#/ajuda', style: { marginTop: 16 } }, 'Contactar ajuda'));
+    }
+    return h(ConfirmBody, { o: order });
+  }
+
   function Confirm(p) {
     var st = K.useStore(), o = st.orders.find(function (x) { return x.n === p.route.id; });
-    var aS = useState(false), acc = aS[0], setAcc = aS[1];
     if (!o) return h('main', { className: 'wrap empty' }, h('p', { className: 'h3' }, 'Encomenda não encontrada.'), h('a', { className: 'btn', href: '#/' }, 'Voltar ao início'));
+    return h(ConfirmBody, { o: o });
+  }
+
+  function ConfirmBody(p) {
+    var o = p.o;
+    var aS = useState(false), acc = aS[0], setAcc = aS[1];
     var payTxt = { mbway: 'Pedido MB WAY enviado para ' + o.info.phone + '. Confirma na app nos próximos 4 minutos.', mb: 'Entidade 21 000 · Referência 123 456 789 · ' + eur(o.total) + ' · válida 48 h.', card: 'Pagamento com cartão aprovado.', paypal: 'Pagamento PayPal aprovado.' }[o.info.payment];
     return h('main', { className: 'wrap', style: { maxWidth: 760 } },
       h('div', { className: 'ok-hero' }, h('div', { className: 'ok-ic' }, h(Icon, { n: 'check', s: 30, w: 2.4 })),
@@ -225,5 +331,5 @@
           h('div', { className: 'deliv' }, h('div', null, h(Icon, { n: 'pen', s: 18 }), h('span', null, 'Vês uma prova por email antes do bordado.')), h('div', null, h(Icon, { n: 'truck', s: 18 }), h('span', null, 'Envio em 5–7 dias úteis.')), h('div', null, h(Icon, { n: 'ret', s: 18 }), h('span', null, 'Peças personalizadas só são trocadas em caso de defeito.'))))));
   }
 
-  Object.assign(window.KN, { Checkout: Checkout, Confirm: Confirm, Account: Account, Favorites: Favorites, Help: Help, Personalize: Personalize });
+  Object.assign(window.KN, { Checkout: Checkout, Success: Success, Confirm: Confirm, Account: Account, Favorites: Favorites, Help: Help, Personalize: Personalize });
 })();

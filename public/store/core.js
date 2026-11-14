@@ -226,18 +226,18 @@
       if (subtotal < d.min) return 'Este código é válido a partir de ' + eur(d.min) + '. Faltam ' + eur(d.min - subtotal) + '.';
       setPromo(c); return null;
     }
-    function placeOrder(info) {
-      var n = 'KN' + String(Date.now()).slice(-6);
-      var ship = info.shipping === 'exp' ? CFG.shipExp : info.shipping === 'pickup' ? 0 : (subtotal - discount >= CFG.freeShip ? 0 : CFG.shipStd);
-      var o = { n: n, at: Date.now(), lines: lines.map(function (l) { return { id: l.id, name: l.p.name, color: l.color, size: l.size, note: l.note, qty: l.qty, price: l.unit, thumb: l.thumb }; }),
-        subtotal: subtotal, discount: discount, ship: ship, total: Math.max(0, subtotal - discount + ship), info: info, eta: deliveryWindow(info.shipping === 'exp' ? 'exp' : 'std') };
+    // Regista uma encomenda já confirmada (pagamento real validado no Stripe
+    // via /api/checkout-session). Ao contrário do antigo placeOrder(), isto
+    // NUNCA é chamado antes de o pagamento estar confirmado — ver
+    // store/checkout.js → Success(). Só aqui o carrinho é esvaziado.
+    function recordOrder(o) {
       setOrders(function (x) { return [o].concat(x); });
       setCart([]); setPromo(null);
       return o;
     }
 
     var api = { cart: lines, count: count, subtotal: subtotal, discount: discount, promo: promo, promoDef: promoDef, add: add, setQty: setQty, remove: remove, applyPromo: applyPromo, clearPromo: function () { setPromo(null); },
-      wish: wish, toggleWish: toggleWish, recent: recent, viewed: viewed, orders: orders, placeOrder: placeOrder,
+      wish: wish, toggleWish: toggleWish, recent: recent, viewed: viewed, orders: orders, recordOrder: recordOrder,
       cartOpen: cartOpen, setCartOpen: setCartOpen, toast: toast, setToast: setToast, notify: notify, byId: byId };
     return h(Ctx.Provider, { value: api }, props.children);
   }

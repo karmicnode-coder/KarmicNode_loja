@@ -8,8 +8,17 @@
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2024-06-20' });
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
+// Instanciação defensiva — sem isto, faltar QUALQUER env var rebenta o módulo
+// inteiro no arranque e o Vercel devolve 500 sem log útil nenhum.
+const stripe = process.env.STRIPE_SECRET_KEY
+  ? new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2024-06-20' })
+  : null;
+// Supabase é opcional: sem ele a encomenda não fica persistida em BD, mas o
+// pagamento Stripe em si continua a funcionar (fica só nos logs + no painel
+// Stripe). Mesmo comportamento inerte do resto do projeto (ver .env.example).
+const supabase = (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_KEY)
+  ? createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
+  : null;
 
 export const config = { api: { bodyParser: false } }; // Stripe precisa raw body
 
@@ -22,8 +31,17 @@ async function getRawBody(req) {
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
 
+  if (!stripe) {
+    console.error('[Webhook] STRIPE_SECRET_KEY não configurada no Vercel.');
+    return res.status(503).json({ error: 'Stripe não configurado' });
+  }
+
   const sig = req.headers['stripe-signature'];
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  if (!webhookSecret) {
+    console.error('[Webhook] STRIPE_WEBHOOK_SECRET não configurada no Vercel.');
+    return res.status(500).json({ error: 'Webhook secret missing' });
+  }
   let event;
 
   try {
