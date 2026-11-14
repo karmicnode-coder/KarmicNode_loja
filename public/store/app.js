@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   var R = React, h = R.createElement, K = window.KN;
-  var TITLES = { home: 'Karmic Node — Roupa, Calçado, Acessórios e Casa', loja: 'Loja', p: 'Produto', checkout: 'Finalizar compra', confirmacao: 'Encomenda confirmada', conta: 'A minha conta', favoritos: 'Favoritos', ajuda: 'Ajuda', personalizar: 'Personalizar', 'black-friday': 'Black Friday' };
+  var TITLES = { home: 'Karmic Node — Roupa, Calçado, Acessórios e Casa', loja: 'Loja', p: 'Produto', checkout: 'Finalizar compra', sucesso: 'Encomenda confirmada', confirmacao: 'Encomenda confirmada', conta: 'A minha conta', favoritos: 'Favoritos', ajuda: 'Ajuda', personalizar: 'Personalizar', 'black-friday': 'Black Friday' };
 
   function Pages() {
     var r = K.useRoute(), st = K.useStore();
@@ -20,6 +20,7 @@
       case 'loja': page = h(K.Listing, { route: r }); break;
       case 'p': page = h(K.Product, { route: r }); break;
       case 'checkout': page = h(K.Checkout, { route: r }); break;
+      case 'sucesso': page = h(K.Success, { route: r }); break;
       case 'confirmacao': page = h(K.Confirm, { route: r }); break;
       case 'conta': page = h(K.Account, { route: r }); break;
       case 'favoritos': page = h(K.Favorites, { route: r }); break;
@@ -29,7 +30,7 @@
       default: page = h(K.Home, { route: r });
     }
 
-    if (r.name === 'checkout') {
+    if (r.name === 'checkout' || r.name === 'sucesso') {
       return h(R.Fragment, null,
         h('header', { className: 'ktop' }, h('div', { className: 'ktop-in', style: { justifyContent: 'space-between' } },
           h('a', { href: '#/', className: 'link', style: { fontSize: 14, display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none' } }, h(K.Icon, { n: 'chevL', s: 16 }), 'Continuar a comprar'),

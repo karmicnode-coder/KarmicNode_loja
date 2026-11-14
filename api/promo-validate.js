@@ -6,7 +6,11 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
+// Supabase é opcional aqui — sem ele caímos sempre no FALLBACK_PROMOS abaixo,
+// que está alinhado com store/core.js PROMOS e api/checkout.js validatePromo.
+const supabase = (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_KEY)
+  ? createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
+  : null;
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -21,8 +25,9 @@ export default async function handler(req, res) {
 
     const normalizedCode = code.trim().toUpperCase();
 
-    // 1. Verificar se é gift card (prefixo GC-)
+    // 1. Verificar se é gift card (prefixo GC-) — precisa de Supabase configurado
     if (normalizedCode.startsWith('GC-')) {
+      if (!supabase) return res.status(200).json({ valid: false, error: 'Gift cards indisponíveis de momento' });
       const { data: gc } = await supabase.from('gift_cards')
         .select('*').eq('code', normalizedCode).single();
       if (!gc) return res.status(200).json({ valid: false, error: 'Gift card não encontrado' });
@@ -39,9 +44,10 @@ export default async function handler(req, res) {
       });
     }
 
-    // 2. Verificar promo code no Supabase
-    const { data: promo } = await supabase.from('promo_codes')
-      .select('*').eq('code', normalizedCode).eq('active', true).maybeSingle();
+    // 2. Verificar promo code no Supabase (se configurado)
+    const { data: promo } = supabase
+      ? await supabase.from('promo_codes').select('*').eq('code', normalizedCode).eq('active', true).maybeSingle()
+      : { data: null };
 
     if (!promo) {
       // Fallback: códigos hardcoded de emergência (podem ser removidos)
