@@ -5,9 +5,11 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { createClient } from '@supabase/supabase-js';
+import { validatePromoCode } from './_lib/promos.js';
 
-// Supabase é opcional aqui — sem ele caímos sempre no FALLBACK_PROMOS abaixo,
-// que está alinhado com store/core.js PROMOS e api/checkout.js validatePromo.
+// Supabase é opcional aqui — sem ele caímos sempre no validatePromoCode()
+// abaixo (fonte única partilhada com api/checkout.js — ver _lib/promos.js),
+// que está alinhado com store/core.js PROMOS: só WELCOME10 e KARMIC15.
 const supabase = (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_KEY)
   ? createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
   : null;
@@ -50,28 +52,17 @@ export default async function handler(req, res) {
       : { data: null };
 
     if (!promo) {
-      // Fallback: códigos hardcoded de emergência (podem ser removidos)
-      const FALLBACK_PROMOS = {
-        'BEMVINDO10': { discount_percent: 10, min_cents: 3000, name: 'Bem-vindo' },
-        'KARMIC20': { discount_percent: 20, min_cents: 5000, name: 'Karmic' },
-        'FRETEGRATIS': { discount_percent: 0, free_shipping: true, name: 'Portes grátis' },
-        'NATAL25': { discount_percent: 25, min_cents: 10000, name: 'Natal' },
-        'VOLTA10': { discount_percent: 10, min_cents: 2000, name: 'Volta' },
-      };
-      const fallback = FALLBACK_PROMOS[normalizedCode];
-      if (!fallback) return res.status(200).json({ valid: false, error: 'Código inválido' });
-      if (fallback.min_cents && subtotal_cents < fallback.min_cents) {
-        return res.status(200).json({
-          valid: false,
-          error: `Mínimo €${(fallback.min_cents/100).toFixed(2)} para este código`,
-        });
-      }
+      // Sem registo no Supabase (ou Supabase não configurado): só os códigos
+      // oficiais da loja — fonte única partilhada com api/checkout.js, ver
+      // _lib/promos.js. NUNCA códigos extra/hardcoded aqui.
+      const result = validatePromoCode(normalizedCode, subtotal_cents);
+      if (!result.valid) return res.status(200).json({ valid: false, error: result.error || 'Código inválido' });
       return res.status(200).json({
         valid: true,
         type: 'promo',
-        discount_cents: Math.round(subtotal_cents * fallback.discount_percent / 100),
-        free_shipping: !!fallback.free_shipping,
-        name: fallback.name,
+        discount_cents: result.discount_cents,
+        free_shipping: false,
+        name: result.name,
         code: normalizedCode,
       });
     }

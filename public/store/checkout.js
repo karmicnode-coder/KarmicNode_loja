@@ -34,7 +34,7 @@
         h('div', { className: 'pm' }, l.thumb ? h('img', { src: l.thumb, alt: '', style: { objectFit: 'contain', borderRadius: 8 } }) : h(K.ProductImage, { product: l.p, color: col, style: { position: 'absolute', inset: 0, aspectRatio: 'auto' } }), h('span', { className: 'badge' }, l.qty)),
         h('div', { style: { fontSize: 13 } }, h('div', { style: { fontWeight: 500 } }, l.p.name), h('div', { className: 'muted' }, [l.color, l.size && l.size !== 'Único' ? l.size : null, l.note ? '“' + l.note + '”' : null].filter(Boolean).join(' · '))),
         h('span', { className: 'price', style: { fontSize: 14 } }, eur(l.total))); }),
-      st.promo ? h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '14px 0', padding: '10px 12px', background: 'var(--surface)', borderRadius: 8, fontSize: 13 } },
+      st.promo ? h('div', { className: 'promo-applied' },
         h('span', { style: { display: 'flex', gap: 8, alignItems: 'center' } }, h(Icon, { n: 'tag', s: 15 }), h('b', null, st.promo), st.discount ? null : h('span', { style: { color: 'var(--warn)' } }, '· mínimo ' + eur(st.promoDef.min))),
         h('button', { className: 'link', onClick: st.clearPromo }, 'Remover')) :
       h('form', { onSubmit: apply, noValidate: true }, h('div', { className: 'promo' },
@@ -85,7 +85,27 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          items: st.cart.map(function (l) { return { id: l.id, sku: l.p.sku || l.id, name: l.p.name + (l.color ? ' · ' + l.color : '') + (l.size && l.size !== 'Único' ? ' · ' + l.size : ''), price: l.unit, qty: l.qty, image: l.thumb || null }; }),
+          // NOTA: `price` vai só para referência/exibição de erros — o servidor
+          // (api/checkout.js) recalcula sempre o preço a partir do SKU +
+          // `customization` (catálogo server-side), nunca confia neste valor.
+          items: st.cart.map(function (l) {
+            return {
+              id: l.id,
+              sku: l.p.sku || l.id,
+              name: l.p.name + (l.color ? ' · ' + l.color : '') + (l.size && l.size !== 'Único' ? ' · ' + l.size : ''),
+              price: l.unit,
+              qty: l.qty,
+              image: l.thumb || null, // PNG base64 do canvas do Estúdio — o servidor nunca o envia ao Stripe tal-qual (vai para o Storage antes)
+              color: l.color || null,
+              size: l.size || null,
+              note: l.note || '',
+              // Personalização: ou o Estúdio avançado (tech+views, igual ao que o
+              // studio.js usa para calcular o preço) ou o +8€ fixo do Personalizar
+              // simples — o servidor usa isto para recalcular o preço e para
+              // persistir o design completo em order_items (ver _lib/catalog.js).
+              customization: l.design ? { tech: l.design.tech, views: l.design.views } : (l.extra ? { text_extra: true } : undefined),
+            };
+          }),
           customer_email: d.email,
           country: country,
           promo_code: st.promo || undefined,
@@ -109,18 +129,18 @@
     function express() { var el = document.getElementById('f-email'); if (el && !d.email) { el.focus(); setTouched({ email: true }); } }
     var F = function (k, label, extra) { return h(Field, Object.assign({ id: 'f-' + k, label: label, value: d[k], onChange: set(k), onBlur: blur(k), err: errs[k], touched: touched[k] }, extra || {})); };
     return h('main', { className: 'wrap' },
-      h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 0 4px' } },
+      h('div', { className: 'co-head' },
         h('h1', { className: 'h2' }, 'Finalizar compra'),
-        h('span', { className: 'muted', style: { display: 'flex', gap: 6, alignItems: 'center', fontSize: 13 } }, h(Icon, { n: 'lock', s: 15 }), 'Pagamento seguro')),
-      h('p', { className: 'muted', style: { margin: '0 0 10px', fontSize: 14 } }, 'Não precisas de conta. Podes criar uma no fim, com um clique.'),
+        h('span', { className: 'co-secure-badge' }, h(Icon, { n: 'lock', s: 14 }), 'Pagamento seguro')),
+      h('p', { className: 'muted', style: { margin: '10px 0 10px', fontSize: 14 } }, 'Não precisas de conta. Podes criar uma no fim, com um clique.'),
       h('div', { className: 'co-mini', style: { margin: '10px 0' } },
         h('button', { onClick: function () { setMini(!mini); }, style: { width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', background: 'var(--soft)', borderRadius: 12, fontSize: 14 }, 'aria-expanded': mini },
           h('span', { style: { display: 'flex', gap: 8, alignItems: 'center' } }, h(Icon, { n: 'bag', s: 18 }), (mini ? 'Esconder' : 'Ver') + ' resumo (' + st.count + ')', h(Icon, { n: 'down', s: 16, style: { transform: mini ? 'rotate(180deg)' : 'none' } })),
           h('b', { className: 'price' }, eur(total))),
         mini ? h('div', { style: { padding: '12px 16px', background: 'var(--soft)', borderRadius: '0 0 12px 12px', marginTop: -6 } }, h(Summary, { ship: shipCost, total: total })) : null),
       h('div', { className: 'co' },
-        h('form', { onSubmit: submit, noValidate: true },
-          h('div', { style: { paddingBottom: 6 } },
+        h('form', { onSubmit: submit, noValidate: true, className: 'co-form-card' },
+          h('div', { className: 'express-box' },
             h('div', { className: 'eyebrow', style: { textAlign: 'center', marginBottom: 10 } }, 'Pagamento expresso'),
             h('div', { className: 'express' },
               h('button', { type: 'button', className: 'ap', onClick: function () { setPay('card'); express(); } }, 'Apple Pay'),
