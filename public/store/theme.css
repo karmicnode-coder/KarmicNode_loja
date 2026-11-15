@@ -167,3 +167,50 @@ body{background:var(--bg);color:var(--ink)}
 .hero2-card:hover .hero2-arrow{background:var(--surface);color:var(--ink)}
 .usp-ic{background:var(--accent-soft);color:var(--accent)}
 .review-ic{background:var(--accent);color:#fff}
+
+/* ═════════ V13 — "Power in Motion": identidade mais ousada e dinâmica ═════════
+   Pedido do cliente: inspirar-se em temas Shopify arrojados (Radian, Stretch/
+   Snow, Force/Challenge, Victory/Nitro, Electro/Nextron, Ignite) mantendo a
+   marca Karmic Node — bordô como acento de impacto, slogan "Power in Motion"
+   como selo. Tipografia de título passa a maiúscula/condensada (Anton), cores
+   de alto contraste, badges sólidos, USP invertido. Carregado por último para
+   sobrepor-se a store/v10/v11/v12 sem duplicar seletores lá. Só visual —
+   nenhuma lógica, preço ou fluxo de pagamento foi tocado. */
+:root{--display:'Anton','Inter',sans-serif}
+
+/* ── Títulos: de serifa discreta para caixa-alta de alto impacto ── */
+.h1,.h2{font-family:var(--display);font-weight:400;text-transform:uppercase;letter-spacing:0}
+.h1{line-height:.92}
+.h2{line-height:.96}
+.h1 em,.h2 em{font-style:normal;color:var(--accent)}
+.hero2-card b{font-family:var(--display);font-weight:400;text-transform:uppercase;letter-spacing:.01em;font-size:23px;line-height:1.08}
+.tile h3{font-family:var(--display);font-weight:400;text-transform:uppercase;letter-spacing:.01em;font-size:23px}
+.mega-feat em{font-family:var(--display);font-weight:400;font-style:normal;text-transform:uppercase;letter-spacing:.01em;font-size:26px}
+.tabs-h button{font-family:var(--display);font-weight:400;text-transform:uppercase;letter-spacing:.01em;font-size:clamp(18px,1.8vw,24px)}
+.m-tile span{font-family:var(--display);font-weight:400;text-transform:uppercase;font-size:20px}
+.m-drill-hero span{font-family:var(--display);font-weight:400;text-transform:uppercase;font-size:28px}
+.bf-strip b{font-family:var(--display);font-weight:400;text-transform:uppercase;font-size:21px}
+.eyebrow{font-weight:800}
+
+/* ── Selo "Power in Motion" ── */
+.pim-badge{display:inline-flex;align-items:center;gap:7px;background:var(--accent);color:#fff!important;padding:7px 14px 7px 11px;border-radius:999px;font-weight:800}
+.pim-badge svg{flex-shrink:0;animation:pim-pulse 1.8s ease-in-out infinite}
+@keyframes pim-pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.18)}}
+.hero2-copy .pim-badge{background:rgba(255,255,255,.16);box-shadow:inset 0 0 0 1px rgba(255,255,255,.4);backdrop-filter:blur(6px)}
+.ftr-tagline{font-family:var(--display);text-transform:uppercase;letter-spacing:.12em;font-size:13px;color:var(--accent);margin:0 0 10px;font-weight:400}
+@media (prefers-reduced-motion:reduce){.pim-badge svg{animation:none}}
+
+/* ── USP: faixa invertida (sempre o oposto do fundo), mais presença ── */
+.usp{background:var(--btn);border:0;border-radius:16px;overflow:hidden}
+.usp div{color:color-mix(in srgb,var(--btn-ink) 72%,transparent);border-right-color:color-mix(in srgb,var(--btn-ink) 16%,transparent)}
+.usp b{color:var(--btn-ink)}
+.usp-ic{background:var(--accent);color:#fff}
+
+/* ── Badges de produto: sólidos em vez de "fantasma" ── */
+.tag{background:var(--btn);color:var(--btn-ink);font-weight:800;letter-spacing:.02em}
+.tag.sale{background:var(--accent);color:#fff}
+
+/* ── Botões: mais peso, leve elevação dinâmica ao passar o rato ── */
+.btn{font-weight:800}
+.btn:not(.ghost):not(.glass):hover{transform:translateY(-1px);box-shadow:0 10px 24px -14px color-mix(in srgb,var(--btn-hover) 65%,transparent)}
+.chip.on,.subtabs button.on{font-weight:700}
