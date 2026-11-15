@@ -141,3 +141,29 @@ body{background:var(--bg);color:var(--ink)}
 .co-form-card{background:var(--surface)}
 .co-side{background:var(--soft)}
 .subtabs button.on span{color:var(--bg);opacity:.7}
+
+/* ── V9: checkout fluído, menu lateral, homepage (equivalentes em escuro) ── */
+.co-mini{background:var(--surface)}
+.co-step-ic{background:var(--surface);box-shadow:inset 0 0 0 1.5px var(--line2);color:var(--ink3)}
+.co-step.active .co-step-ic{background:var(--ink);color:var(--bg)}
+.co-step.done .co-step-ic{background:var(--accent);color:#fff}
+.co-step-line{background:var(--line2)}
+.co-step-line.done{background:var(--accent)}
+.co-express-h svg{color:var(--accent)}
+.co-sec.is-done h2 i{background:var(--ok)}
+.ship-radio .r-ic{background:var(--soft)}
+.ship-radio label.on .r-ic{background:var(--accent);color:#fff}
+.co-spinner{border-color:rgba(255,255,255,.35);border-top-color:#fff}
+[data-theme="dark"] .co-pay-btn .co-spinner{border-color:rgba(18,15,15,.35);border-top-color:var(--btn-ink)}
+.co-trustrow{border-color:var(--line)}
+.co-trustrow svg{color:var(--accent)}
+.co-badges svg{color:var(--accent)}
+.snav-ic{background:var(--soft);color:var(--ink3)}
+.snav-a:hover .snav-ic{background:var(--soft2);color:var(--ink)}
+.snav-a.on .snav-ic{background:rgba(255,255,255,.1);color:var(--bg)}
+.snav-a.hot .snav-ic{background:var(--accent-soft);color:var(--accent)}
+.snav-a.hot.on .snav-ic{background:rgba(255,255,255,.18);color:#fff}
+.hero2-arrow{background:rgba(255,255,255,.14)}
+.hero2-card:hover .hero2-arrow{background:var(--surface);color:var(--ink)}
+.usp-ic{background:var(--accent-soft);color:var(--accent)}
+.review-ic{background:var(--accent);color:#fff}
