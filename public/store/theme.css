@@ -214,3 +214,58 @@ body{background:var(--bg);color:var(--ink)}
 .btn{font-weight:800}
 .btn:not(.ghost):not(.glass):hover{transform:translateY(-1px);box-shadow:0 10px 24px -14px color-mix(in srgb,var(--btn-hover) 65%,transparent)}
 .chip.on,.subtabs button.on{font-weight:700}
+
+/* ═════════ V14 — redesenho de fundo inspirado em temas Shopify de alto impacto
+   (Victory/Nitro, Electro/Nextron, Digital/Cardio, Noble/Automobile), com a
+   paleta da Karmic Node: preto, bordô/vermelho, branco. Cantos retos em vez de
+   pílulas, barra superior sólida preta, hero full-bleed de maior contraste.
+   Carregado por último, por cima de V13. Só visual — zero lógica/preço/pagamento. */
+:root{--rr:2px}
+
+/* Barra de anúncio + topo: pretos sólidos, mais "comando de loja técnica" */
+.ann{background:#0B0909;color:#F3EEE7;font-weight:700;letter-spacing:.04em}
+[data-theme="dark"] .ann{background:#000}
+.ktop{background:var(--bg);border-bottom:2px solid var(--ink);backdrop-filter:none;-webkit-backdrop-filter:none}
+[data-theme="dark"] .ktop{border-bottom-color:var(--line2)}
+.ktop.scrolled{box-shadow:0 14px 30px -20px rgba(0,0,0,.45)}
+.kbrand-t b{font-family:var(--display);font-weight:400;text-transform:uppercase;letter-spacing:.01em;font-size:22px}
+.kbrand-t small{color:var(--accent);font-weight:800}
+
+/* Pesquisa e carrinho: cantos retos, moldura dura em vez de pílula suave */
+.ksearch{border-radius:var(--rr);background:var(--soft)}
+.ksearch.on{box-shadow:inset 0 0 0 2px var(--ink)}
+.ksearch-go{border-radius:var(--rr);font-weight:800;text-transform:uppercase;font-size:12px;letter-spacing:.04em}
+.kcart{border-radius:var(--rr);background:var(--ink);font-weight:700}
+.kcart:hover{background:var(--accent)}
+
+/* Botões: angulares, maiúsculas, traço técnico */
+.btn{border-radius:var(--rr);text-transform:uppercase;letter-spacing:.04em;font-size:14px}
+.btn.sm{font-size:12px}
+.btn.light{background:#fff;color:#0B0909;box-shadow:inset 0 0 0 2px #0B0909}
+.btn.light:hover{background:var(--accent);color:#fff;box-shadow:inset 0 0 0 2px var(--accent)}
+.btn.ghost{border-radius:var(--rr);box-shadow:inset 0 0 0 2px var(--line2)}
+.btn.ghost:hover{box-shadow:inset 0 0 0 2px var(--ink)}
+.chip,.input,.select,.tag,.pm,.tile,.split-img,.mega-feat,.review,.news,.card-box,.co-side,.deliv,.steps3 div,.rv,.rv-sum,.fit,.hero2-main,.hero2-card,.qv-box{border-radius:var(--rr)!important}
+.colorpick button,.colors button,.fcolors button,.sw i,.sizes button{border-radius:var(--rr)}
+.colors button,.fcolors button{border-radius:50%}
+
+/* Hero: mais dramático, vinheta mais forte, eyebrow técnico com traço vermelho */
+.hero2-main{min-height:min(88vh,840px)}
+.hero2-main::after{background:linear-gradient(100deg,rgba(0,0,0,.82) 0%,rgba(0,0,0,.42) 48%,transparent 78%),linear-gradient(0deg,rgba(0,0,0,.55),transparent 42%)}
+.hero2-copy .h1{font-size:clamp(46px,7vw,100px)}
+.hero2-copy .eyebrow{display:inline-flex;align-items:center;gap:8px;color:#fff}
+.hero2-copy .eyebrow::before{content:'';width:22px;height:3px;background:var(--accent);display:inline-block}
+.hero2-card::after{background:linear-gradient(180deg,transparent 25%,rgba(0,0,0,.78))}
+.hero2-card small{color:var(--accent);font-weight:800;letter-spacing:.1em}
+
+/* Tiles de categoria e cards de produto: moldura técnica, hover mais ríspido */
+.tile::after{background:linear-gradient(180deg,transparent 30%,rgba(0,0,0,.72))}
+.tile h3{letter-spacing:.02em}
+.card .pm{box-shadow:inset 0 0 0 1px var(--line)}
+.card:hover .pm{box-shadow:inset 0 0 0 1px var(--ink)}
+
+/* Faixa Black Friday: preto absoluto + traço vermelho */
+.bf-strip,.bf-hero{background:#000!important;box-shadow:inset 0 0 0 1px #000}
+.bf-strip{box-shadow:inset 0 3px 0 var(--accent)}
+
+@media (max-width:900px){.hero2-main{min-height:78vh}}
