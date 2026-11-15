@@ -228,6 +228,7 @@
         h('div', { className: 'ftr-g' },
           h('div', null,
             h('div', { style: { marginBottom: 14 } }, K.Brand ? h(K.Brand) : h('a', { className: 'brand', href: '#/' }, h('img', { src: 'assets/logo-mark.png', alt: '' }), h('span', null, 'Karmic Node'))),
+            h('p', { className: 'ftr-tagline' }, 'Power in Motion'),
             h('p', { style: { margin: '0 0 6px', maxWidth: 320 } }, 'Roupa, calçado, acessórios e casa. Desenhado e acabado em Portugal.'),
             h('p', { className: 'muted', style: { margin: 0 } }, 'Cartaxo · Portugal')),
           h('div', null, h('h4', null, 'Loja'), h('ul', null, [['Novidades', '/loja?f=novo'], ['Roupa', '/loja/roupa'], ['Calçado e acessórios', '/loja/acessorios'], ['Black Friday', '/black-friday'], ['Casa', '/loja/casa'], ['Personalizar', '/personalizar']].map(function (l) { return h('li', { key: l[0] }, h('a', { href: '#' + l[1] }, l[0])); }))),
