@@ -47,11 +47,11 @@
             h('p', null, 'Algodão pesado, pele verdadeira e cortes que não passam de moda. Acabado em Portugal.'),
             h('div', { className: 'actions' }, h('a', { className: 'btn light', href: '#/loja/roupa' }, 'Comprar roupa'), h('a', { className: 'btn glass', href: '#/loja?f=novo' }, 'Ver novidades')))),
         h('div', { className: 'hero2-side' },
-          h('a', { className: 'hero2-card', href: '#/personalizar' }, h('img', { src: 'assets/campaign/product-tshirt.jpg', alt: '' }), h('div', null, h('small', null, 'Novo'), h('b', null, 'Personaliza a tua peça'), h('span', null, 'Nome, iniciais ou logótipo · desde 37,99 €'))),
-          h('a', { className: 'hero2-card', href: '#/loja/casa' }, h('img', { src: 'assets/campaign/casa.jpg', alt: '' }), h('div', null, h('small', null, 'Casa'), h('b', null, 'Têxteis e aromas'), h('span', null, counts.casa + ' produtos'))))),
+          h('a', { className: 'hero2-card', href: '#/personalizar' }, h('img', { src: 'assets/campaign/product-tshirt.jpg', alt: '' }), h('div', null, h('small', null, 'Novo'), h('b', null, 'Personaliza a tua peça'), h('span', null, 'Nome, iniciais ou logótipo · desde 37,99 €')), h('span', { className: 'hero2-arrow' }, h(Icon, { n: 'chev', s: 16 }))),
+          h('a', { className: 'hero2-card', href: '#/loja/casa' }, h('img', { src: 'assets/campaign/casa.jpg', alt: '' }), h('div', null, h('small', null, 'Casa'), h('b', null, 'Têxteis e aromas'), h('span', null, counts.casa + ' produtos')), h('span', { className: 'hero2-arrow' }, h(Icon, { n: 'chev', s: 16 }))))),
       h('div', { className: 'usp' },
         [['truck', 'Envio em 24 h', 'Portes grátis acima de ' + eur(K.CFG.freeShip)], ['ret', 'Devoluções grátis', K.CFG.returnDays + ' dias para mudares de ideias'], ['lock', 'Pagamento seguro', 'MB WAY, Multibanco, cartão'], ['leaf', 'Feito em Portugal', 'Acabamento no Cartaxo']].map(function (u) {
-          return h('div', { key: u[1] }, h(Icon, { n: u[0], s: 22 }), h('span', null, h('b', null, u[1]), u[2]));
+          return h('div', { key: u[1] }, h('span', { className: 'usp-ic' }, h(Icon, { n: u[0], s: 19 })), h('span', null, h('b', null, u[1]), u[2]));
         })),
       h('a', { href: '#/black-friday', className: 'wrap bf-strip' }, h('div', null, h('b', null, 'Black Friday'), h('span', null, 'Até −25% em peças selecionadas · sem códigos')), h(Countdown), h('span', { className: 'btn light sm' }, 'Ver ofertas')),
       h('section', { className: 'wrap sec', style: { paddingBottom: 20 } },
@@ -78,10 +78,10 @@
       h('section', { className: 'wrap', style: { paddingBottom: 56 } },
         h('div', { className: 'sec-h' }, h('h2', { className: 'h2' }, 'A nossa ', h('em', null, 'promessa'))),
         h('div', { className: 'reviews' }, [
-          ['Feito para durar', 'Algodão pesado, costuras reforçadas e pele verdadeira. Se uma peça falhar por defeito em 2 anos, trocamos.'],
-          ['Sem letras pequenas', '30 dias para devolver, sem perguntas e sem custos. O reembolso chega em 2 a 5 dias úteis.'],
-          ['Perto de ti', 'Embalamos no Cartaxo e respondemos em menos de 24 h úteis. Por email, sem robôs.'],
-        ].map(function (r) { return h('figure', { key: r[0], className: 'review', style: { margin: 0 } }, h('b', { style: { fontFamily: 'var(--serif)', fontSize: 24, fontWeight: 500 } }, r[0]), h('p', { style: { fontFamily: 'var(--f)', fontSize: 15, lineHeight: 1.55, color: 'var(--ink2)' } }, r[1])); }))),
+          ['pkg', 'Feito para durar', 'Algodão pesado, costuras reforçadas e pele verdadeira. Se uma peça falhar por defeito em 2 anos, trocamos.'],
+          ['ret', 'Sem letras pequenas', '30 dias para devolver, sem perguntas e sem custos. O reembolso chega em 2 a 5 dias úteis.'],
+          ['pin', 'Perto de ti', 'Embalamos no Cartaxo e respondemos em menos de 24 h úteis. Por email, sem robôs.'],
+        ].map(function (r) { return h('figure', { key: r[1], className: 'review' }, h('span', { className: 'review-ic' }, h(Icon, { n: r[0], s: 18 })), h('b', null, r[1]), h('p', null, r[2])); }))),
       recent.length ? h('section', { className: 'wrap', style: { paddingBottom: 56 } }, h('div', { className: 'sec-h' }, h('h2', { className: 'h2' }, 'Vistos ', h('em', null, 'recentemente'))), h(Rail, { items: recent })) : null,
       h('section', { className: 'wrap', style: { paddingBottom: 24 } }, h(Newsletter)));
   }

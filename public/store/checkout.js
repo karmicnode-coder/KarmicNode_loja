@@ -25,6 +25,23 @@
       err ? h('span', { className: 'msg', id: p.id + '-e', role: 'alert' }, p.err) : null);
   }
 
+  // Indicador de progresso puramente visual: mostra em que ponto do
+  // checkout o cliente está, sem bloquear nada — é só feedback.
+  function Steps(p) {
+    var items = [['Contacto', p.s1], ['Entrega', p.s2], ['Pagamento', p.s3]];
+    return h('div', { className: 'co-steps', role: 'list', 'aria-label': 'Progresso da compra' },
+      items.map(function (it, i) {
+        var done = it[1], active = !done && (i === 0 || items[i - 1][1]);
+        return h('div', { key: i, className: 'co-step' + (done ? ' done' : '') + (active ? ' active' : ''), role: 'listitem' },
+          h('span', { className: 'co-step-ic' }, done ? h(Icon, { n: 'check', s: 13, w: 3 }) : (i + 1)),
+          h('span', { className: 'co-step-l' }, it[0]),
+          i < items.length - 1 ? h('span', { className: 'co-step-line' + (done ? ' done' : '') }) : null);
+      }));
+  }
+
+  var PM_CHIP = { mbway: ['MB WAY', 'pm-mbway'], card: ['Cartão', 'pm-card'], mb: ['Multibanco', 'pm-mb'], paypal: ['PayPal', 'pm-paypal'] };
+  function PmChip(p) { var c = PM_CHIP[p.k]; return h('span', { className: 'pm-chip ' + c[1] }, c[0]); }
+
   function Summary(p) {
     var st = K.useStore();
     var pcS = useState(''), code = pcS[0], setCode = pcS[1], peS = useState(''), perr = peS[0], setPerr = peS[1];
@@ -128,35 +145,41 @@
     }
     function express() { var el = document.getElementById('f-email'); if (el && !d.email) { el.focus(); setTouched({ email: true }); } }
     var F = function (k, label, extra) { return h(Field, Object.assign({ id: 'f-' + k, label: label, value: d[k], onChange: set(k), onBlur: blur(k), err: errs[k], touched: touched[k] }, extra || {})); };
-    return h('main', { className: 'wrap' },
+    var s1done = !errs.email && !errs.phone && (touched.email || d.email) && (touched.phone || d.phone);
+    var s2done = s1done && !errs.name && (!needAddr || (!errs.address && !errs.zip && !errs.city)) && (touched.name || d.name);
+    return h('main', { className: 'wrap co-wrap' },
       h('div', { className: 'co-head' },
-        h('h1', { className: 'h2' }, 'Finalizar compra'),
+        h('div', null,
+          h('a', { href: '#/', className: 'co-back' }, h(Icon, { n: 'chevL', s: 15 }), 'Continuar a comprar'),
+          h('h1', { className: 'h2' }, 'Finalizar compra')),
         h('span', { className: 'co-secure-badge' }, h(Icon, { n: 'lock', s: 14 }), 'Pagamento seguro')),
-      h('p', { className: 'muted', style: { margin: '10px 0 10px', fontSize: 14 } }, 'Não precisas de conta. Podes criar uma no fim, com um clique.'),
-      h('div', { className: 'co-mini', style: { margin: '10px 0' } },
-        h('button', { onClick: function () { setMini(!mini); }, style: { width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', background: 'var(--soft)', borderRadius: 12, fontSize: 14 }, 'aria-expanded': mini },
-          h('span', { style: { display: 'flex', gap: 8, alignItems: 'center' } }, h(Icon, { n: 'bag', s: 18 }), (mini ? 'Esconder' : 'Ver') + ' resumo (' + st.count + ')', h(Icon, { n: 'down', s: 16, style: { transform: mini ? 'rotate(180deg)' : 'none' } })),
+      h(Steps, { s1: s1done, s2: s2done, s3: false }),
+      h('p', { className: 'muted co-sub' }, 'Não precisas de conta. Podes criar uma no fim, com um clique.'),
+      h('div', { className: 'co-mini' },
+        h('button', { className: 'co-mini-bar', onClick: function () { setMini(!mini); }, 'aria-expanded': mini },
+          h('span', { className: 'co-mini-l' }, h(Icon, { n: 'bag', s: 18 }), (mini ? 'Esconder' : 'Ver') + ' resumo (' + st.count + ')', h(Icon, { n: 'down', s: 16, style: { transform: mini ? 'rotate(180deg)' : 'none' } })),
           h('b', { className: 'price' }, eur(total))),
-        mini ? h('div', { style: { padding: '12px 16px', background: 'var(--soft)', borderRadius: '0 0 12px 12px', marginTop: -6 } }, h(Summary, { ship: shipCost, total: total })) : null),
+        mini ? h('div', { className: 'co-mini-body' }, h(Summary, { ship: shipCost, total: total })) : null),
       h('div', { className: 'co' },
         h('form', { onSubmit: submit, noValidate: true, className: 'co-form-card' },
           h('div', { className: 'express-box' },
-            h('div', { className: 'eyebrow', style: { textAlign: 'center', marginBottom: 10 } }, 'Pagamento expresso'),
+            h('div', { className: 'eyebrow co-express-h' }, h(Icon, { n: 'bolt', s: 13 }), 'Pagamento expresso'),
             h('div', { className: 'express' },
-              h('button', { type: 'button', className: 'ap', onClick: function () { setPay('card'); express(); } }, 'Apple Pay'),
+              h('button', { type: 'button', className: 'ap', onClick: function () { setPay('card'); express(); } }, h(Icon, { n: 'apple', s: 16, fill: true }), 'Apple Pay'),
               h('button', { type: 'button', className: 'mbw', onClick: function () { setPay('mbway'); express(); } }, 'MB WAY'),
               h('button', { type: 'button', className: 'pp', onClick: function () { setPay('paypal'); express(); } }, 'PayPal')),
             h('div', { className: 'or' }, 'ou preenche os teus dados')),
-          h('section', { className: 'co-sec' }, h('h2', null, h('i', null, '1'), 'Contacto'),
+          h('section', { className: 'co-sec' + (s1done ? ' is-done' : '') }, h('h2', null, h('i', null, s1done ? h(Icon, { n: 'check', s: 12, w: 3 }) : '1'), 'Contacto'),
             h('div', { className: 'fields' },
               F('email', 'Email', { full: true, type: 'email', ac: 'email', inputMode: 'email', ph: 'nome@exemplo.pt' }),
               F('phone', 'Telemóvel', { full: true, type: 'tel', ac: 'tel-national', inputMode: 'tel', fmt: fmtPhone, ph: '912 345 678' }))),
-          h('section', { className: 'co-sec' }, h('h2', null, h('i', null, '2'), 'Entrega'),
-            h('div', { className: 'radio', role: 'radiogroup', 'aria-label': 'Método de entrega', style: { marginBottom: 16 } },
-              [['std', 'Standard · CTT', 'Recebe ' + K.deliveryWindow('std'), after >= K.CFG.freeShip ? 0 : K.CFG.shipStd],
-               ['exp', 'Expresso · DPD', 'Recebe ' + K.deliveryWindow('exp'), K.CFG.shipExp],
-               ['pickup', 'Recolha na loja', 'Cartaxo · pronto em 24 h', 0]].map(function (o) {
+          h('section', { className: 'co-sec' + (s2done ? ' is-done' : '') }, h('h2', null, h('i', null, s2done ? h(Icon, { n: 'check', s: 12, w: 3 }) : '2'), 'Entrega'),
+            h('div', { className: 'radio ship-radio', role: 'radiogroup', 'aria-label': 'Método de entrega' },
+              [['std', 'Standard · CTT', 'Recebe ' + K.deliveryWindow('std'), after >= K.CFG.freeShip ? 0 : K.CFG.shipStd, 'truck'],
+               ['exp', 'Expresso · DPD', 'Recebe ' + K.deliveryWindow('exp'), K.CFG.shipExp, 'clock'],
+               ['pickup', 'Recolha na loja', 'Cartaxo · pronto em 24 h', 0, 'pin']].map(function (o) {
                 return h('label', { key: o[0], className: ship === o[0] ? 'on' : '' }, h('input', { type: 'radio', name: 'ship', checked: ship === o[0], onChange: function () { setShip(o[0]); } }),
+                  h('span', { className: 'r-ic' }, h(Icon, { n: o[4], s: 17 })),
                   h('span', { className: 'r-t' }, h('b', null, o[1]), h('span', null, o[2])), h('span', { className: 'r-p' }, o[3] === 0 ? 'Grátis' : eur(o[3])));
               })),
             h('div', { className: 'fields' },
@@ -165,20 +188,29 @@
               needAddr ? F('address2', 'Andar, porta', { full: true, ac: 'address-line2', opt: true }) : null,
               needAddr ? F('zip', 'Código postal', { ac: 'postal-code', inputMode: 'numeric', fmt: fmtZip, ph: '0000-000' }) : null,
               needAddr ? F('city', 'Localidade', { ac: 'address-level2' }) : null),
-            h('label', { style: { display: 'flex', gap: 10, alignItems: 'center', marginTop: 14, fontSize: 14, cursor: 'pointer' } },
-              h('input', { type: 'checkbox', checked: wantNif, onChange: function (e) { setWantNif(e.target.checked); }, style: { width: 18, height: 18, accentColor: 'var(--ink)' } }), 'Quero fatura com NIF'),
+            h('label', { className: 'nif-chk' },
+              h('input', { type: 'checkbox', checked: wantNif, onChange: function (e) { setWantNif(e.target.checked); } }), 'Quero fatura com NIF'),
             wantNif ? h('div', { className: 'fields', style: { marginTop: 10 } }, F('nif', 'NIF', { inputMode: 'numeric', ph: '123456789' })) : null),
-          h('section', { className: 'co-sec', style: { borderBottom: 0 } }, h('h2', null, h('i', null, '3'), 'Pagamento'),
+          h('section', { className: 'co-sec co-sec-pay' }, h('h2', null, h('i', null, '3'), 'Pagamento'),
             h('div', { className: 'radio', role: 'radiogroup', 'aria-label': 'Método de pagamento' },
               [['mbway', 'MB WAY', 'Confirma no telemóvel em 4 minutos'], ['card', 'Cartão de crédito ou débito', 'Visa, Mastercard, Apple Pay, Google Pay'], ['mb', 'Referência Multibanco', 'Paga em 48 h no multibanco ou homebanking'], ['paypal', 'PayPal', 'Entras na tua conta PayPal']].map(function (o) {
-                return h('label', { key: o[0], className: pay === o[0] ? 'on' : '' }, h('input', { type: 'radio', name: 'pay', checked: pay === o[0], onChange: function () { setPay(o[0]); } }), h('span', { className: 'r-t' }, h('b', null, o[1]), h('span', null, o[2])));
+                return h('label', { key: o[0], className: pay === o[0] ? 'on' : '' }, h('input', { type: 'radio', name: 'pay', checked: pay === o[0], onChange: function () { setPay(o[0]); } }),
+                  h(PmChip, { k: o[0] }), h('span', { className: 'r-t' }, h('b', null, o[1]), h('span', null, o[2])));
               })),
             pay === 'mbway' ? h('p', { className: 'muted', style: { fontSize: 13, margin: '10px 2px 0' } }, 'Vamos enviar o pedido para ' + (d.phone || 'o teu telemóvel') + '.') : null,
             checkoutErr ? h('div', { className: 'err-txt', role: 'alert', style: { marginTop: 14 } }, checkoutErr) : null,
-            h('button', { className: 'btn block', type: 'submit', disabled: sending, style: { height: 56, marginTop: 14, fontSize: 16 } }, sending ? 'A redirecionar para pagamento…' : h(R.Fragment, null, h(Icon, { n: 'lock', s: 17 }), 'Pagar ' + eur(total))),
-            h('p', { className: 'muted', style: { fontSize: 12, textAlign: 'center', margin: '12px 0 0' } }, 'Ao pagar aceitas os ', h('a', { className: 'link', href: '#/ajuda' }, 'Termos'), ' e a ', h('a', { className: 'link', href: '#/ajuda' }, 'Política de Privacidade'), '. Devolução grátis em ' + K.CFG.returnDays + ' dias.'))),
-        h('aside', { className: 'co-side', 'aria-label': 'Resumo da encomenda' }, h('div', { className: 'h3', style: { marginBottom: 10 } }, 'Resumo'), h(Summary, { ship: shipCost, total: total }),
-          h('div', { className: 'secure' }, h(Icon, { n: 'lock', s: 13 }), 'Ligação encriptada · Dados nunca guardados por nós'))));
+            h('button', { className: 'btn block co-pay-btn', type: 'submit', disabled: sending }, sending ? h(R.Fragment, null, h('span', { className: 'co-spinner' }), 'A redirecionar para pagamento…') : h(R.Fragment, null, h(Icon, { n: 'lock', s: 17 }), 'Pagar ' + eur(total))),
+            h('div', { className: 'co-trustrow' },
+              h('span', null, h(Icon, { n: 'shield', s: 14 }), 'Pagamento 100% seguro'),
+              h('span', null, h(Icon, { n: 'ret', s: 14 }), K.CFG.returnDays + ' dias para devolver')),
+            h('p', { className: 'muted', style: { fontSize: 12, textAlign: 'center', margin: '10px 0 0' } }, 'Ao pagar aceitas os ', h('a', { className: 'link', href: '#/ajuda' }, 'Termos'), ' e a ', h('a', { className: 'link', href: '#/ajuda' }, 'Política de Privacidade'), '.'))),
+        h('aside', { className: 'co-side', 'aria-label': 'Resumo da encomenda' },
+          h('div', { className: 'co-side-h' }, h('div', { className: 'h3' }, 'Resumo'), h('span', { className: 'muted', style: { fontSize: 13 } }, st.count + (st.count === 1 ? ' artigo' : ' artigos'))),
+          h(Summary, { ship: shipCost, total: total }),
+          h('div', { className: 'secure' }, h(Icon, { n: 'lock', s: 13 }), 'Ligação encriptada · Dados nunca guardados por nós'),
+          h('div', { className: 'co-badges' },
+            h('span', null, h(Icon, { n: 'truck', s: 14 }), 'Envio em 24h'),
+            h('span', null, h(Icon, { n: 'leaf', s: 14 }), 'Feito em Portugal')))));
   }
 
   // ───── Sucesso — confirma com o Stripe a sério antes de mostrar nada ─────
