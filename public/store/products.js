@@ -1520,7 +1520,7 @@ window.KN_PRODUCTS = [
   var SUB = { tshirt: 'T-shirts e polos', polo: 'T-shirts e polos', sweatshirt: 'Hoodies e sweats', hoodie: 'Hoodies e sweats', shirt: 'Camisas', jacket: 'Casacos', bomber: 'Casacos', cargo: 'Calças', jeans: 'Calças', dress: 'Vestidos e saias', skirt: 'Vestidos e saias', tracksuit: 'Desporto', leggings: 'Desporto', sneaker: 'Ténis', cap: 'Bonés', wallet: 'Carteiras', bag: 'Mochilas e sacos', cushion: 'Têxteis', throw: 'Têxteis', candle: 'Aromas', robe: 'Banho', poster: 'Decoração' };
   var LINE = { sneaker: 'acessorios', cap: 'acessorios', wallet: 'acessorios', bag: 'acessorios' };
   var NEW = { 'kn-006': 1, 'kn-010': 1, 'kn-011': 1, 'kn-015': 1, 'kn-casa-005': 1, 'kn-002': 1 };
-  window.KN_PRODUCTS = window.KN_PRODUCTS.filter(function (p) { return p.line !== 'atelier'; }).map(function (p) {
+  window.KN_PRODUCTS = window.KN_PRODUCTS.filter(function (p) { return p.line !== 'atelier' && p.line !== 'casa'; }).map(function (p) {
     var line = p.line === 'casa' ? 'casa' : (LINE[p.kind] || 'roupa');
     var o = Object.assign({}, p, { line: line, cat: SUB[p.kind] || p.cat, isNew: !!NEW[p.id] });
     // Black Friday: descontos em peças selecionadas
@@ -1530,9 +1530,8 @@ window.KN_PRODUCTS = [
   });
   window.KN_LINES = [
     { id: 'roupa', label: 'Roupa', img: 'assets/campaign/vestuario.jpg', blurb: 'Básicos de algodão, casacos e calças de corte limpo.' },
-    { id: 'acessorios', label: 'Calçado e acessórios', img: 'assets/campaign/product-tshirt.jpg', prods: ['kn-014', 'kn-016', 'kn-018'], blurb: 'Ténis em pele, bonés, carteiras e mochilas.' },
-    { id: 'casa', label: 'Casa', img: 'assets/campaign/casa.jpg', blurb: 'Têxteis, aromas e banho para casa.' }
+    { id: 'acessorios', label: 'Acessórios', img: 'assets/campaign/product-tshirt.jpg', prods: ['kn-014', 'kn-016', 'kn-018'], blurb: 'Ténis em pele, bonés, carteiras e mochilas.' }
   ];
-  window.KN_LINE_LABEL = { roupa: 'Roupa', acessorios: 'Calçado e acessórios', casa: 'Casa' };
-  window.KN_SUB_ORDER = ['T-shirts e polos', 'Hoodies e sweats', 'Camisas', 'Casacos', 'Calças', 'Vestidos e saias', 'Desporto', 'Ténis', 'Bonés', 'Carteiras', 'Mochilas e sacos', 'Têxteis', 'Banho', 'Aromas', 'Decoração'];
+  window.KN_LINE_LABEL = { roupa: 'Roupa', acessorios: 'Acessórios' };
+  window.KN_SUB_ORDER = ['T-shirts e polos', 'Hoodies e sweats', 'Camisas', 'Casacos', 'Calças', 'Vestidos e saias', 'Desporto', 'Ténis', 'Bonés', 'Carteiras', 'Mochilas e sacos'];
 })();

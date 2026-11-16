@@ -25,23 +25,6 @@
       err ? h('span', { className: 'msg', id: p.id + '-e', role: 'alert' }, p.err) : null);
   }
 
-  // Indicador de progresso puramente visual: mostra em que ponto do
-  // checkout o cliente está, sem bloquear nada — é só feedback.
-  function Steps(p) {
-    var items = [['Contacto', p.s1], ['Entrega', p.s2], ['Pagamento', p.s3]];
-    return h('div', { className: 'co-steps', role: 'list', 'aria-label': 'Progresso da compra' },
-      items.map(function (it, i) {
-        var done = it[1], active = !done && (i === 0 || items[i - 1][1]);
-        return h('div', { key: i, className: 'co-step' + (done ? ' done' : '') + (active ? ' active' : ''), role: 'listitem' },
-          h('span', { className: 'co-step-ic' }, done ? h(Icon, { n: 'check', s: 13, w: 3 }) : (i + 1)),
-          h('span', { className: 'co-step-l' }, it[0]),
-          i < items.length - 1 ? h('span', { className: 'co-step-line' + (done ? ' done' : '') }) : null);
-      }));
-  }
-
-  var PM_CHIP = { mbway: ['MB WAY', 'pm-mbway'], card: ['Cartão', 'pm-card'], mb: ['Multibanco', 'pm-mb'], paypal: ['PayPal', 'pm-paypal'] };
-  function PmChip(p) { var c = PM_CHIP[p.k]; return h('span', { className: 'pm-chip ' + c[1] }, c[0]); }
-
   function Summary(p) {
     var st = K.useStore();
     var pcS = useState(''), code = pcS[0], setCode = pcS[1], peS = useState(''), perr = peS[0], setPerr = peS[1];
@@ -51,7 +34,7 @@
         h('div', { className: 'pm' }, l.thumb ? h('img', { src: l.thumb, alt: '', style: { objectFit: 'contain', borderRadius: 8 } }) : h(K.ProductImage, { product: l.p, color: col, style: { position: 'absolute', inset: 0, aspectRatio: 'auto' } }), h('span', { className: 'badge' }, l.qty)),
         h('div', { style: { fontSize: 13 } }, h('div', { style: { fontWeight: 500 } }, l.p.name), h('div', { className: 'muted' }, [l.color, l.size && l.size !== 'Único' ? l.size : null, l.note ? '“' + l.note + '”' : null].filter(Boolean).join(' · '))),
         h('span', { className: 'price', style: { fontSize: 14 } }, eur(l.total))); }),
-      st.promo ? h('div', { className: 'promo-applied' },
+      st.promo ? h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '14px 0', padding: '10px 12px', background: 'var(--surface)', borderRadius: 8, fontSize: 13 } },
         h('span', { style: { display: 'flex', gap: 8, alignItems: 'center' } }, h(Icon, { n: 'tag', s: 15 }), h('b', null, st.promo), st.discount ? null : h('span', { style: { color: 'var(--warn)' } }, '· mínimo ' + eur(st.promoDef.min))),
         h('button', { className: 'link', onClick: st.clearPromo }, 'Remover')) :
       h('form', { onSubmit: apply, noValidate: true }, h('div', { className: 'promo' },
@@ -75,7 +58,6 @@
     var nfS = useState(false), wantNif = nfS[0], setWantNif = nfS[1];
     var sbS = useState(false), sending = sbS[0], setSending = sbS[1];
     var mS = useState(false), mini = mS[0], setMini = mS[1];
-    var ceS = useState(''), checkoutErr = ceS[0], setCheckoutErr = ceS[1];
     useEffect(function () { if (!st.cart.length) go('/'); }, []);
     if (!st.cart.length) return null;
     var after = st.subtotal - st.discount;
@@ -88,98 +70,44 @@
     function blur(k) { return function () { setTouched(function (t) { var n = Object.assign({}, t); n[k] = true; return n; }); }; }
     function submit(e) {
       e.preventDefault();
-      setCheckoutErr('');
       var t = {}; keys.forEach(function (k) { t[k] = true; }); setTouched(t);
       var first = keys.find(function (k) { return errs[k]; });
       if (first) { var el = document.getElementById('f-' + first); if (el) { el.focus(); window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 120, behavior: 'smooth' }); } return; }
       setSending(true);
       try { localStorage.setItem('kn5-addr', JSON.stringify({ email: d.email, name: d.name, address: d.address, address2: d.address2, zip: d.zip, city: d.city, phone: d.phone })); } catch (x) {}
-      // Guarda os dados de entrega/contacto localmente para associar à encomenda
-      // quando o Stripe confirmar o pagamento (ver store/pages.js → página /sucesso).
-      try { localStorage.setItem('kn5-pending', JSON.stringify({ info: Object.assign({}, d, { shipping: ship, payment: pay }), lines: st.cart.map(function (l) { return { id: l.id, name: l.p.name, color: l.color, size: l.size, note: l.note, qty: l.qty, price: l.unit, thumb: l.thumb }; }), subtotal: st.subtotal, discount: st.discount, promo: st.promo, ship: shipCost, total: total })); } catch (x) {}
-      var country = wantNif || needAddr ? 'PT' : 'PT';
-      fetch('/api/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          // NOTA: `price` vai só para referência/exibição de erros — o servidor
-          // (api/checkout.js) recalcula sempre o preço a partir do SKU +
-          // `customization` (catálogo server-side), nunca confia neste valor.
-          items: st.cart.map(function (l) {
-            return {
-              id: l.id,
-              sku: l.p.sku || l.id,
-              name: l.p.name + (l.color ? ' · ' + l.color : '') + (l.size && l.size !== 'Único' ? ' · ' + l.size : ''),
-              price: l.unit,
-              qty: l.qty,
-              image: l.thumb || null, // PNG base64 do canvas do Estúdio — o servidor nunca o envia ao Stripe tal-qual (vai para o Storage antes)
-              color: l.color || null,
-              size: l.size || null,
-              note: l.note || '',
-              // Personalização: ou o Estúdio avançado (tech+views, igual ao que o
-              // studio.js usa para calcular o preço) ou o +8€ fixo do Personalizar
-              // simples — o servidor usa isto para recalcular o preço e para
-              // persistir o design completo em order_items (ver _lib/catalog.js).
-              customization: l.design ? { tech: l.design.tech, views: l.design.views } : (l.extra ? { text_extra: true } : undefined),
-            };
-          }),
-          customer_email: d.email,
-          country: country,
-          promo_code: st.promo || undefined,
-          success_url: window.location.origin + '/#/sucesso?session_id={CHECKOUT_SESSION_ID}',
-          cancel_url: window.location.origin + '/#/checkout',
-        }),
-      }).then(function (r) { return r.json().then(function (data) { return { ok: r.ok, data: data }; }); })
-        .then(function (res) {
-          if (res.ok && res.data && res.data.url) {
-            window.location.href = res.data.url;
-          } else {
-            setSending(false);
-            setCheckoutErr((res.data && res.data.error) || 'Não foi possível iniciar o pagamento. Tenta novamente.');
-          }
-        })
-        .catch(function () {
-          setSending(false);
-          setCheckoutErr('Erro de ligação. Verifica a internet e tenta novamente.');
-        });
+      setTimeout(function () { var o = st.placeOrder(Object.assign({}, d, { shipping: ship, payment: pay })); go('/confirmacao/' + o.n); }, 900);
     }
     function express() { var el = document.getElementById('f-email'); if (el && !d.email) { el.focus(); setTouched({ email: true }); } }
     var F = function (k, label, extra) { return h(Field, Object.assign({ id: 'f-' + k, label: label, value: d[k], onChange: set(k), onBlur: blur(k), err: errs[k], touched: touched[k] }, extra || {})); };
-    var s1done = !errs.email && !errs.phone && (touched.email || d.email) && (touched.phone || d.phone);
-    var s2done = s1done && !errs.name && (!needAddr || (!errs.address && !errs.zip && !errs.city)) && (touched.name || d.name);
-    return h('main', { className: 'wrap co-wrap' },
-      h('div', { className: 'co-head' },
-        h('div', null,
-          h('a', { href: '#/', className: 'co-back' }, h(Icon, { n: 'chevL', s: 15 }), 'Continuar a comprar'),
-          h('h1', { className: 'h2' }, 'Finalizar compra')),
-        h('span', { className: 'co-secure-badge' }, h(Icon, { n: 'lock', s: 14 }), 'Pagamento seguro')),
-      h(Steps, { s1: s1done, s2: s2done, s3: false }),
-      h('p', { className: 'muted co-sub' }, 'Não precisas de conta. Podes criar uma no fim, com um clique.'),
-      h('div', { className: 'co-mini' },
-        h('button', { className: 'co-mini-bar', onClick: function () { setMini(!mini); }, 'aria-expanded': mini },
-          h('span', { className: 'co-mini-l' }, h(Icon, { n: 'bag', s: 18 }), (mini ? 'Esconder' : 'Ver') + ' resumo (' + st.count + ')', h(Icon, { n: 'down', s: 16, style: { transform: mini ? 'rotate(180deg)' : 'none' } })),
+    return h('main', { className: 'wrap' },
+      h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 0 4px' } },
+        h('h1', { className: 'h2' }, 'Finalizar compra'),
+        h('span', { className: 'muted', style: { display: 'flex', gap: 6, alignItems: 'center', fontSize: 13 } }, h(Icon, { n: 'lock', s: 15 }), 'Pagamento seguro')),
+      h('p', { className: 'muted', style: { margin: '0 0 10px', fontSize: 14 } }, 'Não precisas de conta. Podes criar uma no fim, com um clique.'),
+      h('div', { className: 'co-mini', style: { margin: '10px 0' } },
+        h('button', { onClick: function () { setMini(!mini); }, style: { width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', background: 'var(--soft)', borderRadius: 12, fontSize: 14 }, 'aria-expanded': mini },
+          h('span', { style: { display: 'flex', gap: 8, alignItems: 'center' } }, h(Icon, { n: 'bag', s: 18 }), (mini ? 'Esconder' : 'Ver') + ' resumo (' + st.count + ')', h(Icon, { n: 'down', s: 16, style: { transform: mini ? 'rotate(180deg)' : 'none' } })),
           h('b', { className: 'price' }, eur(total))),
-        mini ? h('div', { className: 'co-mini-body' }, h(Summary, { ship: shipCost, total: total })) : null),
+        mini ? h('div', { style: { padding: '12px 16px', background: 'var(--soft)', borderRadius: '0 0 12px 12px', marginTop: -6 } }, h(Summary, { ship: shipCost, total: total })) : null),
       h('div', { className: 'co' },
-        h('form', { onSubmit: submit, noValidate: true, className: 'co-form-card' },
-          h('div', { className: 'express-box' },
-            h('div', { className: 'eyebrow co-express-h' }, h(Icon, { n: 'bolt', s: 13 }), 'Pagamento expresso'),
+        h('form', { onSubmit: submit, noValidate: true },
+          h('div', { style: { paddingBottom: 6 } },
+            h('div', { className: 'eyebrow', style: { textAlign: 'center', marginBottom: 10 } }, 'Pagamento expresso'),
             h('div', { className: 'express' },
-              h('button', { type: 'button', className: 'ap', onClick: function () { setPay('card'); express(); } }, h(Icon, { n: 'apple', s: 16, fill: true }), 'Apple Pay'),
+              h('button', { type: 'button', className: 'ap', onClick: function () { setPay('card'); express(); } }, 'Apple Pay'),
               h('button', { type: 'button', className: 'mbw', onClick: function () { setPay('mbway'); express(); } }, 'MB WAY'),
               h('button', { type: 'button', className: 'pp', onClick: function () { setPay('paypal'); express(); } }, 'PayPal')),
             h('div', { className: 'or' }, 'ou preenche os teus dados')),
-          h('section', { className: 'co-sec' + (s1done ? ' is-done' : '') }, h('h2', null, h('i', null, s1done ? h(Icon, { n: 'check', s: 12, w: 3 }) : '1'), 'Contacto'),
+          h('section', { className: 'co-sec' }, h('h2', null, h('i', null, '1'), 'Contacto'),
             h('div', { className: 'fields' },
               F('email', 'Email', { full: true, type: 'email', ac: 'email', inputMode: 'email', ph: 'nome@exemplo.pt' }),
               F('phone', 'Telemóvel', { full: true, type: 'tel', ac: 'tel-national', inputMode: 'tel', fmt: fmtPhone, ph: '912 345 678' }))),
-          h('section', { className: 'co-sec' + (s2done ? ' is-done' : '') }, h('h2', null, h('i', null, s2done ? h(Icon, { n: 'check', s: 12, w: 3 }) : '2'), 'Entrega'),
-            h('div', { className: 'radio ship-radio', role: 'radiogroup', 'aria-label': 'Método de entrega' },
-              [['std', 'Standard · CTT', 'Recebe ' + K.deliveryWindow('std'), after >= K.CFG.freeShip ? 0 : K.CFG.shipStd, 'truck'],
-               ['exp', 'Expresso · DPD', 'Recebe ' + K.deliveryWindow('exp'), K.CFG.shipExp, 'clock'],
-               ['pickup', 'Recolha na loja', 'Cartaxo · pronto em 24 h', 0, 'pin']].map(function (o) {
+          h('section', { className: 'co-sec' }, h('h2', null, h('i', null, '2'), 'Entrega'),
+            h('div', { className: 'radio', role: 'radiogroup', 'aria-label': 'Método de entrega', style: { marginBottom: 16 } },
+              [['std', 'Standard · CTT', 'Recebe ' + K.deliveryWindow('std'), after >= K.CFG.freeShip ? 0 : K.CFG.shipStd],
+               ['exp', 'Expresso · DPD', 'Recebe ' + K.deliveryWindow('exp'), K.CFG.shipExp],
+               ['pickup', 'Recolha na loja', 'Cartaxo · pronto em 24 h', 0]].map(function (o) {
                 return h('label', { key: o[0], className: ship === o[0] ? 'on' : '' }, h('input', { type: 'radio', name: 'ship', checked: ship === o[0], onChange: function () { setShip(o[0]); } }),
-                  h('span', { className: 'r-ic' }, h(Icon, { n: o[4], s: 17 })),
                   h('span', { className: 'r-t' }, h('b', null, o[1]), h('span', null, o[2])), h('span', { className: 'r-p' }, o[3] === 0 ? 'Grátis' : eur(o[3])));
               })),
             h('div', { className: 'fields' },
@@ -188,111 +116,25 @@
               needAddr ? F('address2', 'Andar, porta', { full: true, ac: 'address-line2', opt: true }) : null,
               needAddr ? F('zip', 'Código postal', { ac: 'postal-code', inputMode: 'numeric', fmt: fmtZip, ph: '0000-000' }) : null,
               needAddr ? F('city', 'Localidade', { ac: 'address-level2' }) : null),
-            h('label', { className: 'nif-chk' },
-              h('input', { type: 'checkbox', checked: wantNif, onChange: function (e) { setWantNif(e.target.checked); } }), 'Quero fatura com NIF'),
+            h('label', { style: { display: 'flex', gap: 10, alignItems: 'center', marginTop: 14, fontSize: 14, cursor: 'pointer' } },
+              h('input', { type: 'checkbox', checked: wantNif, onChange: function (e) { setWantNif(e.target.checked); }, style: { width: 18, height: 18, accentColor: 'var(--ink)' } }), 'Quero fatura com NIF'),
             wantNif ? h('div', { className: 'fields', style: { marginTop: 10 } }, F('nif', 'NIF', { inputMode: 'numeric', ph: '123456789' })) : null),
-          h('section', { className: 'co-sec co-sec-pay' }, h('h2', null, h('i', null, '3'), 'Pagamento'),
+          h('section', { className: 'co-sec', style: { borderBottom: 0 } }, h('h2', null, h('i', null, '3'), 'Pagamento'),
             h('div', { className: 'radio', role: 'radiogroup', 'aria-label': 'Método de pagamento' },
               [['mbway', 'MB WAY', 'Confirma no telemóvel em 4 minutos'], ['card', 'Cartão de crédito ou débito', 'Visa, Mastercard, Apple Pay, Google Pay'], ['mb', 'Referência Multibanco', 'Paga em 48 h no multibanco ou homebanking'], ['paypal', 'PayPal', 'Entras na tua conta PayPal']].map(function (o) {
-                return h('label', { key: o[0], className: pay === o[0] ? 'on' : '' }, h('input', { type: 'radio', name: 'pay', checked: pay === o[0], onChange: function () { setPay(o[0]); } }),
-                  h(PmChip, { k: o[0] }), h('span', { className: 'r-t' }, h('b', null, o[1]), h('span', null, o[2])));
+                return h('label', { key: o[0], className: pay === o[0] ? 'on' : '' }, h('input', { type: 'radio', name: 'pay', checked: pay === o[0], onChange: function () { setPay(o[0]); } }), h('span', { className: 'r-t' }, h('b', null, o[1]), h('span', null, o[2])));
               })),
             pay === 'mbway' ? h('p', { className: 'muted', style: { fontSize: 13, margin: '10px 2px 0' } }, 'Vamos enviar o pedido para ' + (d.phone || 'o teu telemóvel') + '.') : null,
-            checkoutErr ? h('div', { className: 'err-txt', role: 'alert', style: { marginTop: 14 } }, checkoutErr) : null,
-            h('button', { className: 'btn block co-pay-btn', type: 'submit', disabled: sending }, sending ? h(R.Fragment, null, h('span', { className: 'co-spinner' }), 'A redirecionar para pagamento…') : h(R.Fragment, null, h(Icon, { n: 'lock', s: 17 }), 'Pagar ' + eur(total))),
-            h('div', { className: 'co-trustrow' },
-              h('span', null, h(Icon, { n: 'shield', s: 14 }), 'Pagamento 100% seguro'),
-              h('span', null, h(Icon, { n: 'ret', s: 14 }), K.CFG.returnDays + ' dias para devolver')),
-            h('p', { className: 'muted', style: { fontSize: 12, textAlign: 'center', margin: '10px 0 0' } }, 'Ao pagar aceitas os ', h('a', { className: 'link', href: '#/ajuda' }, 'Termos'), ' e a ', h('a', { className: 'link', href: '#/ajuda' }, 'Política de Privacidade'), '.'))),
-        h('aside', { className: 'co-side', 'aria-label': 'Resumo da encomenda' },
-          h('div', { className: 'co-side-h' }, h('div', { className: 'h3' }, 'Resumo'), h('span', { className: 'muted', style: { fontSize: 13 } }, st.count + (st.count === 1 ? ' artigo' : ' artigos'))),
-          h(Summary, { ship: shipCost, total: total }),
-          h('div', { className: 'secure' }, h(Icon, { n: 'lock', s: 13 }), 'Ligação encriptada · Dados nunca guardados por nós'),
-          h('div', { className: 'co-badges' },
-            h('span', null, h(Icon, { n: 'truck', s: 14 }), 'Envio em 24h'),
-            h('span', null, h(Icon, { n: 'leaf', s: 14 }), 'Feito em Portugal')))));
-  }
-
-  // ───── Sucesso — confirma com o Stripe a sério antes de mostrar nada ─────
-  // Chamada depois do redirect de /api/checkout. Só regista a encomenda
-  // localmente (para aparecer em "A minha conta") DEPOIS de o Stripe confirmar
-  // payment_status === 'paid' — nunca antes, ao contrário do antigo placeOrder()
-  // que gravava a encomenda só com base no que o formulário continha.
-  function Success() {
-    var st = K.useStore();
-    var sessionId = (function () { var m = (location.hash || '').match(/[?&]session_id=([^&]+)/); return m ? decodeURIComponent(m[1]) : null; })();
-    var stS = useState('loading'), status = stS[0], setStatus = stS[1]; // loading | ok | error | unpaid
-    var orderS = useState(null), order = orderS[0], setOrder = orderS[1];
-    var errS = useState(''), err = errS[0], setErr = errS[1];
-    var doneRef = R.useRef(false);
-
-    useEffect(function () {
-      if (!sessionId) { setStatus('error'); setErr('Sessão de pagamento em falta.'); return; }
-      if (doneRef.current) return;
-      doneRef.current = true;
-      fetch('/api/checkout-session?session_id=' + encodeURIComponent(sessionId))
-        .then(function (r) { return r.json().then(function (data) { return { ok: r.ok, data: data }; }); })
-        .then(function (res) {
-          if (!res.ok) { setStatus('error'); setErr((res.data && res.data.error) || 'Não foi possível confirmar o pagamento.'); return; }
-          if (!res.data.paid) { setStatus('unpaid'); return; }
-          // Pagamento confirmado pelo Stripe — agora sim regista a encomenda.
-          var pending = (function () { try { return JSON.parse(localStorage.getItem('kn5-pending')); } catch (e) { return null; } })();
-          var n = 'KN' + sessionId.slice(-8).toUpperCase();
-          var already = st.orders.find(function (x) { return x.n === n; });
-          var o = already || {
-            n: n,
-            at: Date.now(),
-            lines: (pending && pending.lines) || [],
-            subtotal: (pending && pending.subtotal) || (res.data.amount_subtotal || 0) / 100,
-            discount: (pending && pending.discount) || 0,
-            ship: (pending && pending.ship) || 0,
-            total: (res.data.amount_total || 0) / 100,
-            info: Object.assign({}, pending && pending.info, {
-              email: res.data.customer_email || (pending && pending.info && pending.info.email) || '',
-              name: res.data.customer_name || (pending && pending.info && pending.info.name) || '',
-              payment: res.data.payment_method || (pending && pending.info && pending.info.payment) || 'card',
-            }),
-            eta: K.deliveryWindow((pending && pending.info && pending.info.shipping === 'exp') ? 'exp' : 'std'),
-            stripeSessionId: sessionId,
-          };
-          if (!already) st.recordOrder(o);
-          try { localStorage.removeItem('kn5-pending'); } catch (e) {}
-          setOrder(o);
-          setStatus('ok');
-        })
-        .catch(function () { setStatus('error'); setErr('Erro de ligação ao confirmar o pagamento.'); });
-    }, [sessionId]);
-
-    if (status === 'loading') {
-      return h('main', { className: 'wrap empty', style: { textAlign: 'center', paddingTop: 80 } },
-        h('p', { className: 'h3' }, 'A confirmar o teu pagamento…'),
-        h('p', { className: 'muted' }, 'Um momento, estamos a validar diretamente com o Stripe.'));
-    }
-    if (status === 'unpaid') {
-      return h('main', { className: 'wrap empty', style: { textAlign: 'center', paddingTop: 80 } },
-        h('p', { className: 'h3' }, 'Pagamento ainda não confirmado.'),
-        h('p', { className: 'muted' }, 'Se completaste o pagamento, aguarda uns segundos e atualiza a página. Caso contrário, a encomenda foi cancelada.'),
-        h('a', { className: 'btn', href: '#/checkout', style: { marginTop: 16 } }, 'Voltar ao checkout'));
-    }
-    if (status === 'error') {
-      return h('main', { className: 'wrap empty', style: { textAlign: 'center', paddingTop: 80 } },
-        h('p', { className: 'h3' }, 'Não foi possível confirmar a encomenda.'),
-        h('p', { className: 'err-txt' }, err),
-        h('p', { className: 'muted', style: { marginTop: 8 } }, 'Se o dinheiro saiu da conta, contacta-nos com o número da sessão: ', h('code', null, sessionId || '—'), '.'),
-        h('a', { className: 'btn', href: '#/ajuda', style: { marginTop: 16 } }, 'Contactar ajuda'));
-    }
-    return h(ConfirmBody, { o: order });
+            h('button', { className: 'btn block', type: 'submit', disabled: sending, style: { height: 56, marginTop: 22, fontSize: 16 } }, sending ? 'A processar…' : h(R.Fragment, null, h(Icon, { n: 'lock', s: 17 }), 'Pagar ' + eur(total))),
+            h('p', { className: 'muted', style: { fontSize: 12, textAlign: 'center', margin: '12px 0 0' } }, 'Ao pagar aceitas os ', h('a', { className: 'link', href: '#/ajuda' }, 'Termos'), ' e a ', h('a', { className: 'link', href: '#/ajuda' }, 'Política de Privacidade'), '. Devolução grátis em ' + K.CFG.returnDays + ' dias.'))),
+        h('aside', { className: 'co-side', 'aria-label': 'Resumo da encomenda' }, h('div', { className: 'h3', style: { marginBottom: 10 } }, 'Resumo'), h(Summary, { ship: shipCost, total: total }),
+          h('div', { className: 'secure' }, h(Icon, { n: 'lock', s: 13 }), 'Ligação encriptada · Dados nunca guardados por nós'))));
   }
 
   function Confirm(p) {
     var st = K.useStore(), o = st.orders.find(function (x) { return x.n === p.route.id; });
-    if (!o) return h('main', { className: 'wrap empty' }, h('p', { className: 'h3' }, 'Encomenda não encontrada.'), h('a', { className: 'btn', href: '#/' }, 'Voltar ao início'));
-    return h(ConfirmBody, { o: o });
-  }
-
-  function ConfirmBody(p) {
-    var o = p.o;
     var aS = useState(false), acc = aS[0], setAcc = aS[1];
+    if (!o) return h('main', { className: 'wrap empty' }, h('p', { className: 'h3' }, 'Encomenda não encontrada.'), h('a', { className: 'btn', href: '#/' }, 'Voltar ao início'));
     var payTxt = { mbway: 'Pedido MB WAY enviado para ' + o.info.phone + '. Confirma na app nos próximos 4 minutos.', mb: 'Entidade 21 000 · Referência 123 456 789 · ' + eur(o.total) + ' · válida 48 h.', card: 'Pagamento com cartão aprovado.', paypal: 'Pagamento PayPal aprovado.' }[o.info.payment];
     return h('main', { className: 'wrap', style: { maxWidth: 760 } },
       h('div', { className: 'ok-hero' }, h('div', { className: 'ok-ic' }, h(Icon, { n: 'check', s: 30, w: 2.4 })),
@@ -383,5 +225,5 @@
           h('div', { className: 'deliv' }, h('div', null, h(Icon, { n: 'pen', s: 18 }), h('span', null, 'Vês uma prova por email antes do bordado.')), h('div', null, h(Icon, { n: 'truck', s: 18 }), h('span', null, 'Envio em 5–7 dias úteis.')), h('div', null, h(Icon, { n: 'ret', s: 18 }), h('span', null, 'Peças personalizadas só são trocadas em caso de defeito.'))))));
   }
 
-  Object.assign(window.KN, { Checkout: Checkout, Success: Success, Confirm: Confirm, Account: Account, Favorites: Favorites, Help: Help, Personalize: Personalize });
+  Object.assign(window.KN, { Checkout: Checkout, Confirm: Confirm, Account: Account, Favorites: Favorites, Help: Help, Personalize: Personalize });
 })();

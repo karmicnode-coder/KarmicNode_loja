@@ -1,4 +1,4 @@
 node_modules
 dist
 .env
-src/imports/logo-karmic-node-hd.jpg
+.vercel

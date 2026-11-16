@@ -42,7 +42,8 @@
     ret: 'M4 9h11a5 5 0 0 1 0 10h-3M4 9l4-4M4 9l4 4',
     lock: 'M6 11h12v9H6zM8.5 11V8a3.5 3.5 0 0 1 7 0v3',
     star: 'M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9 6.8 19.6l1-5.8L3.5 9.7l5.9-.9z',
-    chev: 'M9 6l6 6-6 6', chevL: 'M15 6l-6 6 6 6', down: 'M6 9l6 6 6-6',
+    chev: 'M9 6l6 6-6 6', chevL: 'M15 6l-6 6 6 6', down: 'M6 9l6 6 6-6', arrowL: 'M19 12H5M11 6l-6 6 6 6',
+    sun: 'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4', moon: 'M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z',
     clock: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 7v5l3 2',
     pin: 'M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21zM12 12a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z',
     pen: 'M4 20h4L19 9l-4-4L4 16v4zM14 6l4 4',
@@ -52,9 +53,6 @@
     pkg: 'M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3zM4 7.5l8 4.5 8-4.5M12 12v9',
     spark: 'M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5L18 18M6 18l2.5-2.5M15.5 8.5L18 6',
     tag: 'M3 12V4h8l10 10-8 8L3 12zM7.5 7.5h.01',
-    bolt: 'M13 2 4 14h6l-1 8 9-12h-6l1-8z',
-    apple: 'M16.4 3c.1 1.1-.3 2.2-1 3-.7.8-1.8 1.4-2.9 1.3-.1-1.1.4-2.2 1-3 .8-.8 1.9-1.3 2.9-1.3zM18.9 17.2c-.5 1.1-.7 1.6-1.3 2.6-.9 1.4-2.1 3.1-3.6 3.1-1.4 0-1.7-.9-3.5-.9-1.8 0-2.2.9-3.5.9-1.5 0-2.6-1.6-3.5-3-2.4-3.7-2.6-8-1.2-10.3.9-1.6 2.5-2.6 4.1-2.6 1.6 0 2.6.9 3.9.9 1.3 0 2.1-.9 3.9-.9 1.3 0 2.7.7 3.7 2-3.3 1.8-2.8 6.6.9 8.2z',
-    shield: 'M12 3l7 3v5c0 4.6-3 8.3-7 10-4-1.7-7-5.4-7-10V6l7-3zM9 12l2 2 4-4',
   };
   function Icon(p) {
     var s = p.s || 20;
@@ -229,18 +227,18 @@
       if (subtotal < d.min) return 'Este código é válido a partir de ' + eur(d.min) + '. Faltam ' + eur(d.min - subtotal) + '.';
       setPromo(c); return null;
     }
-    // Regista uma encomenda já confirmada (pagamento real validado no Stripe
-    // via /api/checkout-session). Ao contrário do antigo placeOrder(), isto
-    // NUNCA é chamado antes de o pagamento estar confirmado — ver
-    // store/checkout.js → Success(). Só aqui o carrinho é esvaziado.
-    function recordOrder(o) {
+    function placeOrder(info) {
+      var n = 'KN' + String(Date.now()).slice(-6);
+      var ship = info.shipping === 'exp' ? CFG.shipExp : info.shipping === 'pickup' ? 0 : (subtotal - discount >= CFG.freeShip ? 0 : CFG.shipStd);
+      var o = { n: n, at: Date.now(), lines: lines.map(function (l) { return { id: l.id, name: l.p.name, color: l.color, size: l.size, note: l.note, qty: l.qty, price: l.unit, thumb: l.thumb }; }),
+        subtotal: subtotal, discount: discount, ship: ship, total: Math.max(0, subtotal - discount + ship), info: info, eta: deliveryWindow(info.shipping === 'exp' ? 'exp' : 'std') };
       setOrders(function (x) { return [o].concat(x); });
       setCart([]); setPromo(null);
       return o;
     }
 
     var api = { cart: lines, count: count, subtotal: subtotal, discount: discount, promo: promo, promoDef: promoDef, add: add, setQty: setQty, remove: remove, applyPromo: applyPromo, clearPromo: function () { setPromo(null); },
-      wish: wish, toggleWish: toggleWish, recent: recent, viewed: viewed, orders: orders, recordOrder: recordOrder,
+      wish: wish, toggleWish: toggleWish, recent: recent, viewed: viewed, orders: orders, placeOrder: placeOrder,
       cartOpen: cartOpen, setCartOpen: setCartOpen, toast: toast, setToast: setToast, notify: notify, byId: byId };
     return h(Ctx.Provider, { value: api }, props.children);
   }

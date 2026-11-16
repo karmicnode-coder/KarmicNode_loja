@@ -3,14 +3,9 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "scripts": {
-    "dev": "echo 'Site estático — serve public/ com qualquer servidor http (ex: npx serve public)'",
-    "build": "echo 'Site estático — nada a compilar, public/ já contém os ficheiros finais'",
-    "check-env": "node scripts/check-env.js"
-  },
+  "engines": { "node": ">=18" },
   "dependencies": {
-    "@supabase/supabase-js": "^2.112.4",
-    "resend": "^4.0.0",
-    "stripe": "^17.0.0"
+    "stripe": "^17.0.0",
+    "@supabase/supabase-js": "^2.45.0"
   }
 }
