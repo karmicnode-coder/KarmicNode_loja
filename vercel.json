@@ -1,5 +1,6 @@
 {
-  "buildCommand": "npm run build",
+  "framework": null,
+  "buildCommand": "echo 'Site estático — nada a compilar'",
   "outputDirectory": "public",
   "installCommand": "npm install",
   "cleanUrls": true,
