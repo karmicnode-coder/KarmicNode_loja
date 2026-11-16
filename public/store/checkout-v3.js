@@ -29,20 +29,10 @@
   var cityFor = function (z) { var d = z.replace(/\D/g, ''); return CP[d.slice(0, 4)] || (d[0] === '1' ? 'Lisboa' : ''); };
   var regionFor = function (z) { var d = z.replace(/\D/g, ''); if (d[0] === '9') return +d.slice(0, 2) < 95 ? 'PT-M' : 'PT-A'; return 'PT'; };
   var digits = function (s) { return String(s || '').replace(/\D/g, ''); };
-  var brandOf = function (n) { var d = digits(n); if (/^4/.test(d)) return 'VISA'; if (/^(5[1-5]|2[2-7])/.test(d)) return 'MASTERCARD'; if (/^3[47]/.test(d)) return 'AMEX'; return ''; };
-  var luhn = function (n) { var d = digits(n), s = 0, alt = false; for (var i = d.length - 1; i >= 0; i--) { var x = +d[i]; if (alt) { x *= 2; if (x > 9) x -= 9; } s += x; alt = !alt; } return d.length >= 13 && s % 10 === 0; };
-  var fmtCard = function (v) { var d = digits(v); if (/^3[47]/.test(d)) { d = d.slice(0, 15); return [d.slice(0, 4), d.slice(4, 10), d.slice(10)].filter(Boolean).join(' '); } return d.slice(0, 16).replace(/(.{4})(?=.)/g, '$1 '); };
-  var fmtExp = function (v) { var d = digits(v).slice(0, 4); if (d.length === 1 && +d > 1) d = '0' + d; return d.length > 2 ? d.slice(0, 2) + '/' + d.slice(2) : d; };
   function payErrors(m, p) {
     var e = {};
-    if (m === 'card') {
-      var d = digits(p.num), amex = brandOf(d) === 'AMEX';
-      if (!d) e.num = 'Escreve o número do cartão.'; else if (d.length < (amex ? 15 : 16)) e.num = 'Número incompleto.'; else if (!luhn(d)) e.num = 'Este número de cartão não é válido.';
-      var x = /^(\d{2})\/(\d{2})$/.exec(p.exp || '');
-      if (!x) e.exp = 'Formato MM/AA.'; else { var mm = +x[1], yy = 2000 + +x[2], now = new Date(); if (mm < 1 || mm > 12) e.exp = 'Mês inválido.'; else if (yy < now.getFullYear() || (yy === now.getFullYear() && mm < now.getMonth() + 1)) e.exp = 'Este cartão já expirou.'; else if (yy > now.getFullYear() + 20) e.exp = 'Confirma o ano.'; }
-      if (digits(p.cvc).length < (amex ? 4 : 3)) e.cvc = amex ? '4 dígitos (frente do cartão).' : '3 dígitos (verso do cartão).';
-      if (String(p.cname || '').trim().split(/\s+/).length < 2) e.cname = 'Nome tal como está no cartão.';
-    }
+    // Método 'card': sem campos neste site — os dados do cartão são introduzidos
+    // exclusivamente na página segura do Stripe, por isso não há nada a validar aqui.
     if (m === 'mbway') { var t = digits(p.mbphone).replace(/^351/, ''); if (!/^9\d{8}$/.test(t)) e.mbphone = 'Telemóvel com 9 dígitos, a começar por 9.'; }
     if (m === 'paypal') { if (p.ppemail && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(p.ppemail)) e.ppemail = 'Confirma o email do PayPal.'; }
     return e;
@@ -72,30 +62,27 @@ var LOGOS = { card: [h('i', { key: 1, className: 'visa' }, 'VISA'), h('i', { key
   var Check = function () { return h('svg', { viewBox: '0 0 16 16', fill: 'none', stroke: 'currentColor', strokeWidth: 2.2, strokeLinecap: 'round', strokeLinejoin: 'round', className: 'k3-ico' }, h('path', { d: 'M3 8.5l3.2 3L13 4.5' })); };
 
   // ───── Visuais do palco ─────
-  function CardVisual(p) {
+  // Mockup do cartão: SEMPRE decorativo — nunca recebe nem mostra dados reais.
+  // Os dados do cartão são introduzidos apenas na página segura do Stripe (SAQ-A);
+  // este site não tem nem nunca teve campos de número/validade/CVC/nome do cartão.
+  function CardVisual() {
     var tS = useState({ x: 0, y: 0 }), t = tS[0], setT = tS[1];
     function move(e) { var r = e.currentTarget.getBoundingClientRect(); setT({ x: ((e.clientY - r.top) / r.height - .5) * -10, y: ((e.clientX - r.left) / r.width - .5) * 14 }); }
-    var brand = brandOf(p.num), raw = digits(p.num), mask = brand === 'AMEX' ? '•••• •••••• •••••' : '•••• •••• •••• ••••', di = 0;
-    // Mostra só os últimos 4 dígitos no cartão (o resto fica mascarado) — ninguém ao lado lê o número completo
-    var show = raw.length - 4;
-    var disp = mask.split('').map(function (ch) { if (ch === ' ') return ' '; var i = di++; return i < raw.length ? (i >= show ? raw[i] : '•') : '•'; }).join('');
-    var flip = p.focus === 'cvc', z = function (k) { return p.focus === k ? ' on' : ''; };
-    var mark = brand === 'VISA' ? h('span', { className: 'k3-visa' }, 'VISA') : brand === 'MASTERCARD' ? h('span', { className: 'k3-mcm' }, h('i'), h('i')) : brand === 'AMEX' ? h('span', { className: 'k3-amex' }, 'AMEX') : h('span', { className: 'k3-nob' }, 'KN · BLACK');
     return h('div', { className: 'k3-card-scene', onMouseMove: move, onMouseLeave: function () { setT({ x: 0, y: 0 }); } },
-      h('div', { className: 'k3-card3d', style: { transform: 'rotateX(' + t.x + 'deg) rotateY(' + ((flip ? 180 : 0) + t.y) + 'deg)' } },
+      h('div', { className: 'k3-card3d', style: { transform: 'rotateX(' + t.x + 'deg) rotateY(' + t.y + 'deg)' } },
         h('div', { className: 'k3-card' },
           h('div', { className: 'k3-guil' }),
           h('div', { className: 'k3-row' }, h('div', { className: 'k3-cbrand' }, h('img', { src: 'assets/logo-mark.png', alt: '' }), h('span', null, 'KARMIC · NODE')),
             h('svg', { className: 'k3-cl', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.6, strokeLinecap: 'round' }, h('path', { d: 'M8.5 8.5a5 5 0 0 1 0 7M12 6a8.5 8.5 0 0 1 0 12M15.5 3.5a12 12 0 0 1 0 17' }))),
           h('div', { className: 'k3-chip' }, h('i'), h('i'), h('i')),
-          h('div', { className: 'k3-cnum k3-zone' + z('num') }, disp),
+          h('div', { className: 'k3-cnum' }, '•••• •••• •••• ••••'),
           h('div', { className: 'k3-row k3-cbot' },
-            h('div', { className: 'k3-zone' + z('cname') }, h('small', null, 'Titular'), h('b', null, (p.cname || 'O teu nome').toUpperCase().slice(0, 24))),
-            h('div', { className: 'k3-zone' + z('exp') }, h('small', null, 'Validade'), h('b', null, p.exp || 'MM/AA')),
-            mark)),
+            h('div', null, h('small', null, 'Titular'), h('b', null, '•••••• ••••••')),
+            h('div', null, h('small', null, 'Validade'), h('b', null, '••/••')),
+            h('span', { className: 'k3-nob' }, 'KN · BLACK'))),
         h('div', { className: 'k3-card k3-back' },
           h('div', { className: 'k3-stripe' }),
-          h('div', { className: 'k3-sign' }, h('div', { className: 'k3-sign-strip' }), h('div', { className: 'k3-cvc k3-zone' + z('cvc') }, h('small', null, 'CVC'), h('b', null, digits(p.cvc) ? '•'.repeat(digits(p.cvc).length) : '•••'))),
+          h('div', { className: 'k3-sign' }, h('div', { className: 'k3-sign-strip' }), h('div', { className: 'k3-cvc' }, h('small', null, 'CVC'), h('b', null, '•••'))),
           h('div', { className: 'k3-back-foot' }, h('span', null, 'KARMIC NODE · POWER IN MOTION.'), h('div', { className: 'k3-holo' })))));
   }
   function PhoneMock(p) {
@@ -141,7 +128,7 @@ var LOGOS = { card: [h('i', { key: 1, className: 'visa' }, 'VISA'), h('i', { key
     var oS = useState(false), sumOpen = oS[0], setSumOpen = oS[1];
     var cS = useState(''), code = cS[0], setCode = cS[1], peS = useState(''), perr = peS[0], setPerr = peS[1];
     var doneS = useState(null), done = doneS[0], setDone = doneS[1];
-    var pyS = useState({ num: '', exp: '', cvc: '', cname: '', mbphone: s0.phone || '', ppemail: '' }), py = pyS[0], setPy = pyS[1];
+    var pyS = useState({ mbphone: s0.phone || '', ppemail: '' }), py = pyS[0], setPy = pyS[1];
     var ptS = useState({}), pTouched = ptS[0], setPTouched = ptS[1];
     var fcS = useState(''), focus = fcS[0], setFocus = fcS[1];
     var timers = useRef([]), attempts = useRef([]), lock = useRef(false);
@@ -194,7 +181,7 @@ var LOGOS = { card: [h('i', { key: 1, className: 'visa' }, 'VISA'), h('i', { key
         items: st.cart.map(function (l) { return { id: l.id, sku: l.p.sku || l.id, name: clean(l.p.name + (l.color ? ' · ' + l.color : '') + (l.size && l.size !== 'Único' ? ' · ' + l.size : '') + (l.note ? ' · ' + l.note : ''), 200), color: l.color, size: l.size, note: clean(l.note, 140), price: l.unit, qty: Math.max(1, Math.min(10, l.qty | 0)), design: l.design ? { tech: l.design.tech, views: { front: (l.design.views.front || []).map(function (v) { return { type: v.type, text: v.type === 'image' ? undefined : clean(v.text, 40), zone: v.zone, font: v.font, color: v.color }; }), back: (l.design.views.back || []).map(function (v) { return { type: v.type, text: v.type === 'image' ? undefined : clean(v.text, 40), zone: v.zone, font: v.font, color: v.color }; }) } } : null }; }),
         customer_email: clean(d.email, 120).toLowerCase(), country: region, promo_code: st.promo || undefined,
         shipping_method: ship, payment_method: method, customer: cust,
-        payment_details: method === 'card' ? { brand: brandOf(py.num) || 'CARD', last4: digits(py.num).slice(-4), exp: py.exp, holder: clean(py.cname, 60) } : method === 'mbway' ? { phone: digits(py.mbphone).replace(/^351/, '') } : method === 'paypal' ? { email: clean(py.ppemail, 120) || undefined } : {},
+        payment_details: method === 'mbway' ? { phone: digits(py.mbphone).replace(/^351/, '') } : method === 'paypal' ? { email: clean(py.ppemail, 120) || undefined } : {},
         success_url: location.origin + location.pathname + '#/sucesso?session_id={CHECKOUT_SESSION_ID}',
         cancel_url: location.origin + location.pathname + '#/checkout',
       };
@@ -222,14 +209,13 @@ var LOGOS = { card: [h('i', { key: 1, className: 'visa' }, 'VISA'), h('i', { key
     }
     function finish() {
       var no = 'KN-' + (40000 + Math.floor(Math.random() * 50000));
-      setDone({ no: no, method: method, label: method === 'card' ? ({ VISA: 'Visa', MASTERCARD: 'Mastercard', AMEX: 'Amex' }[brandOf(py.num)] || 'Cartão') + ' •••• ' + digits(py.num).slice(-4) : method === 'mbway' ? 'MB WAY · +351 ' + fmtPhone(py.mbphone) : method === 'paypal' ? 'PayPal' + (py.ppemail ? ' · ' + py.ppemail : '') : 'Referência Multibanco', total: total, ent: '21 312', ref: no.slice(-3) + ' 482 917', email: clean(d.email) });
+      setDone({ no: no, method: method, label: method === 'card' ? 'Cartão' : method === 'mbway' ? 'MB WAY · +351 ' + fmtPhone(py.mbphone) : method === 'paypal' ? 'PayPal' + (py.ppemail ? ' · ' + py.ppemail : '') : 'Referência Multibanco', total: total, ent: '21 312', ref: no.slice(-3) + ' 482 917', email: clean(d.email) });
       setStage('form'); lock.current = false; window.scrollTo({ top: 0, behavior: 'smooth' });
-      setPy(function (x) { return Object.assign({}, x, { num: '', cvc: '' }); });
     }
     function applyCode(e) { e.preventDefault(); var m = st.applyPromo(code); setPerr(m || ''); if (!m) setCode(''); }
 
     var stageVisual = done && done.method === 'multibanco' ? h(MBTicket, { amount: done.total, ent: done.ent, ref: done.ref })
-      : method === 'card' ? h(CardVisual, { num: py.num, exp: py.exp, cvc: py.cvc, cname: py.cname || d.name, focus: focus })
+      : method === 'card' ? h(CardVisual)
         : method === 'mbway' ? h(PhoneMock, { phone: py.mbphone || d.phone, total: total, wait: stage === 'waiting' })
           : method === 'multibanco' ? h('div', { style: { width: '100%', maxWidth: 400 } }, h(MBTicket, { amount: total, preview: true }))
             : h(PayPalVisual);
@@ -312,12 +298,7 @@ var LOGOS = { card: [h('i', { key: 1, className: 'visa' }, 'VISA'), h('i', { key
             h('div', { className: 'k3-tabs', role: 'tablist' }, METHODS.map(function (m) { return h('button', { key: m.id, type: 'button', role: 'tab', 'aria-selected': method === m.id, className: 'k3-tab' + (method === m.id ? ' on' : ''), onClick: function () { setMethod(m.id); setApiErr(''); } }, h('span', { className: 'lg', 'aria-hidden': true }, LOGOS[m.id]), h('b', null, m.label), h('span', null, m.sub)); })),
             h('div', { className: 'k3-pform k3-in', key: method },
               method === 'card' ? h(R.Fragment, null,
-                h('div', { className: 'k3-fields' },
-                  P('num', 'Número do cartão', { im: 'numeric', ac: 'cc-number', fmt: fmtCard, max: 19, adorn: brandOf(py.num) || null }),
-                  P('exp', 'Validade (MM/AA)', { im: 'numeric', ac: 'cc-exp', fmt: fmtExp, max: 5, half: true }),
-                  P('cvc', 'CVC', { im: 'numeric', ac: 'cc-csc', type: 'password', fmt: function (v) { return digits(v).slice(0, 4); }, max: 4, half: true, hint: brandOf(py.num) === 'AMEX' ? '4 dígitos na frente' : '3 dígitos no verso' }),
-                  P('cname', 'Nome no cartão', { ac: 'cc-name', max: 60, fmt: function (v) { return v.replace(/[^A-Za-zÀ-ÿ' .-]/g, ''); } })),
-                h('p', { className: 'k3-detail' }, h(Lock), ' Encriptado e verificado com 3-D Secure pelo teu banco. Não guardamos o número nem o CVC.'))
+                h('p', { className: 'k3-detail' }, h(Lock), ' O número do cartão, a validade, o CVC e o nome do titular são introduzidos apenas na página segura do Stripe — nunca passam por este site. Ao confirmares abaixo, és encaminhada(o) para essa página para concluíres o pagamento com 3-D Secure.'))
               : method === 'mbway' ? h(R.Fragment, null,
                 h('div', { className: 'k3-fields' }, P('mbphone', 'Telemóvel associado ao MB WAY', { type: 'tel', im: 'tel', ac: 'tel-national', fmt: fmtPhone, max: 11, adorn: '+351' })),
                 h('p', { className: 'k3-detail' }, 'Recebes um pedido de ' + eur(total) + ' na app MB WAY. Tens 4 minutos para aceitar.'))
