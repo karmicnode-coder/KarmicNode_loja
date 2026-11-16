@@ -1,4 +1,4 @@
-// Karmic Node — app (v12: menu lateral)
+// Karmic Node — app (v15: menu horizontal + mega-menu, sem coluna lateral fixa)
 (function () {
   'use strict';
   var R = React, h = R.createElement, K = window.KN;
@@ -6,14 +6,11 @@
 
   function Pages() {
     var r = K.useRoute(), st = K.useStore();
-    var mS = R.useState(false), menu = mS[0], setMenu = mS[1];
-    var cS = R.useState(function () { try { return localStorage.getItem('kn5-side') === 'mini'; } catch (e) { return false; } }), mini = cS[0], setMini = cS[1];
     R.useEffect(function () {
       var t = r.name === 'p' && st.byId[r.id] ? st.byId[r.id].name : TITLES[r.name];
       document.title = r.name === 'home' ? TITLES.home : (t || 'Karmic Node') + ' · Karmic Node';
     }, [r.name, r.id]);
-    R.useEffect(function () { st.setCartOpen(false); setMenu(false); }, [r.name, r.id, r.params.cat, r.params.f]);
-    function toggleMini() { setMini(function (v) { try { localStorage.setItem('kn5-side', v ? 'full' : 'mini'); } catch (e) {} return !v; }); }
+    R.useEffect(function () { st.setCartOpen(false); }, [r.name, r.id, r.params.cat, r.params.f]);
 
     var page;
     switch (r.name) {
@@ -40,13 +37,8 @@
     }
 
     return h(R.Fragment, null,
-      h(K.TopBar, { route: r, onMenu: function () { setMenu(true); } }),
-      h('div', { className: 'kshell' + (mini ? ' mini' : '') },
-        h('aside', { className: 'kside' }, h(K.SideNav, { route: r, mini: mini, onToggle: toggleMini })),
-        h('div', { className: 'kmain' }, page, h(K.Footer))),
-      h(K.Sheet, { open: menu, onClose: function () { setMenu(false); }, side: 'left', label: 'Menu' },
-        h('div', { className: 'sheet-h' }, h(K.Brand), h('button', { className: 'iconbtn', onClick: function () { setMenu(false); }, 'aria-label': 'Fechar menu' }, h(K.Icon, { n: 'x' }))),
-        h('div', { className: 'sheet-b', style: { padding: 0 } }, h(K.SideNav, { route: r, inSheet: true }))),
+      h(K.Header, { route: r }),
+      h('div', { className: 'kmain' }, page, h(K.Footer)),
       h(K.CartDrawer), h(K.Toast));
   }
 
