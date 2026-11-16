@@ -170,7 +170,7 @@
         h('div', { className: 'snav-h' }, 'Explorar'),
         quick.map(function (it) {
           return h('a', { key: it[0], href: '#' + it[2], className: 'snav-a' + (it[3] ? ' on' : '') + (it[0] === 'bf' ? ' hot' : ''), title: mini ? it[1] : undefined, 'aria-current': it[3] ? 'page' : undefined },
-            h('span', { className: 'snav-ic' }, h(SI, { n: it[0], s: 17 })), h('span', null, it[1]), it[0] === 'bf' ? h('i', { className: 'snav-badge' }, '−25%') : null);
+            h(SI, { n: it[0] }), h('span', null, it[1]), it[0] === 'bf' ? h('i', { className: 'snav-badge' }, '−25%') : null);
         })),
       h('div', { className: 'snav-sec' },
         h('div', { className: 'snav-h' }, 'Categorias'),
@@ -180,7 +180,7 @@
           return h('div', { key: l.id, className: 'snav-g' + (isOpen ? ' open' : '') },
             h('div', { className: 'snav-row' },
               h('a', { href: '#/loja/' + l.id, className: 'snav-a' + (on && !r.params.cat ? ' on' : ''), title: mini ? l.label : undefined },
-                h('span', { className: 'snav-ic' }, h(SI, { n: l.id, s: 17 })), h('span', null, l.label), h('em', null, n)),
+                h(SI, { n: l.id }), h('span', null, l.label), h('em', null, n)),
               mini ? null : h('button', { className: 'snav-tg', onClick: function () { setOpen(isOpen ? null : l.id); }, 'aria-expanded': isOpen, 'aria-label': (isOpen ? 'Fechar ' : 'Abrir ') + l.label }, h(Icon, { n: 'down', s: 16 }))),
             isOpen ? h('div', { className: 'snav-sub' }, ss.map(function (s) {
               var a = on && r.params.cat === s[0];
@@ -193,9 +193,9 @@
         h('span', null, 'Portes grátis acima de ' + eur(K.CFG.freeShip) + '.')),
       h('div', { className: 'snav-foot' },
         h(ThemeSwitch),
-        h('a', { href: '#/ajuda', className: 'snav-a', title: mini ? 'Ajuda' : undefined }, h('span', { className: 'snav-ic' }, h(SI, { n: 'help', s: 17 })), h('span', null, 'Ajuda e devoluções')),
+        h('a', { href: '#/ajuda', className: 'snav-a', title: mini ? 'Ajuda' : undefined }, h(SI, { n: 'help' }), h('span', null, 'Ajuda e devoluções')),
         p.inSheet ? null : h('button', { className: 'snav-a snav-col', onClick: p.onToggle, 'aria-label': mini ? 'Expandir menu' : 'Recolher menu', title: mini ? 'Expandir menu' : undefined },
-          h('span', { className: 'snav-ic snav-colic', style: { transform: mini ? 'rotate(180deg)' : 'none' } }, h(SI, { n: 'collapse', s: 17 })), h('span', null, 'Recolher menu'))));
+          h('span', { className: 'snav-colic', style: { transform: mini ? 'rotate(180deg)' : 'none' } }, h(SI, { n: 'collapse' })), h('span', null, 'Recolher menu'))));
   }
 
   Object.assign(window.KN, { TopBar: TopBar, SideNav: SideNav, Brand: Brand, useTheme: useTheme, ThemeToggle: ThemeToggle });

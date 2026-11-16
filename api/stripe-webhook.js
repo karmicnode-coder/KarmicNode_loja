@@ -1,209 +1,135 @@
 // ═══════════════════════════════════════════════════════════════
-// KARMIC NODE — /api/stripe-webhook
+// KARMIC NODE — POST /api/stripe-webhook
+// 1. Verifica a assinatura do Stripe (rejeita tudo o que não venha do Stripe).
+// 2. Quando o pagamento está CONFIRMADO, marca a encomenda como paga no Supabase e baixa o stock.
+// 3. Envia UM aviso ao dono da loja pelo Formspree (sem morada/telefone/NIF).
+// Nunca envia em pagamentos falhados/expirados. Eventos repetidos não geram emails repetidos.
 // ═══════════════════════════════════════════════════════════════
-// Recebe eventos Stripe: cria order no Supabase, atribui Karma,
-// dispara email confirmação, envia pedido para Printful.
-// ═══════════════════════════════════════════════════════════════
-
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 
-// Instanciação defensiva — sem isto, faltar QUALQUER env var rebenta o módulo
-// inteiro no arranque e o Vercel devolve 500 sem log útil nenhum.
-const stripe = process.env.STRIPE_SECRET_KEY
-  ? new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2024-06-20' })
-  : null;
-// Supabase é opcional: sem ele a encomenda não fica persistida em BD, mas o
-// pagamento Stripe em si continua a funcionar (fica só nos logs + no painel
-// Stripe). Mesmo comportamento inerte do resto do projeto (ver .env.example).
-const supabase = (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_KEY)
-  ? createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
-  : null;
+export const config = { api: { bodyParser: false } }; // o Stripe exige o corpo em bruto
 
-export const config = { api: { bodyParser: false } }; // Stripe precisa raw body
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2024-06-20' });
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
+const eur = (c) => new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' }).format((c || 0) / 100);
+const METHOD_LABEL = { card: 'Cartão', multibanco: 'Multibanco', mb_way: 'MB WAY', paypal: 'PayPal', link: 'Link' };
 
-async function getRawBody(req) {
+async function rawBody(req) {
   const chunks = [];
-  for await (const chunk of req) chunks.push(typeof chunk === 'string' ? Buffer.from(chunk) : chunk);
+  for await (const ch of req) chunks.push(typeof ch === 'string' ? Buffer.from(ch) : ch);
   return Buffer.concat(chunks);
 }
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
 
-  if (!stripe) {
-    console.error('[Webhook] STRIPE_SECRET_KEY não configurada no Vercel.');
-    return res.status(503).json({ error: 'Stripe não configurado' });
-  }
-
-  const sig = req.headers['stripe-signature'];
-  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
-  if (!webhookSecret) {
-    console.error('[Webhook] STRIPE_WEBHOOK_SECRET não configurada no Vercel.');
-    return res.status(500).json({ error: 'Webhook secret missing' });
-  }
   let event;
-
   try {
-    const rawBody = await getRawBody(req);
-    event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret);
+    event = stripe.webhooks.constructEvent(await rawBody(req), req.headers['stripe-signature'], process.env.STRIPE_WEBHOOK_SECRET);
   } catch (err) {
-    console.error('[Webhook signature failed]', err.message);
-    return res.status(400).send(`Webhook Error: ${err.message}`);
+    console.error('[webhook] assinatura inválida:', err.message);
+    return res.status(400).send('Assinatura inválida');
   }
 
   try {
+    const s = event.data.object;
     switch (event.type) {
-      case 'checkout.session.completed': {
-        const session = event.data.object;
-        await handleCheckoutCompleted(session);
+      case 'checkout.session.completed':
+        if (s.payment_status === 'paid') await onPaid(s, event.id);
+        else await markOrder(s, { status: 'awaiting_payment' }); // Multibanco: referência gerada, ainda não pago
         break;
-      }
-      case 'checkout.session.expired': {
-        // Opcional: notificar user que a sessão expirou
+      case 'checkout.session.async_payment_succeeded':
+        await onPaid(s, event.id);
         break;
-      }
-      case 'payment_intent.payment_failed': {
-        // Opcional: registar falha para análise
+      case 'checkout.session.async_payment_failed':
+        await markOrder(s, { status: 'payment_failed' });
         break;
-      }
-      case 'charge.refunded': {
-        const charge = event.data.object;
-        await handleRefund(charge);
+      case 'checkout.session.expired':
+        await markOrder(s, { status: 'expired' });
         break;
-      }
+      case 'charge.refunded':
+        await supabase.from('orders').update({ status: 'refunded', refunded_at: new Date().toISOString(), refund_amount_cents: s.amount_refunded })
+          .eq('stripe_payment_intent', s.payment_intent);
+        break;
       default:
-        // Ignorar eventos não relevantes
         break;
     }
     return res.status(200).json({ received: true });
-  } catch (error) {
-    console.error('[Webhook Handler Error]', error);
-    return res.status(500).json({ error: error.message });
+  } catch (err) {
+    console.error('[webhook] erro a processar', event.type, err);
+    return res.status(500).json({ error: 'Erro interno' }); // o Stripe volta a tentar
   }
 }
 
-async function handleCheckoutCompleted(session) {
-  // Ir buscar line items COM metadata do produto (sku, cor, tamanho, nota,
-  // URLs do design) — sem o expand abaixo, `price.product` vem só como ID e
-  // perdíamos toda a informação que api/checkout.js guardou em product_data.metadata.
-  const items = await stripe.checkout.sessions.listLineItems(session.id, {
-    limit: 100,
-    expand: ['data.price.product'],
-  });
+function orderNoOf(s) { return (s.metadata && s.metadata.order_no) || s.client_reference_id || null; }
 
-  const meta = session.metadata || {};
-  const userId = meta.user_id !== 'guest' ? meta.user_id : null;
+async function markOrder(s, patch) {
+  const no = orderNoOf(s);
+  if (!no) return;
+  await supabase.from('orders').update(patch).eq('order_no', no).neq('status', 'paid');
+}
 
-  // 1. Criar order no Supabase
-  const { data: order, error: orderErr } = await supabase.from('orders').insert({
-    stripe_session_id: session.id,
-    stripe_payment_intent: session.payment_intent,
-    user_id: userId,
-    customer_email: session.customer_details?.email,
-    customer_name: session.customer_details?.name,
-    shipping_address: session.shipping_details?.address || null,
-    billing_address: session.customer_details?.address || null,
-    subtotal_cents: parseInt(meta.subtotal_cents || '0'),
-    discount_cents: parseInt(meta.discount_cents || '0'),
-    shipping_cents: parseInt(meta.shipping_cents || '0'),
-    vat_cents: parseInt(meta.vat_cents || '0'),
-    total_cents: session.amount_total,
-    currency: session.currency,
-    status: 'paid',
-    payment_method: session.payment_method_types?.[0] || 'card',
-    items: items.data.map(li => ({
-      name: li.description,
-      quantity: li.quantity,
-      price_cents: li.price?.unit_amount,
-    })),
-    promo_code: meta.promo_code || null,
-  }).select().single();
+async function onPaid(s, eventId) {
+  const no = orderNoOf(s);
+  if (!no) { console.error('[webhook] sessão sem order_no', s.id); return; }
 
-  if (orderErr) console.error('[Order insert error]', orderErr);
-
-  // 2. Encomenda completa: um order_items por linha, com cor, tamanho, nota e
-  // o design (JSON + PNG, já no Storage — nunca base64, ver api/checkout.js),
-  // e decremento de stock por SKU (problema #3 do pacote). A linha de portes
-  // não tem metadata.sku (é um custo, não um produto) — ignora-se aqui.
-  if (order && supabase) {
-    for (const li of items.data) {
-      const productMeta = (li.price?.product && typeof li.price.product === 'object') ? (li.price.product.metadata || {}) : {};
-      const sku = productMeta.sku;
-      if (!sku) continue; // linha de portes ou produto sem SKU — não é um artigo da encomenda
-
-      const variantParts = [productMeta.color, productMeta.size].filter(Boolean);
-      const { error: itemErr } = await supabase.from('order_items').insert({
-        order_id: order.id,
-        product_sku: sku,
-        product_name: li.description || sku,
-        product_image: productMeta.design_png_url || null,
-        variant: variantParts.join(' · ') || null,
-        quantity: li.quantity || 1,
-        unit_price_cents: li.price?.unit_amount || 0,
-        total_cents: (li.price?.unit_amount || 0) * (li.quantity || 1),
-        custom_design: {
-          color: productMeta.color || null,
-          size: productMeta.size || null,
-          note: productMeta.note || null,
-          design_json_url: productMeta.design_json_url || null,
-          design_png_url: productMeta.design_png_url || null,
-        },
-        source: 'manual',
-      });
-      if (itemErr) console.error('[order_items insert error]', sku, itemErr);
-
-      // Baixar stock — ignora em silêncio se a função RPC ou o SKU não existirem
-      // (mesmo padrão defensivo do resto do projeto: nunca rebenta a encomenda
-      // já paga por causa disto).
-      const { error: stockErr } = await supabase.rpc('decrement_product_stock', {
-        p_sku: sku,
-        p_qty: li.quantity || 1,
-      });
-      if (stockErr) console.warn('[decrement_product_stock indisponível, a ignorar]', sku, stockErr.message);
+  // Método efetivamente usado
+  let method = (s.payment_method_types || [])[0] || 'card';
+  try {
+    if (s.payment_intent) {
+      const pi = await stripe.paymentIntents.retrieve(s.payment_intent, { expand: ['latest_charge'] });
+      method = (pi.latest_charge && pi.latest_charge.payment_method_details && pi.latest_charge.payment_method_details.type) || method;
     }
-  }
+  } catch (e) { /* mantém o método por omissão */ }
 
-  // Karma Points: a loja não mostra karma na interface (problema #11 do pacote).
-  // Só atribui pontos se a função RPC existir no Supabase; ignora em silêncio se não existir.
-  if (userId) {
-    const pointsEarned = 100 + Math.floor(session.amount_total / 100);
-    const { error: karmaErr } = await supabase.rpc('award_karma', {
-      p_user_id: userId,
-      p_action: 'purchase',
-      p_points: pointsEarned,
-      p_metadata: { order_id: order?.id, amount: session.amount_total },
-    });
-    if (karmaErr) console.warn('[award_karma indisponível, a ignorar]', karmaErr.message);
-  }
+  // 1. Marcar como paga (só uma vez) — o update condicional garante que eventos repetidos não passam daqui
+  const { data: updated, error } = await supabase.from('orders')
+    .update({ status: 'paid', paid_at: new Date().toISOString(), stripe_session_id: s.id, stripe_payment_intent: s.payment_intent, total_cents: s.amount_total, payment_method: method, last_event_id: eventId })
+    .eq('order_no', no).neq('status', 'paid')
+    .select('order_no, customer_email, items, total_cents, created_at, notified_at')
+    .maybeSingle();
+  if (error) throw error;
+  if (!updated) return; // já estava paga → evento repetido, nada a fazer
 
-  // Disparar email de confirmação
+  // 2. Baixar stock (não bloqueia o aviso se falhar)
   try {
-    await fetch(`${process.env.SITE_URL}/api/create-order-email`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ order_id: order?.id }),
-    });
-  } catch (e) {
-    console.error('[Email dispatch failed]', e);
-  }
+    for (const l of updated.items || []) {
+      await supabase.rpc('decrement_stock', { p_sku: l.sku, p_qty: l.qty });
+    }
+  } catch (e) { console.error('[webhook] stock', e.message); }
 
-  // Enviar para Printful (se items customizados) — nome de rota real do ficheiro (problema #1 do pacote)
-  try {
-    await fetch(`${process.env.SITE_URL}/api/printful-create-order`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ order_id: order?.id }),
-    });
-  } catch (e) {
-    console.error('[Printful dispatch failed]', e);
-  }
+  // 3. Aviso ao dono da loja (uma única vez)
+  if (updated.notified_at) return;
+  const ok = await notifyOwner({ ...updated, method });
+  if (ok) await supabase.from('orders').update({ notified_at: new Date().toISOString() }).eq('order_no', no).is('notified_at', null);
 }
 
-async function handleRefund(charge) {
-  await supabase.from('orders').update({
-    status: 'refunded',
-    refunded_at: new Date().toISOString(),
-    refund_amount_cents: charge.amount_refunded,
-  }).eq('stripe_payment_intent', charge.payment_intent);
+async function notifyOwner(o) {
+  const endpoint = process.env.FORMSPREE_ORDER_ENDPOINT;
+  if (!endpoint) { console.warn('[webhook] FORMSPREE_ORDER_ENDPOINT em falta'); return false; }
+  const items = o.items || [];
+  const pecas = items.map((l) => `${l.qty}× ${[l.name, l.color, l.size && l.size !== 'Único' ? l.size : null].filter(Boolean).join(' · ')} — ${eur(l.unit_cents * l.qty)}${l.note ? ` · ✦ ${l.note}` : ''}`).join('\n');
+  const payload = {
+    _subject: `Nova encomenda paga · #${o.order_no} · ${eur(o.total_cents)}`,
+    _replyto: o.customer_email,
+    encomenda: o.order_no,
+    data: new Date().toLocaleString('pt-PT', { timeZone: 'Europe/Lisbon' }),
+    total: eur(o.total_cents),
+    metodo: METHOD_LABEL[o.method] || o.method,
+    pecas,
+    personalizacao: items.some((l) => l.custom) ? 'Sim — ver o design no painel' : 'Não',
+    cliente_email: o.customer_email,
+    painel: `${(process.env.ADMIN_URL || '').replace(/\/$/, '')}/encomendas/${o.order_no}`,
+  };
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), 8000);
+  try {
+    const r = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify(payload), signal: ctrl.signal });
+    if (!r.ok) { console.error('[webhook] Formspree respondeu', r.status); return false; }
+    return true;
+  } catch (e) {
+    console.error('[webhook] Formspree falhou', e.message); // não faz falhar o webhook
+    return false;
+  } finally { clearTimeout(t); }
 }
