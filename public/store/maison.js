@@ -364,6 +364,50 @@
       h(Search, { open: search, onOpen: function () { setSearch(true); }, onClose: function () { setSearch(false); } }),
       h(K.CartDrawer), h(K.Toast));
   }
-  function App() { return h(K.StoreProvider, null, h(Pages)); }
+  // ───── Popup de boas-vindas (WELCOME10) ─────
+  // Aparece uma vez por visitante, só na página inicial, depois de uns segundos a navegar —
+  // nunca no checkout nem no estúdio. Usa o mesmo código já existente na Newsletter/Footer.
+  function WelcomePopup() {
+    var r = K.useRoute();
+    var vS = useState(false), visible = vS[0], setVisible = vS[1];
+    var eS = useState(''), e = eS[0], setE = eS[1];
+    var dS = useState(false), done = dS[0], setDone = dS[1];
+    var errS = useState(''), err = errS[0], setErr = errS[1];
+    useEffect(function () {
+      if (r.name !== 'home') return;
+      var seen; try { seen = localStorage.getItem('kn5-welcome-seen'); } catch (ex) { seen = '1'; }
+      if (seen) return;
+      var t = setTimeout(function () { setVisible(true); }, 4500);
+      return function () { clearTimeout(t); };
+    }, [r.name]);
+    function close() { setVisible(false); try { localStorage.setItem('kn5-welcome-seen', '1'); } catch (ex) {} }
+    function sub(ev) {
+      ev.preventDefault();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e)) { setErr(e.indexOf('@') < 0 ? 'Falta o “@” no email.' : 'Confirma o domínio do email (ex.: @gmail.com).'); return; }
+      setErr(''); setDone(true);
+    }
+    if (r.name !== 'home' || !visible) return null;
+    return h('div', { className: 'mx-welcome', role: 'dialog', 'aria-modal': true, 'aria-label': 'Boas-vindas' },
+      h('div', { className: 'mx-welcome-bg', onClick: close }),
+      h('div', { className: 'mx-welcome-p' },
+        h('button', { className: 'mx-close', 'aria-label': 'Fechar', onClick: close }, h('span'), h('span')),
+        done
+          ? h('div', { style: { textAlign: 'center' } },
+              h('div', { className: 'mx-label g', style: { marginBottom: 10 } }, 'Código enviado'),
+              h('p', { className: 'mx-h', style: { fontSize: 26, margin: '0 0 10px' } }, 'Bem-vinda(o) ao clube.'),
+              h('p', { className: 'muted', style: { margin: '0 0 16px' } }, 'O teu código: ', h('b', { style: { color: 'var(--mx-gold)' } }, 'WELCOME10')),
+              h('button', { className: 'btn sm', onClick: close }, 'Começar a comprar'))
+          : h(R.Fragment, null,
+              h('div', { className: 'mx-label g' }, '— Bem-vinda(o)'),
+              h('h2', { className: 'mx-h', style: { fontSize: 32, margin: '10px 0 8px' } }, '10% na primeira ', h('em', { className: 'mx-serif' }, 'encomenda.')),
+              h('p', { className: 'muted', style: { margin: '0 0 18px', fontSize: 14 } }, 'Subscreve e recebe o código agora. Novidades e promoções, no máximo duas vezes por mês.'),
+              h('form', { onSubmit: sub, noValidate: true, style: { display: 'grid', gap: 8 } },
+                h('input', { className: 'input', type: 'email', value: e, onChange: function (x) { setE(x.target.value); setErr(''); }, placeholder: 'O teu email', 'aria-label': 'Email', autoComplete: 'email', 'aria-invalid': !!err, autoFocus: true }),
+                err ? h('span', { style: { color: 'var(--err)', fontSize: 13 } }, err) : null,
+                h('button', { className: 'btn block', type: 'submit' }, 'Quero o código')),
+              h('button', { className: 'link', style: { marginTop: 12, fontSize: 12 }, onClick: close }, 'Agora não'))));
+  }
+
+  function App() { return h(K.StoreProvider, null, h(Pages), h(WelcomePopup)); }
   ReactDOM.createRoot(document.getElementById('root')).render(h(App));
 })();

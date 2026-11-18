@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Entrar · Clube KN · Karmic Node</title>
+<meta name="description" content="Entra no Clube KN, cria conta ou recupera o acesso à tua conta Karmic Node.">
+<link rel="icon" href="../assets/logo-mark.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&family=Pinyon+Script&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="mx.css">
+<style>
+  html,body{margin:0;height:100%;background:#050505;overscroll-behavior:none}
+  #stage{position:fixed;inset:0;display:grid;place-items:center;overflow:hidden}
+  #fit{width:1280px;height:800px;transform-origin:center;flex:none}
+  @keyframes v5stitch{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+  @keyframes v5sheen{0%,100%{transform:translateX(-30%)}50%{transform:translateX(30%)}}
+  @keyframes gdraw{to{stroke-dashoffset:0}}
+  @keyframes gfill{0%,55%{opacity:0}100%{opacity:1}}
+  @keyframes ge10float{0%,100%{transform:translate3d(0,0,0)}50%{transform:translate3d(0,-6px,4px)}}
+  @keyframes mxin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  @keyframes ge10line{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+  .mx-btn:disabled{cursor:not-allowed}
+  .kn-ferr{display:block;margin-top:6px;font:400 10.5px 'IBM Plex Mono',monospace;font-style:normal;letter-spacing:.06em;color:#E35368;text-transform:none}
+  .kn-back{position:fixed;top:22px;right:26px;z-index:40;font:500 10.5px 'IBM Plex Mono',monospace;letter-spacing:.18em;text-transform:uppercase;color:#8F8579;text-decoration:none;border-bottom:1px solid #3A2D2E;padding-bottom:4px}
+  .kn-back:hover{color:#C9A15B;border-color:#C9A15B}
+  @keyframes ge10trace{to{stroke-dashoffset:0}}
+  @keyframes mxpulse{50%{opacity:.35}}
+  @keyframes gsshake{0%,100%{transform:none}20%{transform:translateX(-6px)}40%{transform:translateX(5px)}60%{transform:translateX(-3px)}80%{transform:translateX(2px)}}
+  @keyframes g8blink{0%,49%{opacity:1}50%,100%{opacity:0}}
+  .gc-opt:hover{border-color:#C9A15B!important;background:rgba(201,161,91,.05)!important}
+  @media (prefers-reduced-motion:reduce){*{animation-duration:.001s!important;animation-iteration-count:1!important}}
+
+  /* ───── Telemóvel: ecrã próprio em vez de encolher o artboard fixo de 1280×800 ───── */
+  @media (max-width:760px){
+    html,body{overflow-y:auto}
+    #stage{position:static;display:block;min-height:100%;background:radial-gradient(ellipse 120% 60% at 30% 0%,#2a0d12,#0a0708 60%)}
+    #fit{width:100%;height:auto;min-height:100vh;min-height:100dvh;transform:none!important}
+    .kn-back{top:16px;right:16px}
+    #fit .mx{width:100%!important;height:auto!important;min-height:100vh;min-height:100dvh;overflow:visible!important;display:flex;flex-direction:column}
+    /* esconde o fundo canvas animado e o cartão 3D pesado no telemóvel; mantém só o formulário */
+    #fit .mx>canvas{display:none}
+    #fit .mx>div[style*="position: absolute"][style*="perspective"]{display:none}
+    #fit .mx>div[style*="left: 80px"][style*="right: 620px"]{display:none}
+    #fit .mx>div[style*="left:80px"][style*="right:620px"]{display:none}
+  }
+</style>
+<meta name="ext-resource-dependency" content="../assets/logo-karmicnode-oficial.png" data-resource-id="knLogo" />
+</head>
+<body>
+<a class="kn-back" href="/" target="_top">← Voltar à loja</a>
+<div id="stage"><div id="fit"><div id="root"></div></div></div>
+<script>
+  (function () {
+    function fit() {
+      var mobile = innerWidth <= 760;
+      var el = document.getElementById('fit');
+      if (mobile) { el.style.transform = 'none'; return; }
+      var s = Math.min(innerWidth / 1280, innerHeight / 800);
+      el.style.transform = 'scale(' + s + ')';
+    }
+    addEventListener('resize', fit);
+    fit();
+  })();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<!-- Só os ficheiros realmente usados pela cadeia GLogin → GLSide → GE10x → GRec62 (ver HANDOFF.md, ponto "Known gaps" #7).
+     g-code.jsx, g-code2.jsx, g-code3.jsx, g-forgot4.jsx, g-forgot5.jsx eram variações de protótipo nunca referenciadas
+     e foram removidas nesta publicação. -->
+<script type="text/babel" src="mx-a.jsx"></script>
+<script type="text/babel" src="kn-auth.jsx"></script>
+<script type="text/babel" src="kn-bg.jsx"></script>
+<script type="text/babel" src="g-bg4.jsx"></script>
+<script type="text/babel" src="v4-a.jsx"></script>
+<script type="text/babel" src="v5-kit.jsx"></script>
+<script type="text/babel" src="v6-kit.jsx"></script>
+<script type="text/babel" src="f-a.jsx"></script>
+<script type="text/babel" src="g-kit.jsx"></script>
+<script type="text/babel" src="g-e10.jsx"></script>
+<script type="text/babel" src="g-e10v.jsx"></script>
+<script type="text/babel" src="g-forgot.jsx"></script>
+<script type="text/babel" src="g-sec-kit.jsx"></script>
+<script type="text/babel" src="kn-flow.jsx"></script>
+<script type="text/babel" src="g-login.jsx"></script>
+<script type="text/babel">
+ReactDOM.createRoot(document.getElementById('root')).render(<GLogin forgotV={62} />);
+</script>
+</body>
+</html>

@@ -1,0 +1,97 @@
+/* ============================================================
+   KARMIC NODE · 12 LOGINS v2 · linguagem "Maison" do site atual
+   (karmicnode.com: Syne + IBM Plex Mono + Cormorant + Pinyon Script)
+   Artboards 1280×800
+   ============================================================ */
+.mx{position:relative;width:1280px;height:800px;overflow:hidden;font-family:'Syne',system-ui,sans-serif;-webkit-font-smoothing:antialiased;
+  --bg:#0A0708;--bg2:#120D0E;--surf:#110C0D;--fg:#F4EEE6;--ink2:#CBBFB1;--dim:#8F8579;--line:#251C1D;--line2:#3A2D2E;
+  --silver:#E4D8C6;--gold:#C9A15B;--bordo:#8B1E2D;--hi:#B12A3E;
+  background:var(--bg);color:var(--fg)}
+.mx.light{--bg:#F6F1EA;--bg2:#EFE8DE;--surf:#FFFFFF;--fg:#17110F;--ink2:#4E443D;--dim:#7A6F66;--line:#E2D8CC;--line2:#D3C6B6;--silver:#1E1714;--gold:#9C7536}
+.mx *{box-sizing:border-box}
+.mx button{font-family:inherit;cursor:pointer}
+.mx input{font-family:inherit}
+.mx-m{font-family:'IBM Plex Mono',monospace}
+.mx-s{font-family:'Cormorant Garamond',Georgia,serif;font-style:italic;font-weight:400;text-transform:none;letter-spacing:-.01em}
+.mx-p{font-family:'Pinyon Script',cursive;font-weight:400}
+.mx-lbl{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}
+.mx-lbl.g{color:var(--gold)}
+.mx-h{font-weight:700;text-transform:uppercase;letter-spacing:-.04em;line-height:.86;margin:0}
+
+/* Marca (igual ao site) */
+.mx-brand{display:flex;align-items:center;gap:13px;color:var(--fg)}
+.mx-mark{width:40px;height:40px;border-radius:50%;border:1.5px solid var(--silver);display:grid;place-items:center;flex:none}
+.mx-mark img{width:24px;height:24px;object-fit:contain;filter:drop-shadow(0 0 8px rgba(177,42,62,.45))}
+.mx-brand-t{display:grid;line-height:1}
+.mx-brand-t b{font-size:16px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;white-space:nowrap}
+.mx-brand-t small{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);margin-top:6px}
+
+/* Botões (igual ao site: prata, mono, hover ouro) */
+.mx-btn{display:inline-flex;align-items:center;justify-content:center;gap:14px;width:100%;height:54px;background:var(--silver);color:var(--bg);border:1px solid var(--silver);font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.16em;text-transform:uppercase;font-weight:500;transition:.25s;white-space:nowrap}
+.mx-btn:hover{background:var(--gold);border-color:var(--gold);color:#0A0708}
+.mx-btn.out{background:transparent;color:var(--silver)}
+.mx-btn.out:hover{background:var(--silver);color:var(--bg)}
+.mx-btn.bordo{background:var(--bordo);border-color:var(--bordo);color:#F4EEE6}
+.mx-btn.bordo:hover{background:var(--hi);border-color:var(--hi)}
+.mx-btn.ink{background:#17110F;border-color:#17110F;color:#F6F1EA}
+.mx-btn.ink:hover{background:#8B1E2D;border-color:#8B1E2D}
+.mx-link{background:none;border:none;border-bottom:1px solid var(--line2);padding:0 0 3px;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--silver);transition:.2s}
+.mx-link:hover{color:var(--gold);border-color:var(--gold)}
+
+/* Campos */
+.mx-f{display:block;margin-bottom:14px}
+.mx-f span{display:block;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--dim);margin-bottom:7px}
+.mx-f input{width:100%;height:50px;padding:0 16px;background:var(--surf);border:1px solid var(--line2);color:var(--fg);font-size:15px;outline:none;transition:border-color .2s,box-shadow .2s}
+.mx-f input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,161,91,.14)}
+.mx-f input::placeholder{color:var(--dim);opacity:.7}
+.mx-f input:-webkit-autofill,.mx-f input:-webkit-autofill:hover,.mx-f input:-webkit-autofill:focus{-webkit-text-fill-color:var(--fg);-webkit-box-shadow:0 0 0 1000px var(--surf) inset;caret-color:var(--fg);transition:background-color 9999s}
+.mx-f.u input{background:transparent;border:none;border-bottom:1px solid var(--line2);padding:0;height:42px}
+.mx-f.u input:focus{box-shadow:none}
+.mx-row{display:flex;justify-content:space-between;align-items:center;gap:14px}
+.mx-small{font-size:13px;color:var(--dim)}
+.mx-soc{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mx-soc button{height:44px;border:1px solid var(--line2);background:transparent;color:var(--fg);font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;transition:border-color .2s}
+.mx-soc button:hover{border-color:var(--silver)}
+.mx-or{display:flex;align-items:center;gap:14px;margin:18px 0;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--dim)}
+.mx-or::before,.mx-or::after{content:"";flex:1;height:1px;background:var(--line)}
+.mx-ok{display:flex;align-items:center;gap:10px;height:54px;padding:0 16px;border:1px solid var(--gold);font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);animation:mxin .35s both}
+.mx-ok button{margin-left:auto}
+.mx-dot{width:8px;height:8px;border-radius:50%;background:var(--gold);box-shadow:0 0 14px var(--gold);animation:mxpulse 2.4s ease-in-out infinite;flex:none}
+@keyframes mxpulse{50%{box-shadow:0 0 4px var(--gold)}}
+@keyframes mxin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes mxscroll{to{transform:translateX(-50%)}}
+@keyframes mxscrollr{from{transform:translateX(-50%)}to{transform:translateX(0)}}
+@keyframes mxsway{0%,100%{transform:rotate(-1.8deg)}50%{transform:rotate(1.8deg)}}
+@keyframes mxstamp{0%{opacity:0;transform:rotate(-14deg) scale(2.2)}60%{opacity:.9;transform:rotate(-14deg) scale(.94)}100%{opacity:.88;transform:rotate(-14deg) scale(1)}}
+
+/* Chão em grelha + brilho (herói do site) */
+.mx-floor{position:absolute;left:50%;bottom:0;width:200%;height:50%;background-image:linear-gradient(90deg,rgba(228,216,198,.06) 1px,transparent 1px),linear-gradient(180deg,rgba(228,216,198,.06) 1px,transparent 1px);background-size:80px 80px;transform:translateX(-50%) perspective(600px) rotateX(60deg);transform-origin:center bottom;-webkit-mask-image:linear-gradient(180deg,transparent,#000 50%);mask-image:linear-gradient(180deg,transparent,#000 50%);pointer-events:none}
+.mx-glow{position:absolute;left:50%;bottom:6%;width:900px;height:320px;transform:translateX(-50%);background:radial-gradient(ellipse,rgba(201,161,91,.16),transparent 65%);filter:blur(20px);pointer-events:none}
+
+/* Ticker */
+.mx-ticker{overflow:hidden;border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--bg2)}
+.mx-track{display:flex;gap:56px;width:max-content;white-space:nowrap;animation:mxscroll 40s linear infinite;font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--dim)}
+.mx-track b{color:var(--silver);font-weight:500}
+.mx-track i{font-style:normal;color:var(--hi)}
+
+/* Texturas */
+.mx-linen{background-color:#EFE6D6;background-image:repeating-linear-gradient(0deg,rgba(60,40,20,.045) 0 1px,transparent 1px 3px),repeating-linear-gradient(90deg,rgba(60,40,20,.045) 0 1px,transparent 1px 3px)}
+.mx-cotton{background-color:#1A1315;background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.028) 0 1px,transparent 1px 4px),repeating-linear-gradient(-45deg,rgba(255,255,255,.028) 0 1px,transparent 1px 4px)}
+.mx-woven{background-color:#6E1622;background-image:repeating-linear-gradient(0deg,rgba(0,0,0,.2) 0 1px,transparent 1px 3px),repeating-linear-gradient(90deg,rgba(255,255,255,.05) 0 1px,transparent 1px 2px)}
+.mx-kraft{background-color:#141011;background-image:repeating-linear-gradient(90deg,rgba(255,255,255,.018) 0 2px,transparent 2px 7px)}
+.mx-curtain{background:repeating-linear-gradient(90deg,#3d0812 0,#6e1622 16px,#8B1E2D 26px,#6e1622 36px,#3d0812 52px)}
+
+/* Cartão de produto (rails da vitrine) */
+.mx-pcard{flex:none;width:210px}
+.mx-pcard .ph{position:relative;height:250px;overflow:hidden;background:radial-gradient(ellipse at 50% 40%,#2A2424 0%,#1A1616 75%);border:1px solid var(--line)}
+.mx-pcard .ph img{width:100%;height:100%;object-fit:cover;filter:saturate(.85)}
+.mx-pcard .tag{position:absolute;top:10px;left:10px;padding:4px 7px;background:var(--hi);color:#fff;font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase}
+.mx-pcard .mt{display:flex;justify-content:space-between;gap:8px;margin-top:10px;font-size:13px}
+.mx-pcard .mt span{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink2);white-space:nowrap}
+.mx-rail{display:flex;gap:18px;width:max-content;animation:mxscroll 60s linear infinite}
+.mx-rail.r{animation-name:mxscrollr}
+
+/* Bastidor */
+.mx-stitch{fill:none;stroke:var(--gold);stroke-width:2;stroke-dasharray:7 5}
+.mx-stitch.run{stroke-dashoffset:0;animation:mxrun 1.2s linear infinite}
+@keyframes mxrun{to{stroke-dashoffset:-24}}

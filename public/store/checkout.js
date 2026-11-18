@@ -4,8 +4,35 @@
 // trata das páginas pós-compra e de apoio que não têm versão própria.
 (function () {
   'use strict';
-  var R = React, h = R.createElement, useState = R.useState;
+  var R = React, h = R.createElement, useState = R.useState, useEffect = R.useEffect;
   var K = window.KN, Icon = K.Icon, eur = K.eur;
+
+  // ───── Sessão do Clube KN (Supabase) ─────
+  // Usa a mesma conta Supabase do login em public/login/kn-auth.jsx (projeto wfqvofnneaewgfwcvqcx).
+  // Como esta página não carrega o Babel nem os componentes do /login/, falamos
+  // diretamente com o SDK do Supabase só para saber "há sessão?" e "qual o nome/email?".
+  var SB_URL = 'https://wfqvofnneaewgfwcvqcx.supabase.co';
+  var SB_KEY = 'sb_publishable_qIdt7lw7JKSN9bCrH076gg_UINkj8vW';
+  var sbClient = null;
+  function getSb() {
+    if (sbClient) return sbClient;
+    if (window.supabase && window.supabase.createClient) {
+      sbClient = window.supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession: true, autoRefreshToken: true } });
+    }
+    return sbClient;
+  }
+  function useSession() {
+    var sS = useState(undefined), session = sS[0], setSession = sS[1]; // undefined = a carregar, null = sem sessão
+    useEffect(function () {
+      var sb = getSb();
+      if (!sb) { setSession(null); return; }
+      var alive = true;
+      sb.auth.getSession().then(function (r) { if (alive) setSession((r.data && r.data.session) || null); });
+      var sub = sb.auth.onAuthStateChange(function (_evt, s) { if (alive) setSession(s || null); });
+      return function () { alive = false; sub && sub.data && sub.data.subscription && sub.data.subscription.unsubscribe(); };
+    }, []);
+    return session;
+  }
 
   function Confirm(p) {
     var st = K.useStore(), o = st.orders.find(function (x) { return x.n === p.route.id; });
@@ -36,9 +63,45 @@
 
   function Account() {
     var st = K.useStore();
+    var session = useSession();
+    var name = session && session.user && session.user.user_metadata && session.user.user_metadata.full_name;
+    var email = session && session.user && session.user.email;
+
+    function signOut() {
+      var sb = getSb();
+      if (sb) sb.auth.signOut();
+    }
+
+    // A carregar: ainda não sabemos se há sessão — evita piscar "Entrar" antes de confirmar.
+    if (session === undefined) {
+      return h('main', { className: 'wrap', style: { maxWidth: 860, paddingTop: 24, paddingBottom: 40 } },
+        h('h1', { className: 'h2' }, 'A minha conta'),
+        h('p', { className: 'muted', style: { margin: '6px 0 24px' } }, 'A verificar sessão…'));
+    }
+
+    // Sem sessão: convite a entrar/criar conta no Clube KN (ver public/login/).
+    if (!session) {
+      return h('main', { className: 'wrap', style: { maxWidth: 860, paddingTop: 24, paddingBottom: 40 } },
+        h('h1', { className: 'h2' }, 'A minha conta'),
+        h('p', { className: 'muted', style: { margin: '6px 0 24px' } }, 'Entra no Clube KN para veres as tuas encomendas em qualquer dispositivo.'),
+        h('div', { className: 'card-box', style: { display: 'flex', gap: 10, flexWrap: 'wrap' } },
+          h('a', { className: 'btn', href: '/login/' }, 'Entrar'),
+          h('a', { className: 'btn ghost', href: '/login/#criar' }, 'Criar conta')),
+        st.orders.length ? h('div', { style: { marginTop: 28 } },
+          h('p', { className: 'muted', style: { fontSize: 13, marginBottom: 10 } }, 'Encomendas feitas neste dispositivo (sem conta):'),
+          st.orders.map(function (o) { return h('a', { key: o.n, href: '#/confirmacao/' + o.n, className: 'card-box', style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginBottom: 10 } },
+            h('div', null, h('b', null, '#' + o.n), h('div', { className: 'muted', style: { fontSize: 13 } }, new Date(o.at).toLocaleDateString('pt-PT') + ' · ' + o.lines.reduce(function (s, l) { return s + l.qty; }, 0) + ' artigos · entrega ' + o.eta)),
+            h('span', { style: { display: 'flex', alignItems: 'center', gap: 10 } }, h('b', { className: 'price' }, eur(o.total)), h(Icon, { n: 'chev', s: 18 }))); })) : null);
+    }
+
+    // Com sessão: nome da cliente e "Terminar sessão". As encomendas mostradas são as deste
+    // dispositivo (guardadas em localStorage); a tabela `orders` do Supabase é a fonte oficial
+    // assim que o backend de pagamentos (api/checkout.js) estiver configurado com credenciais reais.
     return h('main', { className: 'wrap', style: { maxWidth: 860, paddingTop: 24, paddingBottom: 40 } },
-      h('h1', { className: 'h2' }, 'A minha conta'),
-      h('p', { className: 'muted', style: { margin: '6px 0 24px' } }, 'Encomendas feitas neste dispositivo.'),
+      h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 10 } },
+        h('div', null, h('h1', { className: 'h2' }, 'Olá, ' + (name ? name.split(' ')[0] : 'membro') + '.'),
+          h('p', { className: 'muted', style: { margin: '6px 0 24px' } }, email)),
+        h('button', { className: 'btn ghost sm', onClick: signOut }, 'Terminar sessão')),
       st.orders.length === 0 ? h('div', { className: 'card-box empty' }, h('p', { className: 'h3' }, 'Ainda não tens encomendas.'), h('a', { className: 'btn', href: '#/loja', style: { marginTop: 10 } }, 'Começar a comprar')) :
       st.orders.map(function (o) { return h('a', { key: o.n, href: '#/confirmacao/' + o.n, className: 'card-box', style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginBottom: 10 } },
         h('div', null, h('b', null, '#' + o.n), h('div', { className: 'muted', style: { fontSize: 13 } }, new Date(o.at).toLocaleDateString('pt-PT') + ' · ' + o.lines.reduce(function (s, l) { return s + l.qty; }, 0) + ' artigos · entrega ' + o.eta)),
