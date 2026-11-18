@@ -497,6 +497,16 @@ html.theme-anim,html.theme-anim *{transition:background-color .35s,color .35s,bo
 .mx-tswitch i.r{transform:translateX(100%)}
 .mx-drawer-f .legal{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--mx-dim);text-align:center}
 
+/* ───── Popup de boas-vindas (WELCOME10) ───── */
+.mx-welcome{position:fixed;inset:0;z-index:120;display:grid;place-items:center;padding:20px}
+.mx-welcome-bg{position:absolute;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(2px);animation:mxwfade .4s ease}
+.mx-welcome-p{position:relative;width:min(420px,100%);background:var(--mx-bg);border:1px solid var(--mx-line);box-shadow:var(--shadow);padding:36px 32px 28px;animation:mxwpop .45s cubic-bezier(.2,.7,.2,1)}
+.mx-welcome-p .mx-close{position:absolute;top:6px;right:6px}
+@keyframes mxwfade{from{opacity:0}to{opacity:1}}
+@keyframes mxwpop{from{opacity:0;transform:translateY(18px) scale(.97)}to{opacity:1;transform:none}}
+@media (max-width:760px){.mx-welcome-p{padding:30px 22px 22px}}
+@media (prefers-reduced-motion:reduce){.mx-welcome-bg,.mx-welcome-p{animation:none!important}}
+
 @media (max-width:1100px){
   .mx-links{display:none}
   .mx-burger{display:inline-flex}
