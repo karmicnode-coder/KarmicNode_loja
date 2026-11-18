@@ -57,7 +57,15 @@
       var mobile = innerWidth <= 760;
       var el = document.getElementById('fit');
       if (mobile) { el.style.transform = 'none'; return; }
-      var s = Math.min(innerWidth / 1280, innerHeight / 800);
+      // O desenho tem um tamanho fixo (1280x800). Em vez de o encolher até caber
+      // TODO dentro da janela (o que deixa faixas vazias em cima/baixo ou nos lados,
+      // conforme a proporção do ecrã), preenchemos sempre o ecrã todo — cortando só
+      // um pouco das margens decorativas quando a proporção é muito diferente, em vez
+      // de mostrar espaço morto. O limite evita um corte exagerado em ecrãs muito
+      // largos (ultrawide) ou muito quadrados.
+      var sx = innerWidth / 1280, sy = innerHeight / 800;
+      var cover = Math.max(sx, sy), contain = Math.min(sx, sy);
+      var s = Math.min(cover, contain * 1.22);
       el.style.transform = 'scale(' + s + ')';
     }
     addEventListener('resize', fit);
